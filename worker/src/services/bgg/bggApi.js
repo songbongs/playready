@@ -7,18 +7,55 @@ function sleep(ms) {
 }
 
 async function fetchXml(url, init, errorMessage) {
+  const retryableStatuses = new Set([408, 425, 429, 500, 502, 503, 504]);
+  const maxAttempts = 3;
+  let lastStatus = 0;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(url, {
+        ...init,
+        headers: {
+          "accept": "application/xml",
+          "user-agent": "playready-worker/1.0 (+https://songbongs.github.io/playready)",
+          ...(init?.headers || {})
+        }
+      });
+    } catch {
+      if (attempt < maxAttempts) {
+        await sleep(2500 * attempt);
+        continue;
+      }
+      throw createUserError(errorMessage, 502, "BGG_UNAVAILABLE");
+    }
+
+    lastStatus = response.status;
+    if (response.ok) {
+      return parseXml(await response.text());
+    }
+
+    if (!retryableStatuses.has(response.status) || attempt === maxAttempts) {
+      throw createUserError(errorMessage, 502, "BGG_UNAVAILABLE");
+    }
+
+    await sleep(2500 * attempt);
+  }
+
+  throw createUserError(`${errorMessage} (status: ${lastStatus})`, 502, "BGG_UNAVAILABLE");
+}
+
+async function fetchXmlOrNull(url, init, errorMessage, onProgress) {
   let response;
   try {
-    response = await fetch(url, init);
+    return await fetchXml(url, init, errorMessage);
   } catch {
-    throw createUserError(errorMessage, 502, "BGG_UNAVAILABLE");
+    await onProgress?.("BGG 응답이 지연되어 일부 커뮤니티 자료를 건너뛰고 있습니다... (1/3)", {
+      stage: "bgg-warning",
+      url
+    });
+    return null;
   }
-
-  if (!response.ok) {
-    throw createUserError(errorMessage, 502, "BGG_UNAVAILABLE");
-  }
-
-  return parseXml(await response.text());
 }
 
 function normalizeLanguage(raw) {
@@ -57,11 +94,21 @@ function parseArticles(rawArticles, maxComments) {
 
 export async function collectBggForumData(bggId, config, onProgress) {
   const forumListUrl = `${config.bggApiBase}/forumlist?id=${bggId}&type=thing`;
-  const forumListXml = await fetchXml(
+  const forumListXml = await fetchXmlOrNull(
     forumListUrl,
-    { headers: { accept: "application/xml" } },
-    "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요."
+    {},
+    "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
+    onProgress
   );
+
+  if (!forumListXml) {
+    return {
+      bggId,
+      collectedAt: new Date().toISOString(),
+      warning: "BGG 응답이 지연되어 커뮤니티 자료 없이 계속 진행했습니다.",
+      forums: []
+    };
+  }
 
   const rawForums = forumListXml?.items?.forum || forumListXml?.forums?.forum;
   const forums = pickForums(rawForums);
@@ -78,11 +125,16 @@ export async function collectBggForumData(bggId, config, onProgress) {
     await sleep(config.bggDelayMs);
 
     const forumUrl = `${config.bggApiBase}/forum?id=${forum.id}&page=1`;
-    const forumXml = await fetchXml(
+    const forumXml = await fetchXmlOrNull(
       forumUrl,
-      { headers: { accept: "application/xml" } },
-      "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요."
+      {},
+      "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
+      onProgress
     );
+
+    if (!forumXml) {
+      continue;
+    }
 
     const threads = ensureArray(forumXml?.forum?.threads?.thread || forumXml?.forum?.thread).slice(
       0,
@@ -92,12 +144,17 @@ export async function collectBggForumData(bggId, config, onProgress) {
     const threadResults = [];
     for (const thread of threads) {
       await sleep(config.bggDelayMs);
-      const threadUrl = `${config.bggApiBase}/thread?id=${thread.id}`;
-      const threadXml = await fetchXml(
+      const threadUrl = `${config.bggApiBase}/thread?id=${thread.id}&count=${config.bggMaxCommentsPerThread}`;
+      const threadXml = await fetchXmlOrNull(
         threadUrl,
-        { headers: { accept: "application/xml" } },
-        "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요."
+        {},
+        "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
+        onProgress
       );
+
+      if (!threadXml) {
+        continue;
+      }
 
       const comments = parseArticles(
         threadXml?.thread?.articles?.article || threadXml?.thread?.article,

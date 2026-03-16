@@ -6,8 +6,12 @@ import fitz
 def extract_text_blocks(document: fitz.Document) -> list[dict]:
     text_blocks: list[dict] = []
     for page_index in range(document.page_count):
-        page = document.load_page(page_index)
-        blocks = page.get_text("dict").get("blocks", [])
+        try:
+            page = document.load_page(page_index)
+            blocks = page.get_text("dict").get("blocks", [])
+        except Exception:
+            continue
+
         for block_index, block in enumerate(blocks):
             if "lines" not in block:
                 continue

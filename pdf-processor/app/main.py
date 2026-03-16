@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 
 import fitz
 from fastapi import FastAPI, HTTPException
@@ -23,15 +24,22 @@ def health() -> dict:
 def extract(request: ExtractRequest) -> ExtractResponse:
     temp_path: str | None = None
     document: fitz.Document | None = None
+
     try:
         raw_base64 = request.pdfBase64.split(",", 1)[-1]
-        pdf_bytes = base64.b64decode(raw_base64)
+        pdf_bytes = base64.b64decode(raw_base64, validate=True)
         temp_path = write_temp_pdf(pdf_bytes)
 
         document = fitz.open(temp_path)
+        if document.needs_pass and not document.authenticate(""):
+            raise ValueError("password-protected pdf")
+
         text_blocks = extract_text_blocks(document)
         images = extract_images(document)
         linked_images = link_images_to_text(images, text_blocks)
+
+        if document.page_count == 0 or (not text_blocks and not linked_images):
+            raise ValueError("empty extraction result")
 
         return ExtractResponse(
             gameName=request.gameName,
@@ -47,10 +55,15 @@ def extract(request: ExtractRequest) -> ExtractResponse:
             ],
             images=linked_images,
         )
-    except Exception as exc:
+    except (binascii.Error, ValueError, RuntimeError) as exc:
         raise HTTPException(
             status_code=400,
             detail="PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.",
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="PDF 분석 중 예기치 않은 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
         ) from exc
     finally:
         if document is not None:

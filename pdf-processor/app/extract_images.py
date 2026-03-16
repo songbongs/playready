@@ -10,19 +10,25 @@ def extract_images(document: fitz.Document) -> list[dict[str, Any]]:
     extracted: list[dict[str, Any]] = []
 
     for page_index in range(document.page_count):
-        page = document.load_page(page_index)
-        image_infos = page.get_image_info(xrefs=True)
+        try:
+            page = document.load_page(page_index)
+            image_infos = page.get_image_info(xrefs=True)
+        except Exception:
+            continue
 
         for image_index, info in enumerate(image_infos):
             xref = info.get("xref")
             if not xref:
                 continue
 
-            image = document.extract_image(xref)
-            image_bytes = image.get("image", b"")
-            ext = image.get("ext", "png").lower()
-            mime_type = f"image/{'jpeg' if ext == 'jpg' else ext}"
-            bbox = info.get("bbox", (0, 0, 0, 0))
+            try:
+                image = document.extract_image(xref)
+                image_bytes = image.get("image", b"")
+                ext = image.get("ext", "png").lower()
+                mime_type = f"image/{'jpeg' if ext == 'jpg' else ext}"
+                bbox = info.get("bbox", (0, 0, 0, 0))
+            except Exception:
+                continue
 
             extracted.append(
                 {
