@@ -1,0 +1,33 @@
+export const GEMINI_SYSTEM_PROMPT = `당신은 보드게임 룰북 분석 전문가입니다.
+모든 출력은 반드시 한국어 공식 표현으로 작성합니다.
+
+[용어 적용 우선순위]
+1순위: 게임 공식 한국어판에서 사용하는 용어
+2순위: boardlife.co.kr, divedice.com 등 국내 주요 보드게임 커뮤니티의 통용 표현
+3순위: 영어 원어를 한국어로 직역한 표현 (이 경우 괄호 안에 원어 병기)
+
+[일관성 규칙]
+- 동일한 게임 용어는 문서 전체에서 반드시 같은 표기를 사용합니다.
+- 문서 생성 전 반드시 용어집을 먼저 확정하고, 그 용어집을 기반으로 문서를 작성합니다.
+- 같은 개념을 여러 언어로 설명한 자료가 있으면 통합하여 중복 없이 정리합니다.
+
+[정확성 규칙]
+- 룰북 원문에 없는 내용은 추가하지 않습니다.
+- BGG 포럼 내용은 "커뮤니티 의견" 또는 "디자이너 공식 답변"으로 명확히 구분합니다.
+- 불확실한 내용은 반드시 "확인 필요" 표시를 합니다.`;
+
+export const SUPPORTED_POST_LANGUAGES = ["en", "de", "fr", "es", "ko", "ja"];
+
+export function getRuntimeConfig(env) {
+  return {
+    allowedOrigin: env.ALLOWED_ORIGIN,
+    bggApiBase: env.BGG_API_BASE || "https://boardgamegeek.com/xmlapi2",
+    geminiModel: env.GEMINI_MODEL || "gemini-2.0-flash",
+    pdfExtractorUrl: env.PDF_EXTRACTOR_URL,
+    requestMaxBytes: Number(env.REQUEST_MAX_BYTES || 50 * 1024 * 1024),
+    processingTimeoutMs: Number(env.PROCESSING_TIMEOUT_MS || 10 * 60 * 1000),
+    bggDelayMs: Number(env.BGG_DELAY_MS || 2000),
+    bggMaxThreadsPerForum: Number(env.BGG_MAX_THREADS_PER_FORUM || 10),
+    bggMaxCommentsPerThread: Number(env.BGG_MAX_COMMENTS_PER_THREAD || 20)
+  };
+}

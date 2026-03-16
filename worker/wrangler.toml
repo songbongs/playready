@@ -1,0 +1,18 @@
+name = "playready-worker"
+main = "src/index.js"
+compatibility_date = "2026-03-16"
+
+[vars]
+ALLOWED_ORIGIN = "https://example.github.io"
+BGG_API_BASE = "https://boardgamegeek.com/xmlapi2"
+GEMINI_MODEL = "gemini-2.0-flash"
+PDF_EXTRACTOR_URL = "http://127.0.0.1:8000/extract"
+REQUEST_MAX_BYTES = "52428800"
+PROCESSING_TIMEOUT_MS = "600000"
+BGG_DELAY_MS = "2000"
+BGG_MAX_THREADS_PER_FORUM = "10"
+BGG_MAX_COMMENTS_PER_THREAD = "20"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "fae3d0e445504158afd0b0cc7ad45ab5"
