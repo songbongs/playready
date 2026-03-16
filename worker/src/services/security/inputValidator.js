@@ -16,6 +16,7 @@ export async function readAndValidateJsonRequest(request, config) {
   const pdfBase64 = String(body?.pdfBase64 || "").trim();
   const pdfFileName = String(body?.pdfFileName || "rulebook.pdf").trim();
   const pdfMimeType = String(body?.pdfMimeType || "application/pdf").trim();
+  const additionalMaterials = normalizeAdditionalMaterials(body?.additionalMaterials || []);
 
   if (!gameName) {
     throw createUserError("게임 이름을 입력해주세요.", 400, "INVALID_GAME_NAME");
@@ -23,15 +24,12 @@ export async function readAndValidateJsonRequest(request, config) {
   if (!bggId || !/^\d+$/.test(bggId)) {
     throw createUserError("BGG ID는 숫자로만 입력해주세요.", 400, "INVALID_BGG_ID");
   }
-  if (!pdfBase64) {
-    throw createUserError("룰북 PDF 파일이 필요합니다.", 400, "MISSING_PDF");
-  }
-  if (pdfMimeType !== "application/pdf") {
+  if (pdfBase64 && pdfMimeType !== "application/pdf") {
     throw createUserError("PDF 파일만 업로드할 수 있습니다.", 400, "INVALID_PDF_TYPE");
   }
 
-  const estimatedBytes = estimateBase64Bytes(pdfBase64);
-  if (estimatedBytes > config.requestMaxBytes) {
+  const estimatedBytes = pdfBase64 ? estimateBase64Bytes(pdfBase64) : 0;
+  if (pdfBase64 && estimatedBytes > config.requestMaxBytes) {
     throw createUserError("PDF 파일은 최대 50MB까지 업로드할 수 있습니다.", 413, "PDF_TOO_LARGE");
   }
 
@@ -41,8 +39,24 @@ export async function readAndValidateJsonRequest(request, config) {
     pdfBase64,
     pdfFileName,
     pdfMimeType,
-    estimatedBytes
+    estimatedBytes,
+    additionalMaterials
   };
+}
+
+function normalizeAdditionalMaterials(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item) => ({
+      fileName: String(item?.fileName || "").trim(),
+      mimeType: String(item?.mimeType || "application/octet-stream").trim(),
+      textContent: String(item?.textContent || "").trim()
+    }))
+    .filter((item) => item.fileName)
+    .slice(0, 5);
 }
 
 export function estimateBase64Bytes(value) {

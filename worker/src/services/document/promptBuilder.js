@@ -5,7 +5,14 @@ function stringifyJson(title, value) {
 }
 
 export function buildGeminiPayload(input) {
-  const { gameName, bggId, pdfExtraction, bggForumData } = input;
+  const { gameName, bggId, pdfExtraction, bggForumData, additionalMaterials } = input;
+
+  const materialSummary = (additionalMaterials || []).map((item, index) => ({
+    index: index + 1,
+    fileName: item.fileName,
+    mimeType: item.mimeType,
+    textContent: item.textContent || ""
+  }));
 
   const userPrompt = [
     `게임 이름: ${gameName}`,
@@ -30,7 +37,9 @@ export function buildGeminiPayload(input) {
     "",
     stringifyJson("PDF 추출 결과", pdfExtraction),
     "",
-    stringifyJson("BGG 포럼 데이터", bggForumData)
+    stringifyJson("BGG 포럼 데이터", bggForumData),
+    "",
+    stringifyJson("추가 자료", materialSummary)
   ].join("\n");
 
   return {

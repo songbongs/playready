@@ -41,6 +41,7 @@ function cleanupSensitiveData(state) {
   state.request.pdfBase64 = "";
   state.pdfExtraction = null;
   state.bggForumData = null;
+  state.request.additionalMaterials = [];
 }
 
 export async function runGenerationPipeline(state, env, config, onProgress = async () => {}) {
@@ -57,14 +58,27 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     assertTime();
 
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
-    state.pdfExtraction = await fetchPdfExtraction(
-      {
+    if (state.request.pdfBase64) {
+      state.pdfExtraction = await fetchPdfExtraction(
+        {
+          gameName: state.request.gameName,
+          pdfBase64: state.request.pdfBase64,
+          pdfFileName: state.request.pdfFileName
+        },
+        config
+      );
+    } else {
+      await onProgress("PDF가 없어 BGG 데이터 중심으로 진행하고 있습니다... (2/3)", {
+        stage: "pdf-skip"
+      });
+      state.pdfExtraction = {
+        ok: true,
         gameName: state.request.gameName,
-        pdfBase64: state.request.pdfBase64,
-        pdfFileName: state.request.pdfFileName
-      },
-      config
-    );
+        pageCount: 0,
+        textBlocks: [],
+        images: []
+      };
+    }
     assertTime();
 
     await onProgress("한국어 문서를 생성하고 있습니다... (3/3)", { stage: "ai" });
@@ -72,7 +86,8 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       gameName: state.request.gameName,
       bggId: state.request.bggId,
       pdfExtraction: state.pdfExtraction,
-      bggForumData: state.bggForumData
+      bggForumData: state.bggForumData,
+      additionalMaterials: state.request.additionalMaterials
     });
     const geminiResult = await generateWithRetry(env, config, geminiPayload);
     const parsed = parseGeminiJsonResponse(geminiResult);
