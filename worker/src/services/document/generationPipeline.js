@@ -269,6 +269,35 @@ async function generateJsonSection(config, payload) {
   }
 }
 
+function isRetryableAiError(error) {
+  return [
+    "GEMINI_TEMPORARILY_UNAVAILABLE",
+    "GEMINI_UPSTREAM_BAD_GATEWAY",
+    "AI_SERVICE_UNAVAILABLE"
+  ].includes(error?.code);
+}
+
+async function generateJsonSectionWithRetry(config, payload, onProgress, retryMessage) {
+  const delays = [3000, 8000];
+  let lastError;
+
+  for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    try {
+      return await generateJsonSection(config, payload);
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableAiError(error) || attempt === delays.length) {
+        throw error;
+      }
+
+      await onProgress(retryMessage, { stage: "ai-retry", attempt: attempt + 1 });
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+    }
+  }
+
+  throw lastError;
+}
+
 export async function runGenerationPipeline(state, env, config, onProgress = async () => {}) {
   const startedAt = Date.now();
   const assertTime = () => {
@@ -361,14 +390,23 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       additionalMaterials: state.request.additionalMaterials
     };
 
-    const glossaryResult = await generateJsonSection(config, buildGlossaryPayload(payloadInput));
-    const documentAResult = await generateJsonSection(
+    const glossaryResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "A")
+      buildGlossaryPayload(payloadInput),
+      onProgress,
+      "AI 서버가 잠시 혼잡하여 용어집을 다시 시도하고 있습니다... (3/3)"
     );
-    const documentBResult = await generateJsonSection(
+    const documentAResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "B")
+      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "A"),
+      onProgress,
+      "AI 서버가 잠시 혼잡하여 문서 A를 다시 시도하고 있습니다... (3/3)"
+    );
+    const documentBResult = await generateJsonSectionWithRetry(
+      config,
+      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "B"),
+      onProgress,
+      "AI 서버가 잠시 혼잡하여 문서 B를 다시 시도하고 있습니다... (3/3)"
     );
 
     const images = state.pdfExtraction?.images || [];
