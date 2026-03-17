@@ -128,7 +128,7 @@ function classifyImage(image, textBlockMap) {
 
   if (
     looksLikeIcon ||
-    matchAny(context, ["아이콘", "기호", "심벌", "symbol", "icon", "효과", "자원 획득"])
+    matchAny(context, ["아이콘", "기호", "효과", "symbol", "icon", "자원 획득", "액션"])
   ) {
     return {
       bucket: "icons",
@@ -151,7 +151,7 @@ function classifyImage(image, textBlockMap) {
   }
 
   if (
-    matchAny(context, ["세팅", "준비", "배치", "setup", "set up", "시작 준비", "공용 준비", "개인 준비"])
+    matchAny(context, ["세팅", "준비", "배치", "setup", "set up", "공용 준비", "개인 준비", "첫 라운드"])
   ) {
     return {
       bucket: "setup",
@@ -199,9 +199,7 @@ function buildGallerySection(title, lead, items, variant = "standard") {
   const gridClass =
     variant === "icon" ? "auto-image-grid auto-image-grid--icons" : "auto-image-grid";
 
-  const cards = items
-    .map((item) => buildImageTag(item.image, item.caption, variant))
-    .join("");
+  const cards = items.map((item) => buildImageTag(item.image, item.caption, variant)).join("");
 
   return [
     `<section class="auto-image-gallery auto-image-gallery--${variant}">`,
@@ -229,23 +227,23 @@ function buildSectionPlan(docType) {
         lead: "플레이어 설명 중 바로 보여주기 쉬운 대표 구성물만 추려 넣었습니다.",
         maxCount: 4,
         variant: "standard",
-        headings: ["구성물", "components", "참조 카드", "소개"]
+        headings: ["구성물", "참조 카드", "소개"]
       },
       {
         bucket: "icons",
-        title: "중요 아이콘 빠른 참조",
-        lead: "설명 중 자주 헷갈리는 아이콘만 작은 카드 형태로 빠르게 볼 수 있게 정리했습니다.",
+        title: "핵심 아이콘 사전",
+        lead: "설명 중 자주 헷갈리는 아이콘만 빠르게 찾아볼 수 있도록 정리했습니다.",
         maxCount: 8,
         variant: "icon",
-        headings: ["아이콘", "용어집", "참조 카드", "자주 헷갈리는"]
+        headings: ["아이콘", "Q&A", "용어", "참조"]
       },
       {
         bucket: "boards",
-        title: "보드 보는 법",
-        lead: "공용 보드와 개인 보드를 설명할 때 바로 보여주기 좋은 예시만 남겼습니다.",
+        title: "첫 라운드 보드 참고",
+        lead: "첫 설명 때 테이블 위에서 바로 보여주기 좋은 보드 이미지만 남겼습니다.",
         maxCount: 2,
         variant: "standard",
-        headings: ["보드", "첫 라운드", "진행 가이드"]
+        headings: ["첫 라운드", "스크립트", "보드", "셋업"]
       }
     ];
   }
@@ -253,35 +251,35 @@ function buildSectionPlan(docType) {
   return [
     {
       bucket: "components",
-      title: "주요 구성물 이미지",
-      lead: "구성물 설명 근처에서 찾아낸 이미지를 학습용으로 다시 정리했습니다.",
+      title: "구성물 완전 해설 이미지",
+      lead: "구성물 설명을 볼 때 바로 옆에서 참고할 수 있게 대표 이미지를 정리했습니다.",
       maxCount: 6,
       variant: "standard",
-      headings: ["구성물", "components", "materials"]
+      headings: ["구성물", "완전 해설"]
     },
     {
       bucket: "setup",
-      title: "세팅 참고 이미지",
-      lead: "공용 준비와 개인 준비를 실제 배치 예시로 이해하기 쉽게 모았습니다.",
+      title: "준비 단계 참고 이미지",
+      lead: "공용 준비와 개인 준비를 실제 배치 예시로 이해할 수 있게 모았습니다.",
       maxCount: 4,
       variant: "standard",
-      headings: ["세팅", "준비", "setup", "턴 순서"]
+      headings: ["준비", "가이드", "세팅"]
     },
     {
       bucket: "icons",
-      title: "주요 아이콘 참조표",
-      lead: "자주 등장하는 아이콘을 큰 그림 대신 작은 참조 카드처럼 정리했습니다.",
+      title: "작업 아이콘 완전 백과",
+      lead: "자주 보는 아이콘을 작은 참조 카드처럼 정리해 빠르게 다시 볼 수 있게 만들었습니다.",
       maxCount: 10,
       variant: "icon",
-      headings: ["아이콘", "기호", "핵심 메커니즘", "예외 규칙"]
+      headings: ["아이콘", "백과", "작업 아이콘"]
     },
     {
       bucket: "boards",
-      title: "개인 보드/공용 보드 예시",
-      lead: "보드 구조를 미리 익히기 좋도록 대표 이미지만 추려 넣었습니다.",
+      title: "보드 구조 참고 이미지",
+      lead: "개인 보드와 공용 보드 구조를 이해하기 좋도록 대표 이미지를 남겼습니다.",
       maxCount: 3,
       variant: "standard",
-      headings: ["보드", "턴 순서", "핵심 메커니즘"]
+      headings: ["보드", "트랙", "턴 진행"]
     }
   ];
 }
@@ -350,7 +348,7 @@ function stripHtml(value) {
 
 function extractListItemsNearTurnSection(html) {
   const sectionRegex =
-    /<(section|article)[^>]*>([\s\S]{0,3000}?(턴 순서|진행 순서|라운드|행동|액션|첫 라운드|턴 진행)[\s\S]{0,3000}?)<\/\1>/i;
+    /<(section|article)[^>]*>([\s\S]{0,3200}?(턴|행동|라운드|첫 라운드|진행 흐름|턴 진행)[\s\S]{0,3200}?)<\/\1>/i;
   const match = html.match(sectionRegex);
   const source = match?.[2] || html;
   const listMatches = [...source.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)];
@@ -358,72 +356,91 @@ function extractListItemsNearTurnSection(html) {
   return listMatches
     .map((item) => stripHtml(item[1]))
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, 6);
 }
 
 function buildFallbackActionSteps(docType, html) {
   const inferred = extractListItemsNearTurnSection(html);
-  if (inferred.length >= 3) {
+  if (inferred.length >= 4) {
     return inferred.map((item, index) => ({
-      title: index === 0 ? "시작 확인" : index === inferred.length - 1 ? "마무리" : `핵심 단계 ${index + 1}`,
-      detail: item
+      title:
+        index === 0
+          ? "내 차례 시작"
+          : index === inferred.length - 1
+            ? "종료 또는 다음 단계"
+            : `핵심 단계 ${index + 1}`,
+      detail: item,
+      tone: index === 0 || index === inferred.length - 1 ? "neutral" : "primary"
     }));
   }
 
   if (docType === "B") {
     return [
-      { title: "차례 시작", detail: "내 차례에 확인할 보드 상태와 필수 효과를 먼저 확인합니다." },
-      { title: "행동 선택", detail: "설명자가 안내한 대표 행동 중 하나를 선택합니다." },
-      { title: "효과 처리", detail: "선택한 행동의 비용, 보상, 이동, 카드 처리 등을 순서대로 적용합니다." },
-      { title: "차례 종료", detail: "정리 효과를 끝내고 다음 플레이어에게 차례를 넘깁니다." }
+      { title: "내 차례 시작", detail: "차례 시작 시 확인할 효과와 현재 보드 상태를 먼저 봅니다.", tone: "neutral" },
+      { title: "행동 1개 선택", detail: "이번 차례에는 대표 행동 하나를 선택해 실행합니다.", tone: "primary" },
+      { title: "효과 처리", detail: "선택한 행동의 비용, 보상, 배치, 이동을 순서대로 적용합니다.", tone: "secondary" },
+      { title: "차례 종료", detail: "추가 정리 효과를 끝내고 다음 플레이어에게 차례를 넘깁니다.", tone: "neutral" }
     ];
   }
 
   return [
-    { title: "턴 시작", detail: "시작 시 발동 효과, 유지 조건, 자원 상태를 먼저 확인합니다." },
-    { title: "행동 선택", detail: "이번 턴에 가능한 주요 액션 중 하나를 선택합니다." },
-    { title: "결과 처리", detail: "선택한 행동의 비용 지불, 보상 획득, 배치, 이동, 해결 순서를 적용합니다." },
-    { title: "정리 단계", detail: "턴 종료 조건과 정리 효과를 확인한 뒤 다음 플레이어로 넘어갑니다." }
+    { title: "내 차례 시작", detail: "시작 시 발동 효과와 목표 달성 여부를 먼저 확인합니다.", tone: "neutral" },
+    { title: "3가지 행동 중 하나 선택", detail: "작업 배치, 기술자 승급, 패스 중 하나를 선택해 실행합니다.", tone: "primary" },
+    { title: "추가 처리", detail: "특수 경로, 빠른 배치, 목표 달성 여부, 추가 보상을 순서대로 처리합니다.", tone: "secondary" },
+    { title: "라운드 종료 조건 확인", detail: "모든 플레이어가 패스했는지 또는 종료 조건을 만족했는지 확인합니다.", tone: "warning" },
+    { title: "종료 아님 / 라운드 종료", detail: "종료가 아니면 다음 플레이어로, 종료면 라운드 마무리 단계로 넘어갑니다.", tone: "neutral" }
   ];
+}
+
+function buildVerticalActionFlow(steps) {
+  return steps
+    .map((step, index) => {
+      const arrow =
+        index === steps.length - 1
+          ? ""
+          : '<div class="action-flow-arrow action-flow-arrow--vertical" aria-hidden="true">↓</div>';
+
+      return [
+        `<div class="action-flow-node action-flow-node--${escapeHtml(step.tone || "neutral")}">`,
+        `<div class="action-flow-step">`,
+        `<strong>${escapeHtml(step.title)}</strong>`,
+        `<p>${escapeHtml(step.detail)}</p>`,
+        `</div>`,
+        `</div>`,
+        arrow
+      ].join("");
+    })
+    .join("");
 }
 
 function buildActionFlowSection(docType, html) {
   const steps = buildFallbackActionSteps(docType, html);
-  const title = docType === "B" ? "내 턴에는 이렇게 진행합니다" : "턴 진행 흐름 한눈에 보기";
+  const title = docType === "B" ? "내 턴에는 이렇게 진행합니다" : "플레이 흐름 도식화";
   const lead =
     docType === "B"
-      ? "설명 중 바로 보여주기 쉽게, 한 턴의 흐름만 짧고 분명하게 정리했습니다."
-      : "게임을 혼자 공부할 때 턴의 흐름을 빠르게 떠올릴 수 있도록 핵심 단계만 도식화했습니다.";
-
-  const stepHtml = steps
-    .map((step) => {
-      return [
-        `<div class="action-flow-step">`,
-        `<strong>${escapeHtml(step.title)}</strong>`,
-        `<p>${escapeHtml(step.detail)}</p>`,
-        `</div>`
-      ].join("");
-    })
-    .join('<div class="action-flow-arrow" aria-hidden="true">→</div>');
+      ? "처음 설명할 때 바로 보여줄 수 있도록, 내 차례에 무엇을 하는지 위에서 아래로 정리했습니다."
+      : "실제 플레이 도중 흐름을 놓치지 않도록, 내 턴의 핵심 단계를 위에서 아래로 따라가며 볼 수 있게 정리했습니다.";
 
   return [
     `<section class="action-flow-section">`,
     `<h3>${escapeHtml(title)}</h3>`,
     `<p class="action-flow-section__lead">${escapeHtml(lead)}</p>`,
-    `<div class="action-flow">${stepHtml}</div>`,
+    `<div class="action-flow action-flow--vertical">`,
+    buildVerticalActionFlow(steps),
+    `</div>`,
     `</section>`
   ].join("");
 }
 
 function ensureActionFlowSection(html, docType) {
   if (/class=["'][^"']*action-flow-section/.test(html)) {
-    return html;
+    return html.replace(/class=(["'][^"']*action-flow)(?![^"']*action-flow--vertical)([^"']*\1)/, "");
   }
 
   const actionFlowHtml = buildActionFlowSection(docType, html);
   return insertAfterHeading(
     html,
-    ["턴 순서", "진행 순서", "핵심 메커니즘", "첫 라운드", "round", "turn", "action"],
+    ["턴 진행", "플레이 흐름", "행동", "첫 라운드", "turn", "action"],
     actionFlowHtml
   );
 }
