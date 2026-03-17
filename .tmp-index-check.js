@@ -473,15 +473,26 @@ function stopTimers() {
         }
       }
 
+      function startFunMessages() {
+        elements.funBox.textContent = "업로드한 자료와 입력값을 정리하고 있습니다...";
+        if (state.funTimer) {
+          clearInterval(state.funTimer);
+        }
+        state.funTimer = window.setInterval(() => {
+          state.funIndex = (state.funIndex + 1) % FUN_MESSAGES.length;
+          elements.funBox.textContent = FUN_MESSAGES[state.funIndex];
+        }, 4500);
+      }
+
       function resetProgressUi() {
         state.currentStage = "start";
         state.funIndex = 0;
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
-        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
-        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
+        elements.progressTitle.textContent = "입력 정보를 확인하고 있습니다";
+        elements.progressSubtitle.textContent = "파일과 게임 정보를 확인한 뒤 작업 서버로 요청을 보낼 준비를 하고 있습니다.";
+        elements.progressMessage.textContent = "첨부 파일이 있으면 브라우저에서 먼저 읽고 요청용 데이터로 바꾸는 중일 수 있습니다.";
         setProgressVisualState("working");
         paintStageChips("start");
         resetEtaForStage("start");
@@ -898,11 +909,11 @@ function stopTimers() {
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
-        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
-        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
+        elements.progressTitle.textContent = "입력 정보를 확인하고 있습니다";
+        elements.progressSubtitle.textContent = "파일과 게임 정보를 확인한 뒤 작업 서버로 요청을 보낼 준비를 하고 있습니다.";
+        elements.progressMessage.textContent = "첨부 파일이 있으면 브라우저에서 먼저 읽고 요청용 데이터로 바꾸는 중일 수 있습니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>작업이 시작되면 서버와 계속 통신 중이라는 표시가 여기에서 보입니다.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>아직 세부 단계 이벤트가 오기 전일 수 있습니다. 요청 준비가 끝나면 서버 진행 상태가 이어서 표시됩니다.';
         paintStageChips("start");
         resetEtaForStage("start");
         renderElapsed();
