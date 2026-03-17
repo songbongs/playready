@@ -7,8 +7,8 @@ function sleep(ms) {
 }
 
 async function fetchXml(url, init, errorMessage) {
-  const retryableStatuses = new Set([408, 425, 429, 500, 502, 503, 504]);
-  const maxAttempts = 3;
+  const retryableStatuses = new Set([202, 408, 425, 429, 500, 502, 503, 504]);
+  const maxAttempts = 5;
   let lastStatus = 0;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -101,7 +101,8 @@ function parseThingInfo(xml) {
     maxPlayers: Number(item.maxplayers?.value || 0) || null,
     playingTime: Number(item.playingtime?.value || 0) || null,
     minAge: Number(item.minage?.value || 0) || null,
-    description: item.description?.value || "",
+    description:
+      typeof item.description === "string" ? item.description : item.description?.value || "",
     mechanics: links
       .filter((link) => link.type === "boardgamemechanic")
       .map((link) => link.value)
