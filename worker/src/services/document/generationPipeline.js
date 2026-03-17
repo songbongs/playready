@@ -152,7 +152,10 @@ function parseAiServiceError(status, message) {
     );
   }
 
-  if (/token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized) || status === 413) {
+  if (
+    status === 413 ||
+    /token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized)
+  ) {
     return createUserError(
       "AI에 전달할 자료가 너무 많아 문서 생성에 실패했습니다. 입력 자료를 줄이거나 더 큰 한도의 모델을 사용해주세요.",
       413,
@@ -224,7 +227,11 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
   const startedAt = Date.now();
   const assertTime = () => {
     if (Date.now() - startedAt > config.processingTimeoutMs) {
-      throw createUserError("처리 시간이 초과되었습니다. 입력 자료를 줄이거나 다시 시도해주세요.", 504, "TIMEOUT");
+      throw createUserError(
+        "처리 시간이 초과되었습니다. 입력 자료를 줄이거나 다시 시도해주세요.",
+        504,
+        "TIMEOUT"
+      );
     }
   };
 
@@ -236,14 +243,17 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
 
     if (state.request.pdfBase64) {
-      state.rulebookExtraction = await fetchPdfExtraction(
-        {
-          gameName: state.request.gameName,
-          pdfBase64: state.request.pdfBase64,
-          pdfFileName: state.request.pdfFileName
-        },
-        config
-      );
+      state.rulebookExtraction =
+        (await fetchOptionalPdfExtraction(
+          {
+            gameName: state.request.gameName,
+            pdfBase64: state.request.pdfBase64,
+            pdfFileName: state.request.pdfFileName
+          },
+          config,
+          onProgress,
+          "룰북 PDF는 읽지 못했지만 BGG 자료 기준으로 계속 진행합니다... (2/3)"
+        )) || buildEmptyExtraction(state.request.gameName);
     } else {
       state.rulebookExtraction = buildEmptyExtraction(state.request.gameName);
     }
@@ -259,10 +269,22 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           },
           config,
           onProgress,
-          "FAQ/정오표 PDF는 읽지 못했지만 룰북 기준으로 계속 진행합니다... (2/3)"
+          "FAQ/정오표 PDF는 읽지 못했지만 룰북과 BGG 자료 기준으로 계속 진행합니다... (2/3)"
         )) || buildEmptyExtraction(state.request.gameName);
     } else {
       state.faqExtraction = buildEmptyExtraction(state.request.gameName);
+    }
+
+    if (
+      !state.rulebookExtraction?.pageCount &&
+      !state.bggForumData?.forums?.length &&
+      !state.request.additionalMaterials?.length
+    ) {
+      throw createUserError(
+        "룰북 PDF를 읽지 못했고 사용할 수 있는 다른 자료도 없어 문서를 생성할 수 없습니다. 다른 PDF 파일로 다시 시도해주세요.",
+        400,
+        "RULEBOOK_PDF_PARSE_FAILED"
+      );
     }
 
     if (!state.request.pdfBase64 && state.request.faqPdfBase64 && !state.faqExtraction?.pageCount) {

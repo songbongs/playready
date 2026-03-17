@@ -26,13 +26,18 @@ def health() -> dict:
 def extract(request: ExtractRequest) -> ExtractResponse:
     temp_path: str | None = None
     document: fitz.Document | None = None
+    pdf_bytes: bytes | None = None
 
     try:
         raw_base64 = request.pdfBase64.split(",", 1)[-1]
         pdf_bytes = base64.b64decode(raw_base64, validate=True)
-        temp_path = write_temp_pdf(pdf_bytes)
 
-        document = fitz.open(temp_path)
+        try:
+            document = fitz.open(stream=pdf_bytes, filetype="pdf")
+        except Exception:
+            temp_path = write_temp_pdf(pdf_bytes)
+            document = fitz.open(temp_path)
+
         if document.needs_pass and not document.authenticate(""):
             raise ValueError("password-protected pdf")
 
@@ -40,7 +45,7 @@ def extract(request: ExtractRequest) -> ExtractResponse:
         images = extract_images(document)
         linked_images = link_images_to_text(images, text_blocks)
 
-        if document.page_count == 0 or (not text_blocks and not linked_images):
+        if document.page_count == 0:
             raise ValueError("empty extraction result")
 
         return ExtractResponse(
