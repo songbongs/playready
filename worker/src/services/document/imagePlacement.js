@@ -454,6 +454,88 @@ function buildVerticalActionFlow(steps) {
     .join("");
 }
 
+function buildStructuredActionFlow(docType) {
+  const model =
+    docType === "B"
+      ? [
+          { type: "node", title: "내 차례 시작", detail: "현재 상태와 시작 효과를 확인합니다.", tone: "neutral" },
+          { type: "decision", title: "이번 턴에 무엇을 할까?", detail: "핵심 행동 1개를 고를 준비를 합니다.", tone: "primary" },
+          {
+            type: "branch",
+            tone: "secondary",
+            options: [
+              { title: "행동 선택", detail: "이번 턴의 핵심 행동을 고릅니다." },
+              { title: "효과 처리", detail: "비용과 보상을 바로 처리합니다." },
+              { title: "패스/종료 판단", detail: "추가 행동 없이 끝낼지 확인합니다." }
+            ]
+          },
+          { type: "merge", title: "턴 마무리", detail: "남은 처리와 종료 조건을 확인합니다.", tone: "warning" },
+          { type: "node", title: "다음 플레이어 또는 라운드 종료", detail: "조건에 따라 차례를 넘기거나 종료를 처리합니다.", tone: "neutral" }
+        ]
+      : [
+          { type: "node", title: "내 차례 시작", detail: "시작 효과와 현재 상태를 먼저 확인합니다.", tone: "neutral" },
+          { type: "decision", title: "즉시 처리할 예외가 있는가?", detail: "강제 효과와 즉시 반응을 먼저 봅니다.", tone: "primary" },
+          {
+            type: "branch",
+            tone: "secondary",
+            options: [
+              { title: "행동 선택", detail: "가능한 행동 중 하나를 고릅니다." },
+              { title: "효과 처리", detail: "비용, 보상, 이동, 배치를 처리합니다." },
+              { title: "예외 확인", detail: "추가 반응과 예외 규칙을 짧게 봅니다." }
+            ]
+          },
+          { type: "merge", title: "턴 마무리", detail: "이번 턴 결과를 정리하고 종료 조건을 확인합니다.", tone: "warning" },
+          { type: "node", title: "다음 플레이어 또는 라운드 종료", detail: "조건에 따라 다음 차례나 종료 처리로 넘어갑니다.", tone: "neutral" }
+        ];
+
+  return model
+    .map((item, index) => {
+      const arrow =
+        index === model.length - 1
+          ? ""
+          : '<div class="action-flow-arrow action-flow-arrow--vertical" aria-hidden="true">↓</div>';
+
+      if (item.type === "branch") {
+        const options = item.options
+          .map(
+            (option) => `
+              <div class="action-flow-branch-option">
+                <strong>${escapeHtml(option.title)}</strong>
+                <p>${escapeHtml(option.detail)}</p>
+              </div>
+            `
+          )
+          .join("");
+
+        return `
+          <div class="action-flow-branch action-flow-branch--${escapeHtml(item.tone || "secondary")}">
+            <div class="action-flow-branch__label">여기서 선택이 갈립니다</div>
+            <div class="action-flow-branch__options">${options}</div>
+          </div>
+          ${arrow}
+        `;
+      }
+
+      const extraClass =
+        item.type === "decision"
+          ? "action-flow-node--decision"
+          : item.type === "merge"
+            ? "action-flow-node--merge"
+            : "";
+
+      return `
+        <div class="action-flow-node action-flow-node--${escapeHtml(item.tone || "neutral")} ${extraClass}">
+          <div class="action-flow-step">
+            <strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
+          </div>
+        </div>
+        ${arrow}
+      `;
+    })
+    .join("");
+}
+
 function buildActionFlowSection(docType) {
   const title = docType === "B" ? "2-1. 플레이어 턴 흐름도 (간소화)" : "2-1. 플레이어 턴 흐름도";
   const lead =
@@ -466,7 +548,7 @@ function buildActionFlowSection(docType) {
     `<h3>${escapeHtml(title)}</h3>`,
     `<p class="action-flow-section__lead">${escapeHtml(lead)}</p>`,
     `<div class="action-flow action-flow--vertical">`,
-    buildVerticalActionFlow(buildActionFlowSteps(docType)),
+    buildStructuredActionFlow(docType),
     `</div>`,
     `</section>`
   ].join("");
