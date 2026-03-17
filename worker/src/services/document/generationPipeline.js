@@ -351,8 +351,8 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     );
 
     const images = state.pdfExtraction?.images || [];
-    const documentAHtml = injectImagesIntoHtml(documentAResult.documentHtml || "", images);
-    const documentBHtml = injectImagesIntoHtml(documentBResult.documentHtml || "", images);
+    const documentAHtml = injectImagesIntoHtml(documentAResult.documentHtml || "", state.pdfExtraction);
+    const documentBHtml = injectImagesIntoHtml(documentBResult.documentHtml || "", state.pdfExtraction);
 
     return {
       ok: true,

@@ -520,12 +520,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(state.result.gameName || "playready")} - 문서 ${which}</title>
   <style>
-    body { margin: 0; padding: 28px; background: #f6f0e3; color: #2f2418; font-family: "Noto Sans KR", sans-serif; line-height: 1.75; }
+    @page { size: A4; margin: 14mm 12mm 16mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px; background: #f6f0e3; color: #2f2418; font-family: "Noto Sans KR", sans-serif; line-height: 1.75; font-size: 15px; }
     main { max-width: 980px; margin: 0 auto; background: #fffaf0; border-radius: 24px; padding: 28px; box-shadow: 0 24px 60px rgba(70, 44, 19, 0.12); }
-    img { max-width: 100%; height: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid rgba(117, 90, 51, 0.18); padding: 10px 12px; }
+    section, article, figure, table, ul, ol, dl, blockquote { break-inside: avoid; page-break-inside: avoid; }
+    h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+    h1 { font-size: 28px; margin-top: 0; }
+    h2 { font-size: 22px; margin-top: 28px; padding-top: 8px; border-top: 1px solid rgba(117, 90, 51, 0.16); }
+    h3 { font-size: 18px; margin-top: 22px; }
+    img { max-width: 100%; height: auto; break-inside: avoid; page-break-inside: avoid; }
+    figure { margin: 18px 0; }
+    figcaption { margin-top: 8px; font-size: 12px; color: #5d4f3f; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid rgba(117, 90, 51, 0.18); padding: 10px 12px; vertical-align: top; word-break: keep-all; }
     blockquote { margin: 18px 0; padding: 14px 18px; border-left: 4px solid rgba(159, 79, 43, 0.4); background: rgba(255, 245, 232, 0.8); }
+    .auto-image-gallery { margin: 18px 0 24px; padding: 18px; border: 1px solid rgba(117, 90, 51, 0.14); border-radius: 18px; background: rgba(255, 248, 236, 0.88); }
+    .auto-image-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .auto-image-card { margin: 0; padding: 12px; border-radius: 14px; background: #fffdf8; border: 1px solid rgba(117, 90, 51, 0.1); }
+    .auto-image-card img { width: 100%; border-radius: 10px; }
+    @media print {
+      body { padding: 0; background: #ffffff; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      main { max-width: none; margin: 0; padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
+      h1 { font-size: 20pt; }
+      h2 { font-size: 15pt; }
+      h3 { font-size: 12pt; }
+      .auto-image-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
   </style>
 </head>
 <body>
