@@ -226,7 +226,15 @@ async function generateJsonSection(config, payload) {
 
   try {
     return parseGeminiJsonResponse(result);
-  } catch {
+  } catch (error) {
+    if (error?.code === "GEMINI_OUTPUT_TOO_LARGE") {
+      throw createUserError(
+        "AI가 문서를 거의 완성했지만 출력 길이가 너무 길어 마지막 JSON 정리에 실패했습니다. 문서 분량을 더 나눠 생성하거나 출력 한도를 더 큰 방식으로 조정해야 합니다.",
+        502,
+        "GEMINI_OUTPUT_TOO_LARGE"
+      );
+    }
+
     throw createUserError(
       "AI 응답 형식을 정리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
       502,

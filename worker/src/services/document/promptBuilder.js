@@ -32,7 +32,17 @@ function buildSourceBundle(input) {
   };
 }
 
-function buildPayload(userPrompt, maxOutputTokens) {
+function buildPayload(userPrompt, maxOutputTokens, responseSchema) {
+  const generationConfig = {
+    temperature: 0.3,
+    responseMimeType: "application/json",
+    maxOutputTokens
+  };
+
+  if (responseSchema) {
+    generationConfig.responseSchema = responseSchema;
+  }
+
   return {
     systemInstruction: {
       parts: [{ text: GEMINI_SYSTEM_PROMPT }]
@@ -43,11 +53,7 @@ function buildPayload(userPrompt, maxOutputTokens) {
         parts: [{ text: userPrompt }]
       }
     ],
-    generationConfig: {
-      temperature: 0.3,
-      responseMimeType: "application/json",
-      maxOutputTokens
-    }
+    generationConfig
   };
 }
 
@@ -69,7 +75,25 @@ export function buildGlossaryPayload(input) {
     `원본 자료: ${JSON.stringify(sources)}`
   ].join("\n");
 
-  return buildPayload(prompt, 8192);
+  return buildPayload(prompt, 8192, {
+    type: "OBJECT",
+    properties: {
+      glossary: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            term: { type: "STRING" },
+            selectedKorean: { type: "STRING" },
+            source: { type: "STRING" },
+            note: { type: "STRING" }
+          },
+          required: ["term", "selectedKorean", "source", "note"]
+        }
+      }
+    },
+    required: ["glossary"]
+  });
 }
 
 export function buildDocumentPayload(input, glossary, documentType) {
@@ -100,17 +124,51 @@ export function buildDocumentPayload(input, glossary, documentType) {
     `원본 자료: ${JSON.stringify(sources)}`
   ].join("\n");
 
-  return buildPayload(prompt, 65536);
+  return buildPayload(prompt, 65536, {
+    type: "OBJECT",
+    properties: {
+      documentHtml: { type: "STRING" }
+    },
+    required: ["documentHtml"]
+  });
 }
 
 export function parseGeminiJsonResponse(result) {
-  const text =
-    result?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+  const candidate = result?.candidates?.[0] || {};
+  const finishReason = String(candidate?.finishReason || "");
+  const text = candidate?.content?.parts?.map((part) => part.text || "").join("") || "";
   const cleaned = text
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
 
-  return JSON.parse(cleaned);
+  if (!cleaned) {
+    const error = new Error("empty gemini response");
+    error.code = finishReason === "MAX_TOKENS" ? "GEMINI_OUTPUT_TOO_LARGE" : "GEMINI_EMPTY_RESPONSE";
+    error.finishReason = finishReason;
+    throw error;
+  }
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const objectStart = cleaned.indexOf("{");
+    const objectEnd = cleaned.lastIndexOf("}");
+
+    if (objectStart !== -1 && objectEnd !== -1 && objectEnd > objectStart) {
+      const sliced = cleaned.slice(objectStart, objectEnd + 1);
+      try {
+        return JSON.parse(sliced);
+      } catch {
+        // Fall through to structured error below.
+      }
+    }
+
+    const error = new Error("invalid gemini json");
+    error.code = finishReason === "MAX_TOKENS" ? "GEMINI_OUTPUT_TOO_LARGE" : "GEMINI_RESPONSE_INVALID";
+    error.finishReason = finishReason;
+    error.preview = cleaned.slice(0, 500);
+    throw error;
+  }
 }
