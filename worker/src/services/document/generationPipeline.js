@@ -1,7 +1,11 @@
 import { collectBggForumData } from "../bgg/bggApi.js";
 import { createUserError } from "../security/inputValidator.js";
 import { generateWithRetry } from "../ai/geminiClient.js";
-import { buildGeminiPayload, parseGeminiJsonResponse } from "./promptBuilder.js";
+import {
+  buildDocumentPayload,
+  buildGlossaryPayload,
+  parseGeminiJsonResponse
+} from "./promptBuilder.js";
 import { injectImagesIntoHtml } from "./imagePlacement.js";
 
 async function fetchPdfExtraction(payload, config) {
@@ -82,26 +86,81 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     assertTime();
 
     await onProgress("한국어 문서를 생성하고 있습니다... (3/3)", { stage: "ai" });
-    const geminiPayload = buildGeminiPayload({
+    const payloadInput = {
       gameName: state.request.gameName,
       bggId: state.request.bggId,
       pdfExtraction: state.pdfExtraction,
       bggForumData: state.bggForumData,
       additionalMaterials: state.request.additionalMaterials
-    });
-    const geminiResult = await generateWithRetry(env, config, geminiPayload);
-    const parsed = parseGeminiJsonResponse(geminiResult);
+    };
+
+    const glossary = await generateJsonSection(env, config, [
+      {
+        label: "용어집을 정리하고 있습니다... (3/3)",
+        payload: buildGlossaryPayload(payloadInput, "full")
+      },
+      {
+        label: "BGG를 제외하고 용어집을 다시 정리하고 있습니다... (3/3)",
+        payload: buildGlossaryPayload(payloadInput, "no-bgg")
+      },
+      {
+        label: "추가 자료까지 제외하고 용어집을 다시 정리하고 있습니다... (3/3)",
+        payload: buildGlossaryPayload(payloadInput, "no-bgg-no-extras")
+      },
+      {
+        label: "최소 정보만으로 용어집을 다시 정리하고 있습니다... (3/3)",
+        payload: buildGlossaryPayload(payloadInput, "minimal-only")
+      }
+    ], onProgress);
+
+    const documentAResult = await generateJsonSection(env, config, [
+      {
+        label: "문서 A를 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "A", "full")
+      },
+      {
+        label: "BGG를 제외하고 문서 A를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "A", "no-bgg")
+      },
+      {
+        label: "추가 자료까지 제외하고 문서 A를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "A", "no-bgg-no-extras")
+      },
+      {
+        label: "최소 정보만으로 문서 A를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "A", "minimal-only")
+      }
+    ], onProgress);
+
+    const documentBResult = await generateJsonSection(env, config, [
+      {
+        label: "문서 B를 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "B", "full")
+      },
+      {
+        label: "BGG를 제외하고 문서 B를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "B", "no-bgg")
+      },
+      {
+        label: "추가 자료까지 제외하고 문서 B를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "B", "no-bgg-no-extras")
+      },
+      {
+        label: "최소 정보만으로 문서 B를 다시 작성하고 있습니다... (3/3)",
+        payload: buildDocumentPayload(payloadInput, glossary.glossary || [], "B", "minimal-only")
+      }
+    ], onProgress);
 
     const images = state.pdfExtraction?.images || [];
-    const documentAHtml = injectImagesIntoHtml(parsed.documentAHtml || "", images);
-    const documentBHtml = injectImagesIntoHtml(parsed.documentBHtml || "", images);
+    const documentAHtml = injectImagesIntoHtml(documentAResult.documentHtml || "", images);
+    const documentBHtml = injectImagesIntoHtml(documentBResult.documentHtml || "", images);
 
     return {
       ok: true,
       data: {
         gameName: state.request.gameName,
         bggId: state.request.bggId,
-        glossary: parsed.glossary || [],
+        glossary: glossary.glossary || [],
         documentAHtml,
         documentBHtml,
         meta: {
@@ -114,4 +173,39 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
   } finally {
     cleanupSensitiveData(state);
   }
+}
+
+async function generateJsonSection(env, config, attempts, onProgress) {
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    await onProgress(attempt.label, { stage: "ai" });
+
+    let result;
+    try {
+      result = await generateWithRetry(env, config, attempt.payload);
+    } catch (error) {
+      if (error.code === "GEMINI_INPUT_TOO_LARGE") {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
+
+    try {
+      return parseGeminiJsonResponse(result);
+    } catch {
+      throw createUserError(
+        "AI 응답 형식을 정리하는 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        502,
+        "GEMINI_RESPONSE_INVALID"
+      );
+    }
+  }
+
+  throw createUserError(
+    "AI에 전달할 자료가 너무 많아 문서 생성에 실패했습니다. BGG, 추가 자료, PDF를 단계적으로 제외해도 현재 무료 티어 한도를 넘고 있습니다.",
+    413,
+    lastError?.code || "GEMINI_INPUT_TOO_LARGE"
+  );
 }
