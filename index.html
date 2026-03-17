@@ -363,6 +363,8 @@
       }
 
       .eta-box,
+      .elapsed-box,
+      .heartbeat-box,
       .fun-box,
       .message-box,
       .error-box {
@@ -374,6 +376,11 @@
 
       .eta-box {
         background: rgba(244, 217, 191, 0.6);
+      }
+
+      .elapsed-box,
+      .heartbeat-box {
+        background: rgba(232, 238, 247, 0.78);
       }
 
       .fun-box {
@@ -388,6 +395,68 @@
         background: rgba(156, 47, 47, 0.08);
         color: var(--danger);
         border: 1px solid rgba(156, 47, 47, 0.16);
+      }
+
+      .working-indicator {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        background: rgba(255, 252, 245, 0.95);
+        border: 1px solid rgba(117, 90, 51, 0.12);
+      }
+
+      .working-spinner {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid rgba(159, 79, 43, 0.18);
+        border-top-color: var(--brand);
+        animation: spin 0.85s linear infinite;
+        flex: 0 0 auto;
+      }
+
+      .working-indicator strong {
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .working-indicator small {
+        color: var(--ink-soft);
+      }
+
+      .heartbeat-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 0 rgba(59, 111, 85, 0.35);
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(59, 111, 85, 0.35);
+          opacity: 1;
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(59, 111, 85, 0);
+          opacity: 0.9;
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(59, 111, 85, 0);
+          opacity: 1;
+        }
       }
 
       .results-panel {
@@ -809,7 +878,18 @@
               </div>
             </div>
 
+            <div class="working-indicator" id="workingIndicator" aria-live="polite">
+              <div class="working-spinner" aria-hidden="true"></div>
+              <div>
+                <strong>현재 작업이 계속 진행 중입니다</strong>
+                <small>오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.</small>
+              </div>
+            </div>
             <div id="etaBox" class="eta-box">예상 남은 시간: 계산 중...</div>
+            <div id="elapsedBox" class="elapsed-box">경과 시간: 0분 00초</div>
+            <div id="heartbeatBox" class="heartbeat-box">
+              <span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다.
+            </div>
             <div id="funBox" class="fun-box">BGG 포럼의 열띤 토론을 읽고 있습니다...</div>
             <div id="progressMessage" class="message-box">
               작업이 시작되면 여기에서 자세한 상태를 알려드립니다.
@@ -863,8 +943,15 @@
           start: 240,
           bgg: 180,
           pdf: 120,
+          "pdf-upload": 110,
+          "pdf-extract": 105,
+          "pdf-faq-upload": 95,
+          "pdf-faq-extract": 90,
+          "pdf-merge": 75,
+          "pdf-warning": 70,
           "pdf-skip": 90,
           ai: 45,
+          "ai-retry": 35,
           done: 0
         }
       };
@@ -883,6 +970,8 @@
         abortController: null,
         etaSeconds: APP_CONFIG.ETA_SECONDS.start,
         etaTimer: null,
+        elapsedSeconds: 0,
+        elapsedTimer: null,
         funTimer: null,
         funIndex: 0,
         result: null,
@@ -917,6 +1006,8 @@
         progressFill: document.getElementById("progressFill"),
         progressMessage: document.getElementById("progressMessage"),
         etaBox: document.getElementById("etaBox"),
+        elapsedBox: document.getElementById("elapsedBox"),
+        heartbeatBox: document.getElementById("heartbeatBox"),
         funBox: document.getElementById("funBox"),
         progressError: document.getElementById("progressError"),
         cancelButton: document.getElementById("cancelButton"),
@@ -1499,6 +1590,182 @@
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
         elements.startButton.disabled = false;
+      }
+
+      function normalizeStage(stage) {
+        if (
+          [
+            "pdf",
+            "pdf-upload",
+            "pdf-extract",
+            "pdf-faq-upload",
+            "pdf-faq-extract",
+            "pdf-merge",
+            "pdf-warning",
+            "pdf-skip"
+          ].includes(stage)
+        ) {
+          return "pdf";
+        }
+        if (stage === "ai-retry") {
+          return "ai";
+        }
+        return stage;
+      }
+
+      function updateProgress(payload) {
+        const stage = payload.stage || state.currentStage;
+        const previousStage = state.currentStage;
+        state.currentStage = stage;
+
+        const stageMap = {
+          start: {
+            title: "요청을 정리하고 있습니다",
+            percent: 8,
+            subtitle: "업로드된 정보와 파일을 확인하며 첫 단계를 준비하고 있습니다."
+          },
+          bgg: {
+            title: "BGG 데이터를 수집하고 있습니다",
+            percent: 34,
+            subtitle: "게임 기본 정보와 공개 토론 내용을 모아 참고 자료를 만들고 있습니다."
+          },
+          pdf: {
+            title: "PDF를 분석하고 있습니다",
+            percent: 64,
+            subtitle: "룰북과 FAQ에서 텍스트와 이미지를 읽어 문서용 자료로 정리하고 있습니다."
+          },
+          "pdf-upload": {
+            title: "룰북 PDF를 분석 서버로 보내고 있습니다",
+            percent: 52,
+            subtitle: "룰북 파일을 서버로 전송하고 있습니다."
+          },
+          "pdf-extract": {
+            title: "룰북 PDF에서 텍스트와 이미지를 추출하고 있습니다",
+            percent: 60,
+            subtitle: "페이지 텍스트, 이미지, 위치 정보를 읽는 데 시간이 조금 걸릴 수 있습니다."
+          },
+          "pdf-faq-upload": {
+            title: "FAQ/정오표 PDF를 분석 서버로 보내고 있습니다",
+            percent: 66,
+            subtitle: "추가 PDF가 있으면 순서대로 전송하여 함께 분석합니다."
+          },
+          "pdf-faq-extract": {
+            title: "FAQ/정오표 PDF를 분석하고 있습니다",
+            percent: 72,
+            subtitle: "FAQ와 정오표의 텍스트, 이미지, 보정 규칙을 정리하고 있습니다."
+          },
+          "pdf-merge": {
+            title: "PDF 분석 결과를 정리하고 있습니다",
+            percent: 78,
+            subtitle: "룰북과 FAQ 분석 결과를 합쳐 문서 생성용 재료로 마무리하고 있습니다."
+          },
+          "pdf-warning": {
+            title: "PDF 분석이 지연되어 가능한 자료부터 계속 진행하고 있습니다",
+            percent: 74,
+            subtitle: "PDF가 오래 걸리면 다른 자료를 먼저 사용해 다음 단계로 넘어갑니다."
+          },
+          "pdf-skip": {
+            title: "PDF 없이 BGG 중심으로 진행하고 있습니다",
+            percent: 70,
+            subtitle: "룰북 PDF가 없어도 기본 정보와 공개 자료를 바탕으로 계속 진행합니다."
+          },
+          ai: {
+            title: "한국어 문서를 생성하고 있습니다",
+            percent: 90,
+            subtitle: "용어를 통일하고 문장 구조를 다듬어 최종 문서를 만드는 단계입니다."
+          },
+          "ai-retry": {
+            title: "AI 서버가 잠시 혼잡하여 다시 시도하고 있습니다",
+            percent: 92,
+            subtitle: "더 안정적으로 결과를 받기 위해 잠시 재시도하고 있습니다."
+          }
+        };
+
+        const info = stageMap[stage] || stageMap.start;
+        elements.progressTitle.textContent = info.title;
+        elements.progressSubtitle.textContent = info.subtitle;
+        elements.progressFill.style.width = `${info.percent}%`;
+        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
+        elements.heartbeatBox.innerHTML =
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다. 잠깐 멈춘 것처럼 보여도 내부 작업은 계속될 수 있습니다.';
+
+        if (previousStage !== stage) {
+          resetEtaForStage(stage);
+        } else {
+          renderEta();
+        }
+
+        paintStageChips(normalizeStage(stage));
+      }
+
+      function resetEtaForStage(stage) {
+        state.etaSeconds = APP_CONFIG.ETA_SECONDS[stage] ?? 120;
+        renderEta();
+
+        if (!state.etaTimer) {
+          state.etaTimer = window.setInterval(() => {
+            if (state.etaSeconds > 0) {
+              state.etaSeconds -= 1;
+            }
+            renderEta();
+          }, 1000);
+        }
+
+        if (!state.elapsedTimer) {
+          state.elapsedTimer = window.setInterval(() => {
+            state.elapsedSeconds += 1;
+            renderElapsed();
+          }, 1000);
+        }
+      }
+
+      function renderEta() {
+        if (state.etaSeconds <= 0) {
+          elements.etaBox.textContent = "예상 남은 시간: 거의 끝났습니다.";
+          return;
+        }
+
+        const minutes = Math.floor(state.etaSeconds / 60);
+        const seconds = state.etaSeconds % 60;
+        elements.etaBox.textContent = `예상 남은 시간: ${minutes}분 ${String(seconds).padStart(2, "0")}초`;
+      }
+
+      function renderElapsed() {
+        const minutes = Math.floor(state.elapsedSeconds / 60);
+        const seconds = state.elapsedSeconds % 60;
+        elements.elapsedBox.textContent = `경과 시간: ${minutes}분 ${String(seconds).padStart(2, "0")}초`;
+      }
+
+      function stopTimers() {
+        if (state.etaTimer) {
+          clearInterval(state.etaTimer);
+          state.etaTimer = null;
+        }
+        if (state.elapsedTimer) {
+          clearInterval(state.elapsedTimer);
+          state.elapsedTimer = null;
+        }
+        if (state.funTimer) {
+          clearInterval(state.funTimer);
+          state.funTimer = null;
+        }
+      }
+
+      function resetProgressUi() {
+        state.currentStage = "start";
+        state.funIndex = 0;
+        state.elapsedSeconds = 0;
+        elements.progressError.classList.add("hidden");
+        elements.progressError.textContent = "";
+        elements.progressFill.style.width = "8%";
+        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
+        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
+        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
+        elements.heartbeatBox.innerHTML =
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업이 시작되면 서버와 계속 통신 중이라는 표시가 여기에서 보입니다.';
+        paintStageChips("start");
+        resetEtaForStage("start");
+        renderElapsed();
       }
 
       function readFileAsDataUrl(file) {

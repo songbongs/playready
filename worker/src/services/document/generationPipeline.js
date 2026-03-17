@@ -11,24 +11,30 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchPdfExtraction(payload, config) {
+async function fetchPdfExtraction(payload, config, options = {}) {
   if (!config.pdfExtractorUrl) {
     throw createUserError("PDF 추출 서비스 주소가 설정되지 않았습니다.", 500, "MISSING_PDF_SERVICE");
   }
 
   const retryableStatuses = new Set([500, 502, 503, 504]);
   const delays = [2000, 5000];
+  const timeoutMs = options.timeoutMs ?? 90000;
   let lastResponse = null;
 
   for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
       const response = await fetch(config.pdfExtractorUrl, {
         method: "POST",
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         return response.json();
@@ -41,7 +47,21 @@ async function fetchPdfExtraction(payload, config) {
       }
 
       break;
-    } catch {
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error?.name === "AbortError") {
+        if (attempt < delays.length) {
+          await sleep(delays[attempt]);
+          continue;
+        }
+
+        throw createUserError(
+          "PDF 분석 서버 응답이 너무 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.",
+          504,
+          "PDF_SERVICE_TIMEOUT"
+        );
+      }
+
       if (attempt < delays.length) {
         await sleep(delays[attempt]);
         continue;
@@ -70,11 +90,23 @@ async function fetchPdfExtraction(payload, config) {
   );
 }
 
-async function fetchOptionalPdfExtraction(payload, config, onProgress, warningMessage) {
+async function fetchOptionalPdfExtraction(
+  payload,
+  config,
+  onProgress,
+  warningMessage,
+  timeoutWarningMessage = warningMessage
+) {
   try {
     return await fetchPdfExtraction(payload, config);
-  } catch {
-    await onProgress(warningMessage, { stage: "pdf-warning" });
+  } catch (error) {
+    const message =
+      error?.code === "PDF_SERVICE_TIMEOUT"
+        ? timeoutWarningMessage === warningMessage
+          ? `${warningMessage} PDF 분석이 오래 걸려 가능한 다른 자료부터 먼저 사용합니다.`
+          : timeoutWarningMessage
+        : warningMessage;
+    await onProgress(message, { stage: "pdf-warning" });
     return null;
   }
 }
@@ -362,6 +394,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
 
     if (state.request.pdfBase64) {
+      await onProgress("룰북 PDF를 분석 서버로 전송하고 있습니다... (2/3)", {
+        stage: "pdf-upload"
+      });
+      await onProgress("룰북 PDF에서 텍스트와 이미지를 추출하고 있습니다... (2/3)", {
+        stage: "pdf-extract"
+      });
       state.rulebookExtraction =
         (await fetchOptionalPdfExtraction(
           {
@@ -375,11 +413,26 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
             ? "룰북 PDF는 읽지 못했지만 BGG 자료 기준으로 계속 진행합니다... (2/3)"
             : "룰북 PDF를 읽지 못했습니다. BGG 기본 정보만으로 계속 진행 가능한지 확인하고 있습니다... (2/3)"
         )) || buildEmptyExtraction(state.request.gameName);
+      await onProgress("FAQ/정오표 PDF 분석 결과를 정리하고 있습니다... (2/3)", {
+        stage: "pdf-merge"
+      });
+      await onProgress("FAQ/정오표 PDF 분석 결과를 정리하고 있습니다... (2/3)", {
+        stage: "pdf-merge"
+      });
+      await onProgress("룰북 PDF 분석 결과를 정리하고 있습니다... (2/3)", {
+        stage: "pdf-merge"
+      });
     } else {
       state.rulebookExtraction = buildEmptyExtraction(state.request.gameName);
     }
 
     if (state.request.faqPdfBase64) {
+      await onProgress("FAQ/정오표 PDF를 분석 서버로 전송하고 있습니다... (2/3)", {
+        stage: "pdf-faq-upload"
+      });
+      await onProgress("FAQ/정오표 PDF에서 텍스트와 이미지를 추출하고 있습니다... (2/3)", {
+        stage: "pdf-faq-extract"
+      });
       await onProgress("FAQ/정오표 PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
       state.faqExtraction =
         (await fetchOptionalPdfExtraction(
