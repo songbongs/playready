@@ -104,6 +104,107 @@ export function buildGlossaryPayload(input) {
   });
 }
 
+export function buildTurnFlowPayload(input, glossary) {
+  const sources = buildSourceBundle(input);
+  const prompt = [
+    `Game name: ${sources.gameName}`,
+    `BGG ID: ${sources.bggId}`,
+    "",
+    "Analyze the actual player turn flow for this specific board game.",
+    "Do not output a generic board-game flow.",
+    "Return only JSON for two flowchart data sets:",
+    "- detailed: for Document A",
+    "- simplified: for Document B",
+    "",
+    "Rules:",
+    "- Use the actual turn structure from the supplied sources.",
+    "- Reflect real branch points when the player must choose between major actions.",
+    "- Keep each title short.",
+    "- Keep each detail to one short sentence.",
+    "- branch options should usually be 2 to 4 items.",
+    "- detailed should preserve meaningful choices and follow-up effects.",
+    "- simplified should keep only the explanation-critical path.",
+    "- If FAQ/errata changes the turn flow, follow FAQ/errata.",
+    "",
+    "Return format:",
+    '{"detailed":{"lead":"","steps":[{"kind":"start|decision|branch|merge|end","title":"","detail":"","tone":"neutral|primary|secondary|warning","options":[{"title":"","detail":"","tone":"secondary"}]}]},"simplified":{"lead":"","steps":[]}}',
+    "",
+    `Glossary: ${JSON.stringify(glossary || [])}`,
+    `Sources: ${JSON.stringify(sources)}`
+  ].join("\n");
+
+  return buildPayload(prompt, 8192, {
+    type: "OBJECT",
+    properties: {
+      detailed: {
+        type: "OBJECT",
+        properties: {
+          lead: { type: "STRING" },
+          steps: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                kind: { type: "STRING" },
+                title: { type: "STRING" },
+                detail: { type: "STRING" },
+                tone: { type: "STRING" },
+                options: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      title: { type: "STRING" },
+                      detail: { type: "STRING" },
+                      tone: { type: "STRING" }
+                    },
+                    required: ["title", "detail", "tone"]
+                  }
+                }
+              },
+              required: ["kind", "title", "detail", "tone"]
+            }
+          }
+        },
+        required: ["lead", "steps"]
+      },
+      simplified: {
+        type: "OBJECT",
+        properties: {
+          lead: { type: "STRING" },
+          steps: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                kind: { type: "STRING" },
+                title: { type: "STRING" },
+                detail: { type: "STRING" },
+                tone: { type: "STRING" },
+                options: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      title: { type: "STRING" },
+                      detail: { type: "STRING" },
+                      tone: { type: "STRING" }
+                    },
+                    required: ["title", "detail", "tone"]
+                  }
+                }
+              },
+              required: ["kind", "title", "detail", "tone"]
+            }
+          }
+        },
+        required: ["lead", "steps"]
+      }
+    },
+    required: ["detailed", "simplified"]
+  });
+}
+
 function buildDocumentAStructurePrompt() {
   return [
     "문서 A는 개인 학습용 가이드입니다.",

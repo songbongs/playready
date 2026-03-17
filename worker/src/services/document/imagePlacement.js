@@ -569,6 +569,167 @@ function ensureActionFlowSection(html, docType) {
   return inserted === html ? `${html}${sectionHtml}` : inserted;
 }
 
+function sanitizeFlowText(value, fallback = "") {
+  const cleaned = sanitizeText(value);
+  return cleaned || fallback;
+}
+
+function normalizeFlowOption(option, fallbackTitle) {
+  return {
+    title: sanitizeFlowText(option?.title, fallbackTitle),
+    detail: sanitizeFlowText(option?.detail, ""),
+    tone: sanitizeFlowText(option?.tone, "secondary")
+  };
+}
+
+function normalizeFlowStep(step, index) {
+  const kind = sanitizeFlowText(step?.kind, index === 0 ? "start" : "action").toLowerCase();
+  const title = sanitizeFlowText(step?.title, `단계 ${index + 1}`);
+  const detail = sanitizeFlowText(step?.detail, "");
+  const tone = sanitizeFlowText(step?.tone, kind === "decision" ? "primary" : "neutral").toLowerCase();
+  const options = Array.isArray(step?.options)
+    ? step.options
+        .slice(0, 4)
+        .map((item, optionIndex) => normalizeFlowOption(item, `선택 ${optionIndex + 1}`))
+    : [];
+
+  return { kind, title, detail, tone, options };
+}
+
+function getFallbackFlowData(docType) {
+  return {
+    lead:
+      docType === "B"
+        ? "설명용으로 내 차례의 핵심 흐름만 짧게 정리했습니다."
+        : "학습용으로 내 차례가 어떻게 흘러가는지 핵심 순서만 정리했습니다.",
+    steps:
+      docType === "B"
+        ? [
+            { kind: "start", title: "차례 시작", detail: "시작 상태를 먼저 확인합니다.", tone: "neutral" },
+            { kind: "decision", title: "행동 선택", detail: "이번 턴에 할 핵심 행동을 고릅니다.", tone: "primary" },
+            {
+              kind: "branch",
+              title: "핵심 선택지",
+              detail: "대표 행동 중 하나를 고릅니다.",
+              tone: "secondary",
+              options: [
+                { title: "행동 A", detail: "주요 행동을 수행합니다.", tone: "secondary" },
+                { title: "행동 B", detail: "다른 핵심 행동을 수행합니다.", tone: "secondary" }
+              ]
+            },
+            { kind: "end", title: "턴 마무리", detail: "효과를 처리하고 다음 차례로 넘깁니다.", tone: "neutral" }
+          ]
+        : [
+            { kind: "start", title: "내 차례 시작", detail: "턴 시작 상태와 즉시 효과를 확인합니다.", tone: "neutral" },
+            { kind: "decision", title: "선택 가능 행동 확인", detail: "이번 턴에 가능한 행동과 조건을 봅니다.", tone: "primary" },
+            {
+              kind: "branch",
+              title: "핵심 선택지",
+              detail: "대표 행동 중 하나를 고릅니다.",
+              tone: "secondary",
+              options: [
+                { title: "행동 A", detail: "선택한 행동의 비용과 효과를 처리합니다.", tone: "secondary" },
+                { title: "행동 B", detail: "다른 행동의 비용과 효과를 처리합니다.", tone: "secondary" }
+              ]
+            },
+            { kind: "merge", title: "후속 처리", detail: "행동 후 공통으로 확인할 효과를 처리합니다.", tone: "warning" },
+            { kind: "end", title: "턴 종료", detail: "종료 조건을 확인하고 다음 플레이어로 넘깁니다.", tone: "neutral" }
+          ]
+  };
+}
+
+function normalizeFlowData(flowData, docType) {
+  const source = flowData && Array.isArray(flowData.steps) && flowData.steps.length ? flowData : getFallbackFlowData(docType);
+
+  return {
+    lead: sanitizeFlowText(source.lead, getFallbackFlowData(docType).lead),
+    steps: source.steps.slice(0, docType === "B" ? 6 : 8).map((step, index) => normalizeFlowStep(step, index))
+  };
+}
+
+function renderFlowSteps(flowData) {
+  return flowData.steps
+    .map((item, index) => {
+      const arrow =
+        index === flowData.steps.length - 1
+          ? ""
+          : '<div class="action-flow-arrow action-flow-arrow--vertical" aria-hidden="true">↓</div>';
+
+      if (item.kind === "branch") {
+        const options = item.options
+          .map(
+            (option) => `
+              <div class="action-flow-branch-option">
+                <strong>${escapeHtml(option.title)}</strong>
+                <p>${escapeHtml(option.detail)}</p>
+              </div>
+            `
+          )
+          .join("");
+
+        return `
+          <div class="action-flow-branch action-flow-branch--${escapeHtml(item.tone || "secondary")}">
+            <div class="action-flow-branch__label">${escapeHtml(item.title)}</div>
+            ${item.detail ? `<p class="action-flow-branch__detail">${escapeHtml(item.detail)}</p>` : ""}
+            <div class="action-flow-branch__options">${options}</div>
+          </div>
+          ${arrow}
+        `;
+      }
+
+      const extraClass =
+        item.kind === "decision"
+          ? "action-flow-node--decision"
+          : item.kind === "merge"
+            ? "action-flow-node--merge"
+            : "";
+
+      return `
+        <div class="action-flow-node action-flow-node--${escapeHtml(item.tone || "neutral")} ${extraClass}">
+          <div class="action-flow-step">
+            <strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
+          </div>
+        </div>
+        ${arrow}
+      `;
+    })
+    .join("");
+}
+
+function buildActionFlowSectionV2(docType, flowData) {
+  const normalized = normalizeFlowData(flowData, docType);
+  const title = docType === "B" ? "2-1. 플레이어 턴 흐름도 (간소화)" : "2-1. 플레이어 턴 흐름도";
+
+  return [
+    `<section class="action-flow-section">`,
+    `<h3>${escapeHtml(title)}</h3>`,
+    `<p class="action-flow-section__lead">${escapeHtml(normalized.lead)}</p>`,
+    `<div class="action-flow action-flow--vertical">`,
+    renderFlowSteps(normalized),
+    `</div>`,
+    `</section>`
+  ].join("");
+}
+
+function ensureActionFlowSectionV2(html, docType, flowData) {
+  if (/class=["'][^"']*action-flow-section/.test(html)) {
+    return html.replace(
+      /<section class="action-flow-section">[\s\S]*?<\/section>/i,
+      buildActionFlowSectionV2(docType, flowData)
+    );
+  }
+
+  const sectionHtml = buildActionFlowSectionV2(docType, flowData);
+  const headingPatterns =
+    docType === "B"
+      ? ["플레이어 턴 흐름도 (간소화)", "핵심 행동 요약"]
+      : ["플레이어 턴 흐름도", "핵심 행동 상세 설명"];
+
+  const inserted = insertAfterHeading(html, headingPatterns, sectionHtml);
+  return inserted === html ? `${html}${sectionHtml}` : inserted;
+}
+
 function buildSectionPlan(docType) {
   if (docType === "B") {
     return [
@@ -697,9 +858,9 @@ function injectAutomaticGalleries(html, extraction, docType) {
   return result;
 }
 
-export function injectImagesIntoHtml(html, extraction, docType = "A") {
+export function injectImagesIntoHtml(html, extraction, docType = "A", flowData = null) {
   const images = extraction?.images || [];
   const withSlots = replaceImageSlots(html, images);
-  const withActionFlow = ensureActionFlowSection(withSlots, docType);
+  const withActionFlow = ensureActionFlowSectionV2(withSlots, docType, flowData);
   return injectAutomaticGalleries(withActionFlow, extraction, docType);
 }

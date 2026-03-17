@@ -3,6 +3,7 @@ import { createUserError } from "../security/inputValidator.js";
 import {
   buildDocumentPayload,
   buildGlossaryPayload,
+  buildTurnFlowPayload,
   parseGeminiJsonResponse
 } from "./promptBuilder.js";
 import { injectImagesIntoHtml } from "./imagePlacement.js";
@@ -405,6 +406,26 @@ function buildModelUsageDetails(sectionMap) {
     .filter(Boolean);
 }
 
+function buildModelUsageDetailsV2(sectionMap) {
+  const sectionLabels = {
+    glossary: "용어집",
+    turnFlow: "플레이어 턴 흐름도",
+    documentA: "문서 A",
+    documentB: "문서 B"
+  };
+
+  return Object.entries(sectionMap)
+    .map(([key, info]) => {
+      if (!info?.usedModel) {
+        return null;
+      }
+
+      const suffix = info.fallbackUsed ? " (fallback)" : "";
+      return `${sectionLabels[key] || key}: ${info.usedModel}${suffix}`;
+    })
+    .filter(Boolean);
+}
+
 async function generateJsonSectionWithRetry(config, payload, onProgress, retryMessage) {
   const delays = [3000, 8000];
   let lastError;
@@ -550,6 +571,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       onProgress,
       "AI 서버가 잠시 혼잡하여 용어집을 다시 시도하고 있습니다... (3/3)"
     );
+    const turnFlowResult = await generateJsonSectionWithRetry(
+      config,
+      buildTurnFlowPayload(payloadInput, glossaryResult.data.glossary || []),
+      onProgress,
+      "AI ?쒕쾭媛 ?좎떆 ?쇱옟?섏뿬 ?뚮젅?댁뼱 ???먮쫫?꾨? ?ㅼ떆 ?쒕룄?섍퀬 ?덉뒿?덈떎... (3/3)"
+    );
     const documentAResult = await generateJsonSectionWithRetry(
       config,
       buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "A"),
@@ -567,20 +594,23 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     const documentAHtml = injectImagesIntoHtml(
       documentAResult.data.documentHtml || "",
       state.pdfExtraction,
-      "A"
+      "A",
+      turnFlowResult.data?.detailed || null
     );
     const documentBHtml = injectImagesIntoHtml(
       documentBResult.data.documentHtml || "",
       state.pdfExtraction,
-      "B"
+      "B",
+      turnFlowResult.data?.simplified || null
     );
     const modelUsageBySection = {
       glossary: glossaryResult.modelInfo,
+      turnFlow: turnFlowResult.modelInfo,
       documentA: documentAResult.modelInfo,
       documentB: documentBResult.modelInfo
     };
     const modelUsageSummary = formatModelUsageSummary(Object.values(modelUsageBySection));
-    const modelUsageDetails = buildModelUsageDetails(modelUsageBySection);
+    const modelUsageDetails = buildModelUsageDetailsV2(modelUsageBySection);
 
     return {
       ok: true,
@@ -588,6 +618,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
         gameName: state.request.gameName,
         bggId: state.request.bggId,
         glossary: glossaryResult.data.glossary || [],
+        turnFlow: turnFlowResult.data || null,
         documentAHtml,
         documentBHtml,
         meta: {
