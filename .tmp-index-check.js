@@ -1,4 +1,4 @@
-﻿
+
       const APP_CONFIG = {
         WORKER_BASE_URL: "https://playready-worker.iamsangmin.workers.dev",
         MAX_PDF_BYTES: 50 * 1024 * 1024,
@@ -20,11 +20,11 @@
       };
 
       const FUN_MESSAGES = [
-        "BGG ?щ읆???대씍 ?좊줎???쎄퀬 ?덉뒿?덈떎...",
-        "洹쒖튃?쒕? 瑗쇨세??踰덉뿭?섍퀬 ?덉뒿?덈떎...",
-        "?룰컝由ш린 ?ъ슫 ?덉쇅 洹쒖튃??紐⑥븘蹂대뒗 以묒엯?덈떎...",
-        "泥섏쓬 ?ㅻ챸????留됲엳吏 ?딅룄濡?臾몄옣???ㅻ벉怨??덉뒿?덈떎...",
-        "?뚮젅?댁뼱?ㅼ씠 ?먯＜ 臾쇱뼱蹂?吏덈Ц???뺣━?섍퀬 ?덉뒿?덈떎..."
+        "BGG 포럼의 열띤 토론을 읽고 있습니다...",
+        "규칙서를 꼼꼼히 번역하고 있습니다...",
+        "헷갈리기 쉬운 예외 규칙을 모아보는 중입니다...",
+        "처음 설명할 때 막히지 않도록 문장을 다듬고 있습니다...",
+        "플레이어들이 자주 물어본 질문을 정리하고 있습니다..."
       ];
 
       const state = {
@@ -91,24 +91,24 @@
       };
 
       elements.pdfFile.addEventListener("change", () =>
-        handlePdfSelection(elements.pdfFile, elements.pdfMeta, "猷곕턿 PDF")
+        handlePdfSelection(elements.pdfFile, elements.pdfMeta, "룰북 PDF")
       );
       elements.faqPdfFile.addEventListener("change", () =>
-        handlePdfSelection(elements.faqPdfFile, elements.faqPdfMeta, "FAQ/?뺤삤??PDF")
+        handlePdfSelection(elements.faqPdfFile, elements.faqPdfMeta, "FAQ/정오표 PDF")
       );
       elements.extraFiles.addEventListener("change", handleExtraSelection);
       elements.pdfFile.addEventListener("change", () =>
-        syncPdfSelection(elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "rulebook", "猷곕턿 PDF")
+        syncPdfSelection(elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "rulebook", "룰북 PDF")
       );
       elements.faqPdfFile.addEventListener("change", () =>
-        syncPdfSelection(elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "faq", "FAQ/?뺤삤??PDF")
+        syncPdfSelection(elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "faq", "FAQ/정오표 PDF")
       );
       elements.extraFiles.addEventListener("change", syncExtraSelection);
       elements.clearPdfButton.addEventListener("click", () =>
-        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "猷곕턿 PDF")
+        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "룰북 PDF")
       );
       elements.clearFaqPdfButton.addEventListener("click", () =>
-        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/?뺤삤??PDF")
+        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/정오표 PDF")
       );
       elements.clearExtraButton.addEventListener("click", clearExtraSelection);
       elements.startButton.addEventListener("click", startGeneration);
@@ -127,7 +127,7 @@
       }
 
       function getEmptyFileMessage(label) {
-        return `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
+        return `아직 선택한 ${label}가 없습니다.`;
       }
 
       function syncPdfSelection(fileInput, metaNode, clearButton, kind, label) {
@@ -139,7 +139,7 @@
 
         if (file.size > APP_CONFIG.MAX_PDF_BYTES) {
           clearSelectedUpload(kind, fileInput, metaNode, clearButton, label);
-          showInputError(`${label}??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎. ???묒? ?뚯씪濡??ㅼ떆 ?좏깮?댁＜?몄슂.`);
+          showInputError(`${label}는 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.`);
           return;
         }
 
@@ -156,7 +156,7 @@
         }
 
         state.selectedUploads.extras = files;
-        elements.extraMeta.textContent = `${files.length}媛??뚯씪 ?좏깮??| ${files
+        elements.extraMeta.textContent = `${files.length}개 파일 선택됨 | ${files
           .map((file) => file.name)
           .join(", ")}`;
         elements.clearExtraButton.classList.remove("hidden");
@@ -173,13 +173,13 @@
       function clearExtraSelection() {
         state.selectedUploads.extras = [];
         elements.extraFiles.value = "";
-        elements.extraMeta.textContent = "異붽? ?먮즺瑜??좏깮?섏? ?딆븘???⑸땲??";
+        elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
         elements.clearExtraButton.classList.add("hidden");
       }
 
       function resetUploadSelections() {
-        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "猷곕턿 PDF");
-        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/?뺤삤??PDF");
+        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "룰북 PDF");
+        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/정오표 PDF");
         clearExtraSelection();
       }
 
@@ -187,14 +187,14 @@
         clearInputError();
         const file = fileInput.files[0];
         if (!file) {
-          metaNode.textContent = `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
           return;
         }
 
         if (file.size > APP_CONFIG.MAX_PDF_BYTES) {
           fileInput.value = "";
-          metaNode.textContent = `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
-          showInputError(`${label}??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎. ???묒? ?뚯씪濡??ㅼ떆 ?좏깮?댁＜?몄슂.`);
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
+          showInputError(`${label}는 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.`);
           return;
         }
 
@@ -204,11 +204,11 @@
       function handleExtraSelection() {
         const files = Array.from(elements.extraFiles.files || []);
         if (!files.length) {
-          elements.extraMeta.textContent = "異붽? ?먮즺瑜??좏깮?섏? ?딆븘???⑸땲??";
+          elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
           return;
         }
 
-        elements.extraMeta.textContent = `${files.length}媛??뚯씪 ?좏깮??| ${files
+        elements.extraMeta.textContent = `${files.length}개 파일 선택됨 | ${files
           .map((file) => file.name)
           .join(", ")}`;
       }
@@ -222,22 +222,22 @@
         const extraFiles = [...state.selectedUploads.extras];
 
         if (!gameName) {
-          showInputError("寃뚯엫 ?대쫫??癒쇱? ?낅젰?댁＜?몄슂. ?? ?꾪겕?몃컮 (Ark Nova)");
+          showInputError("게임 이름을 먼저 입력해주세요. 예: 아크노바 (Ark Nova)");
           return;
         }
 
         if (!bggId) {
-          showInputError("BGG 寃뚯엫 ID瑜??낅젰?댁＜?몄슂.");
+          showInputError("BGG 게임 ID를 입력해주세요.");
           return;
         }
 
         if (pdfFile && pdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
-          showInputError("猷곕턿 PDF??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎.");
+          showInputError("룰북 PDF는 최대 50MB까지 업로드할 수 있습니다.");
           return;
         }
 
         if (faqPdfFile && faqPdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
-          showInputError("FAQ/?뺤삤??PDF??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎.");
+          showInputError("FAQ/정오표 PDF는 최대 50MB까지 업로드할 수 있습니다.");
           return;
         }
 
@@ -256,7 +256,7 @@
           });
           await streamGeneration(payload);
         } catch (error) {
-          showProgressError(error.message || "?붿껌??以鍮꾪븯??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.");
+          showProgressError(error.message || "요청을 준비하는 중 오류가 발생했습니다.");
           elements.startButton.disabled = false;
         }
       }
@@ -353,7 +353,7 @@
         }
 
         if (eventName === "error") {
-          showProgressError(parsed.message || "泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.");
+          showProgressError(parsed.message || "처리 중 오류가 발생했습니다.");
         }
       }
 
@@ -363,29 +363,29 @@
 
         const stageMap = {
           start: {
-            title: "?붿껌???뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "요청을 정리하고 있습니다",
             percent: 8,
-            subtitle: "?낅줈?쒗븳 ?뺣낫瑜?李⑤텇???뺤씤?섎뒗 以묒엯?덈떎."
+            subtitle: "업로드한 정보와 입력값을 차분히 확인하고 있습니다."
           },
           bgg: {
-            title: "BGG ?곗씠?곕? ?섏쭛?섍퀬 ?덉뒿?덈떎",
+            title: "BGG 데이터를 수집하고 있습니다",
             percent: 34,
-            subtitle: "?щ읆, FAQ, 吏덈Ц 湲??紐⑥쑝???④퀎?낅땲??"
+            subtitle: "포럼, FAQ, 질문 글을 모아 참고 자료를 만들고 있습니다."
           },
           pdf: {
-            title: "PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "PDF를 분석하고 있습니다",
             percent: 64,
-            subtitle: "?띿뒪??援ъ“? ?대?吏瑜??뺣━?섎뒗 ?④퀎?낅땲??"
+            subtitle: "텍스트 구조와 이미지를 정리하는 단계입니다."
           },
           "pdf-skip": {
             title: "PDF 없이 BGG 중심으로 진행합니다",
             percent: 70,
-            subtitle: "猷곕턿 PDF媛 ?놁뼱??臾몄꽌 ?앹꽦??怨꾩냽 吏꾪뻾?⑸땲??"
+            subtitle: "룰북 PDF가 없어도 문서 생성은 계속 진행됩니다."
           },
           ai: {
-            title: "?쒓뎅??臾몄꽌瑜??앹꽦?섍퀬 ?덉뒿?덈떎",
+            title: "학습용 문서를 생성하고 있습니다",
             percent: 90,
-            subtitle: "?⑹뼱瑜??듭씪?섍퀬 臾몄옣???ㅻ벉??以묒엯?덈떎."
+            subtitle: "용어를 통일하고 문장을 다듬는 중입니다."
           }
         };
 
@@ -393,7 +393,7 @@
         elements.progressTitle.textContent = info.title;
         elements.progressSubtitle.textContent = info.subtitle;
         elements.progressFill.style.width = `${info.percent}%`;
-        elements.progressMessage.textContent = payload.message || "?꾩옱 ?곹깭瑜??뺣━?섍퀬 ?덉뒿?덈떎.";
+        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
         resetEtaForStage(stage);
         paintStageChips(stage);
       }
@@ -465,9 +465,9 @@ function stopTimers() {
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "臾몄꽌瑜?以鍮꾪븯怨??덉뒿?덈떎";
-        elements.progressSubtitle.textContent = "泥??붿껌???뺣━?섎뒗 以묒엯?덈떎. ?좎떆留?湲곕떎?ㅼ＜?몄슂.";
-        elements.progressMessage.textContent = "?묒뾽???쒖옉?섎㈃ ?ш린?먯꽌 ?먯꽭???곹깭瑜??뚮젮?쒕┰?덈떎.";
+        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
+        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
+        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
         setProgressVisualState("working");
         paintStageChips("start");
         resetEtaForStage("start");
@@ -484,18 +484,18 @@ function stopTimers() {
       }
 
       function renderResult(data) {
-        const titleGame = data.gameName || "蹂대뱶寃뚯엫";
-        elements.resultTitle.textContent = `${titleGame} 臾몄꽌 ?앹꽦 ?꾨즺`;
+        const titleGame = data.gameName || "보드게임";
+        elements.resultTitle.textContent = `${titleGame} 문서 생성 완료`;
         elements.resultSubtitle.textContent =
-          "臾몄꽌 A? 臾몄꽌 B瑜???쑝濡?諛붽퓭媛硫??쎄굅??HTML ?뚯씪濡??대젮諛쏆쓣 ???덉뒿?덈떎.";
-        elements.previewA.innerHTML = data.documentAHtml || "<p>臾몄꽌 A 寃곌낵媛 ?놁뒿?덈떎.</p>";
-        elements.previewB.innerHTML = data.documentBHtml || "<p>臾몄꽌 B 寃곌낵媛 ?놁뒿?덈떎.</p>";
+          "문서 A와 문서 B를 탭으로 바꿔가며 읽고, HTML 파일로 내려받을 수 있습니다.";
+        elements.previewA.innerHTML = data.documentAHtml || "<p>문서 A 결과가 없습니다.</p>";
+        elements.previewB.innerHTML = data.documentBHtml || "<p>문서 B 결과가 없습니다.</p>";
         elements.resultMeta.innerHTML = "";
 
         const pills = [
-          `${data.meta?.forumCount || 0}媛??щ읆 臾띠쓬`,
-          `${data.meta?.imageCount || 0}媛??대?吏`,
-          `${(data.glossary || []).length}媛??⑹뼱`
+          `${data.meta?.forumCount || 0}개 포럼 묶음`,
+          `${data.meta?.imageCount || 0}개 이미지`,
+          `${(data.glossary || []).length}개 용어`
         ];
 
         pills.forEach((label) => {
@@ -529,7 +529,7 @@ function stopTimers() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(state.result.gameName || "playready")} - 臾몄꽌 ${which}</title>
+  <title>${escapeHtml(state.result.gameName || "playready")} - 문서 ${which}</title>
   <style>
     @page { size: A4; margin: 14mm 12mm 16mm; }
     * { box-sizing: border-box; }
@@ -607,7 +607,7 @@ function stopTimers() {
         stopTimers();
         elements.startButton.disabled = false;
         showScreen("input");
-        showInputError("臾몄꽌 ?앹꽦??痍⑥냼?덉뒿?덈떎. ?낅젰媛믪? 洹몃?濡??⑥븘 ?덉쑝???ㅼ떆 ?쒖옉?섏떆硫??⑸땲??");
+        showInputError("문서 생성이 취소되었습니다. 입력값은 그대로 남아 있으니 다시 시작하시면 됩니다.");
       }
 
       function resetToStart() {
@@ -643,7 +643,7 @@ function stopTimers() {
         resetUploadSelections();
         elements.startButton.disabled = false;
         showScreen("input");
-        showInputError("臾몄꽌 ?앹꽦??痍⑥냼?덉뒿?덈떎. ?뚯씪? ?ㅼ떆 泥⑤??섎룄濡?珥덇린?뷀뻽?듬땲??");
+        showInputError("문서 생성이 취소되었습니다. 파일은 다시 첨부하도록 초기화했습니다.");
       }
 
       function resetToStart() {
@@ -662,7 +662,7 @@ function stopTimers() {
         setProgressVisualState("failed");
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
-        elements.progressMessage.textContent = "?대쾲 ?쒕룄???꾨즺?섏? 紐삵뻽?듬땲??";
+        elements.progressMessage.textContent = "이번 시도는 완료되지 못했습니다.";
         elements.startButton.disabled = false;
       }
 
@@ -678,8 +678,8 @@ function stopTimers() {
           elements.workingIndicator.innerHTML = `
             <div class="working-spinner" aria-hidden="true"></div>
             <div>
-              <strong>?먮룞 ?ъ떆??以묒엯?덈떎</strong>
-              <small>${escapeHtml(message || "泥??쒕룄 ?묐떟??遺덉븞?뺥빐 媛숈? ?④퀎瑜???踰????쒕룄?섍퀬 ?덉뒿?덈떎.")}</small>
+              <strong>자동 재시도 중입니다</strong>
+              <small>${escapeHtml(message || "첫 시도 응답이 불안정해 같은 단계를 한 번 더 시도하고 있습니다.")}</small>
             </div>
           `;
           return;
@@ -690,7 +690,7 @@ function stopTimers() {
           elements.etaBox.classList.add("hidden");
           elements.heartbeatBox.classList.add("hidden");
           elements.funBox.classList.add("hidden");
-          elements.progressSubtitle.textContent = "?대쾲 ?쒕룄???ш린??硫덉톬?듬땲?? ?꾨옒 ?덈궡瑜?蹂닿퀬 ?ㅼ떆 ?쒕룄?댁＜?몄슂.";
+          elements.progressSubtitle.textContent = "이번 시도는 여기서 멈췄습니다. 아래 안내를 보고 다시 시도해주세요.";
           return;
         }
 
@@ -699,8 +699,8 @@ function stopTimers() {
           elements.workingIndicator.innerHTML = `
             <div class="working-spinner" aria-hidden="true"></div>
             <div>
-              <strong>臾몄꽌 ?앹꽦???꾨즺?섏뿀?듬땲??/strong>
-              <small>寃곌낵 ?붾㈃?쇰줈 ?대룞?⑸땲??</small>
+              <strong>문서 생성이 완료되었습니다</strong>
+              <small>결과 화면으로 이동합니다.</small>
             </div>
           `;
           elements.etaBox.classList.add("hidden");
@@ -712,8 +712,8 @@ function stopTimers() {
         elements.workingIndicator.innerHTML = `
           <div class="working-spinner" aria-hidden="true"></div>
           <div>
-            <strong>?꾩옱 ?묒뾽??怨꾩냽 吏꾪뻾 以묒엯?덈떎</strong>
-            <small>${escapeHtml(message || "?ㅻ쪟媛 蹂댁씠吏 ?딅뒗?ㅻ㈃ 釉뚮씪?곗?瑜??レ? 留먭퀬 議곌툑 ??湲곕떎?ㅼ＜?몄슂.")}</small>
+            <strong>현재 작업이 계속 진행 중입니다</strong>
+            <small>${escapeHtml(message || "오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.")}</small>
           </div>
         `;
       }
@@ -746,64 +746,64 @@ function stopTimers() {
 
         const stageMap = {
           start: {
-            title: "?붿껌???뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "요청을 정리하고 있습니다",
             percent: 8,
-            subtitle: "?낅줈?쒕맂 ?뺣낫? ?뚯씪???뺤씤?섎ŉ 泥??④퀎瑜?以鍮꾪븯怨??덉뒿?덈떎."
+            subtitle: "업로드한 정보와 파일을 확인하며 첫 단계를 준비하고 있습니다."
           },
           bgg: {
-            title: "BGG ?곗씠?곕? ?섏쭛?섍퀬 ?덉뒿?덈떎",
+            title: "BGG 데이터를 수집하고 있습니다",
             percent: 34,
-            subtitle: "寃뚯엫 湲곕낯 ?뺣낫? 怨듦컻 ?좊줎 ?댁슜??紐⑥븘 李멸퀬 ?먮즺瑜?留뚮뱾怨??덉뒿?덈떎."
+            subtitle: "게임 기본 정보와 공개 토론 내용을 모아 참고 자료를 만들고 있습니다."
           },
           pdf: {
-            title: "PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "PDF를 분석하고 있습니다",
             percent: 64,
-            subtitle: "猷곕턿怨?FAQ?먯꽌 ?띿뒪?몄? ?대?吏瑜??쎌뼱 臾몄꽌???먮즺濡??뺣━?섍퀬 ?덉뒿?덈떎."
+            subtitle: "룰북과 FAQ에서 텍스트와 이미지를 읽어 문서용 자료로 정리하고 있습니다."
           },
           "pdf-upload": {
-            title: "猷곕턿 PDF瑜?遺꾩꽍 ?쒕쾭濡?蹂대궡怨??덉뒿?덈떎",
+            title: "룰북 PDF를 분석 서버로 보내고 있습니다",
             percent: 52,
-            subtitle: "猷곕턿 ?뚯씪???쒕쾭濡??꾩넚?섍퀬 ?덉뒿?덈떎."
+            subtitle: "룰북 파일을 서버로 안전하게 전송하고 있습니다."
           },
           "pdf-extract": {
-            title: "猷곕턿 PDF?먯꽌 ?띿뒪?몄? ?대?吏瑜?異붿텧?섍퀬 ?덉뒿?덈떎",
+            title: "룰북 PDF에서 텍스트와 이미지를 추출하고 있습니다",
             percent: 60,
-            subtitle: "?섏씠吏 ?띿뒪?? ?대?吏, ?꾩튂 ?뺣낫瑜??쎈뒗 ???쒓컙??議곌툑 嫄몃┫ ???덉뒿?덈떎."
+            subtitle: "페이지 텍스트, 이미지, 위치 정보를 읽는 데 시간이 조금 걸릴 수 있습니다."
           },
           "pdf-faq-upload": {
-            title: "FAQ/?뺤삤??PDF瑜?遺꾩꽍 ?쒕쾭濡?蹂대궡怨??덉뒿?덈떎",
+            title: "FAQ/정오표 PDF를 분석 서버로 보내고 있습니다",
             percent: 66,
-            subtitle: "異붽? PDF媛 ?덉쑝硫??쒖꽌?濡??꾩넚?섏뿬 ?④퍡 遺꾩꽍?⑸땲??"
+            subtitle: "추가 PDF가 있으면 순서대로 전송하여 함께 분석합니다."
           },
           "pdf-faq-extract": {
-            title: "FAQ/?뺤삤??PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "FAQ/정오표 PDF를 분석하고 있습니다",
             percent: 72,
-            subtitle: "FAQ? ?뺤삤?쒖쓽 ?띿뒪?? ?대?吏, 蹂댁젙 洹쒖튃???뺣━?섍퀬 ?덉뒿?덈떎."
+            subtitle: "FAQ와 정오표의 텍스트, 이미지, 수정 규칙을 정리하고 있습니다."
           },
           "pdf-merge": {
-            title: "PDF 遺꾩꽍 寃곌낵瑜??뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "PDF 분석 결과를 정리하고 있습니다",
             percent: 78,
-            subtitle: "猷곕턿怨?FAQ 遺꾩꽍 寃곌낵瑜??⑹퀜 臾몄꽌 ?앹꽦???щ즺濡?留덈Т由ы븯怨??덉뒿?덈떎."
+            subtitle: "룰북과 FAQ 분석 결과를 합쳐 문서 생성용 재료로 마무리하고 있습니다."
           },
           "pdf-warning": {
-            title: "PDF 遺꾩꽍??吏?곕릺??媛?ν븳 ?먮즺遺??怨꾩냽 吏꾪뻾?섍퀬 ?덉뒿?덈떎",
+            title: "PDF 분석이 지연되어 가능한 자료부터 계속 진행하고 있습니다",
             percent: 74,
-            subtitle: "PDF媛 ?ㅻ옒 嫄몃━硫??ㅻⅨ ?먮즺瑜?癒쇱? ?ъ슜???ㅼ쓬 ?④퀎濡??섏뼱媛묐땲??"
+            subtitle: "PDF가 오래 걸리면 다른 자료를 먼저 사용해 다음 단계로 넘어갑니다."
           },
           "pdf-skip": {
             title: "PDF 없이 BGG 중심으로 진행합니다",
             percent: 70,
-            subtitle: "猷곕턿 PDF媛 ?놁뼱??湲곕낯 ?뺣낫? 怨듦컻 ?먮즺瑜?諛뷀깢?쇰줈 怨꾩냽 吏꾪뻾?⑸땲??"
+            subtitle: "룰북 PDF가 없어도 기본 정보와 공개 자료를 바탕으로 계속 진행합니다."
           },
           ai: {
-            title: "?쒓뎅??臾몄꽌瑜??앹꽦?섍퀬 ?덉뒿?덈떎",
+            title: "학습용 문서를 생성하고 있습니다",
             percent: 90,
-            subtitle: "?⑹뼱瑜??듭씪?섍퀬 臾몄옣 援ъ“瑜??ㅻ벉??理쒖쥌 臾몄꽌瑜?留뚮뱶???④퀎?낅땲??"
+            subtitle: "용어를 통일하고 문장 구조를 다듬어 최종 문서를 만들고 있습니다."
           },
           "ai-retry": {
-            title: "AI ?쒕쾭媛 ?좎떆 ?쇱옟?섏뿬 ?ㅼ떆 ?쒕룄?섍퀬 ?덉뒿?덈떎",
+            title: "AI 서버가 잠시 혼잡하여 다시 시도하고 있습니다",
             percent: 92,
-            subtitle: "???덉젙?곸쑝濡?寃곌낵瑜?諛쏄린 ?꾪빐 ?좎떆 ?ъ떆?꾪븯怨??덉뒿?덈떎."
+            subtitle: "더 안정적으로 결과를 받기 위해 잠시 후 다시 시도하고 있습니다."
           }
         };
 
@@ -811,9 +811,9 @@ function stopTimers() {
         elements.progressTitle.textContent = info.title;
         elements.progressSubtitle.textContent = info.subtitle;
         elements.progressFill.style.width = `${info.percent}%`;
-        elements.progressMessage.textContent = payload.message || "?꾩옱 ?곹깭瑜??뺣━?섍퀬 ?덉뒿?덈떎.";
+        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>?묒뾽 ?쒕쾭? 怨꾩냽 ?듭떊 以묒엯?덈떎. ?좉퉸 硫덉텣 寃껋쿂??蹂댁뿬???대? ?묒뾽? 怨꾩냽?????덉뒿?덈떎.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다. 잠깐 멈춘 것처럼 보여도 내부 작업은 계속될 수 있습니다.';
 
         if (previousStage !== stage) {
           resetEtaForStage(stage);
@@ -884,11 +884,11 @@ function stopTimers() {
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "臾몄꽌瑜?以鍮꾪븯怨??덉뒿?덈떎";
-        elements.progressSubtitle.textContent = "泥??붿껌???뺣━?섎뒗 以묒엯?덈떎. ?좎떆留?湲곕떎?ㅼ＜?몄슂.";
-        elements.progressMessage.textContent = "?묒뾽???쒖옉?섎㈃ ?ш린?먯꽌 ?먯꽭???곹깭瑜??뚮젮?쒕┰?덈떎.";
+        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
+        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
+        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>?묒뾽???쒖옉?섎㈃ ?쒕쾭? 怨꾩냽 ?듭떊 以묒씠?쇰뒗 ?쒖떆媛 ?ш린?먯꽌 蹂댁엯?덈떎.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업이 시작되면 서버와 계속 통신 중이라는 표시가 여기에서 보입니다.';
         paintStageChips("start");
         resetEtaForStage("start");
         renderElapsed();
@@ -900,7 +900,7 @@ function stopTimers() {
         const stage = payload.stage || state.currentStage;
         setProgressVisualState(
           stage === "ai-retry" ? "retrying" : "working",
-          stage === "ai-retry" ? "AI ?쒕쾭媛 ?좎떆 ?쇱옟??媛숈? ?④퀎瑜??먮룞?쇰줈 ??踰????쒕룄?섍퀬 ?덉뒿?덈떎." : ""
+          stage === "ai-retry" ? "AI 서버가 잠시 혼잡하여 같은 단계를 자동으로 한 번 더 시도하고 있습니다." : ""
         );
       };
 
@@ -908,7 +908,7 @@ function stopTimers() {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(new Error("?뚯씪???쎈뒗 以?臾몄젣媛 諛쒖깮?덉뒿?덈떎."));
+          reader.onerror = () => reject(new Error("파일을 읽는 중 문제가 발생했습니다."));
           reader.readAsDataURL(file);
         });
       }
@@ -917,7 +917,7 @@ function stopTimers() {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(new Error("異붽? ?먮즺瑜??쎈뒗 以?臾몄젣媛 諛쒖깮?덉뒿?덈떎."));
+          reader.onerror = () => reject(new Error("추가 자료를 읽는 중 문제가 발생했습니다."));
           reader.readAsText(file, "utf-8");
         });
       }
@@ -930,7 +930,7 @@ function stopTimers() {
           /\.(txt|md|json|csv|html|htm)$/i.test(file.name);
 
         if (!isTextLike) {
-          return `[泥⑤? ?뚯씪: ${file.name}] ???뚯씪 ?뺤떇? 蹂?踰꾩쟾?먯꽌 ?띿뒪???먮룞 異붿텧??吏?먰븯吏 ?딆븘 ?뚯씪紐낅쭔 李멸퀬?⑸땲??`;
+          return `[첨부 파일: ${file.name}] 이 파일 형식은 현 버전에서 텍스트 자동 추출을 지원하지 않아 파일명만 참고합니다.`;
         }
 
         const text = await readFileAsText(file);
@@ -940,9 +940,9 @@ function stopTimers() {
       async function extractErrorMessage(response) {
         try {
           const data = await response.json();
-          return data?.error?.message || "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
+          return data?.error?.message || "요청 처리 중 오류가 발생했습니다.";
         } catch {
-          return "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
+          return "요청 처리 중 오류가 발생했습니다.";
         }
       }
 

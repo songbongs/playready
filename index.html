@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>playready | 蹂대뱶寃뚯엫 猷곕턿 ?먮즺 ?먮룞 ?앹꽦</title>
+    <title>playready | 보드게임 룰북 자료 자동 생성</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;800&display=swap");
 
@@ -802,127 +802,130 @@
   <body>
     <div class="app-shell">
       <header class="hero">
-        <span class="eyebrow">playready | 猷곕턿 ?숈뒿 蹂댁“ ?꾧뎄</span>
-        <h1>蹂대뱶寃뚯엫 猷곕턿??br />?쎄린 ?ъ슫 ?쒓뎅???먮즺濡??뺣━?⑸땲??/h1>
+        <span class="eyebrow">playready | 룰북 학습 보조 도구</span>
+        <h1>보드게임 룰북을<br />읽기 쉬운 한국어 자료로 정리합니다</h1>
         <p>
-          寃뚯엫 ?대쫫, BGG ID, 猷곕턿 PDF瑜??ｌ쑝硫??숈뒿??臾몄꽌? ?ㅻ챸??臾몄꽌瑜??먮룞?쇰줈
-          留뚮뱾?댁쨳?덈떎. PDF媛 ?놁뼱???쒖옉?????덇퀬, PDF媛 ?덉쑝硫??대?吏? 洹쒖튃 臾몃㎘源뚯?
-          ???띾??섍쾶 諛섏쁺?⑸땲??
+          게임 이름, BGG ID, 룰북 PDF를 넣으면 학습용 문서와 설명용 문서를 자동으로
+          만들어줍니다. PDF가 없어도 시작할 수 있고, PDF가 있으면 이미지와 규칙 문맥까지
+          더 풍부하게 반영합니다.
         </p>
       </header>
 
       <main>
-        <section id="screen-input" class="screen is-active" aria-label="?낅젰 ?붾㈃">
+        <section id="screen-input" class="screen is-active" aria-label="입력 화면">
           <div class="panel form-panel">
             <div class="panel-section">
-              <h2 class="section-title">1. 寃뚯엫 ?뺣낫瑜??낅젰?댁＜?몄슂</h2>
+              <h2 class="section-title">1. 게임 정보를 입력해주세요</h2>
               <p class="section-desc">
-                ?덉떆瑜?洹몃?濡??곕씪 ?곸쑝硫?媛???덉쟾?⑸땲?? 泥섏쓬?먮뒗 ?묒? PDF???듭닕??寃뚯엫?쇰줈
-                ?뚯뒪?명빐蹂대뒗 寃껋쓣 異붿쿇?⑸땲??
+                예시를 그대로 따라 적으면 가장 안전합니다. 처음에는 작은 PDF나 익숙한 게임으로
+                테스트해보는 것을 추천합니다.
               </p>
 
               <div class="field">
-                <label for="gameName">寃뚯엫 ?대쫫</label>
+                <label for="gameName">게임 이름</label>
                 <input
                   id="gameName"
                   type="text"
-                  placeholder="?? ?꾪겕?몃컮 (Ark Nova)"
+                  placeholder="예: 아크노바 (Ark Nova)"
                   autocomplete="off"
                 />
               </div>
 
               <div class="field">
-                <label for="bggId">BGG 寃뚯엫 ID</label>
+                <label for="bggId">BGG 게임 ID</label>
                 <input
                   id="bggId"
                   type="number"
                   inputmode="numeric"
-                  placeholder="?? 342942"
+                  placeholder="예: 342942"
                 />
                 <p class="hint">
-                  BGG ID??boardgamegeek.com?먯꽌 寃뚯엫??寃?됲븳 ?? 二쇱냼李쎌쓽 ?レ옄?낅땲??
-                  ?? boardgamegeek.com/boardgame/342942/ark-nova ?먯꽌 342942媛 ID?낅땲??
+                  BGG ID는 boardgamegeek.com에서 게임을 검색한 후, 주소창의 숫자입니다.
+                  예: boardgamegeek.com/boardgame/342942/ark-nova 에서 342942가 ID입니다.
                 </p>
               </div>
 
               <div class="field">
-                <label for="pdfFile">猷곕턿 PDF ?낅줈??/label>
+                <label for="pdfFile">룰북 PDF 업로드</label>
                 <div class="upload-box">
                   <input id="pdfFile" type="file" accept="application/pdf,.pdf" />
-                  <div id="pdfMeta" class="file-meta">?꾩쭅 ?좏깮??PDF媛 ?놁뒿?덈떎.</div>
+                  <div id="pdfMeta" class="file-meta">아직 선택한 PDF가 없습니다.</div>
                   <div class="upload-actions">
-                    <button id="clearPdfButton" class="btn-inline hidden" type="button">?좏깮???뚯씪 ?쒓굅</button>
+                    <button id="clearPdfButton" class="btn-inline hidden" type="button">선택한 파일 제거</button>
                   </div>
                 </div>
                 <p class="hint">
-                  PDF媛 ?놁뼱??BGG ?곗씠?곕쭔?쇰줈 臾몄꽌瑜??앹꽦?????덉뒿?덈떎. PDF媛 ?덉쑝硫???                  ?곸꽭??臾몄꽌媛 留뚮뱾?댁쭛?덈떎.
+                  PDF가 없어도 BGG 데이터만으로 문서를 생성할 수 있습니다. PDF가 있으면 더
+                  상세한 문서가 만들어집니다.
                 </p>
               </div>
 
               <div class="field">
-                <label for="faqPdfFile">FAQ/?뺤삤??PDF ?낅줈??/label>
+                <label for="faqPdfFile">FAQ/정오표 PDF 업로드</label>
                 <div class="upload-box">
                   <input id="faqPdfFile" type="file" accept="application/pdf,.pdf" />
-                  <div id="faqPdfMeta" class="file-meta">?꾩쭅 ?좏깮??FAQ/?뺤삤??PDF媛 ?놁뒿?덈떎.</div>
+                  <div id="faqPdfMeta" class="file-meta">아직 선택한 FAQ/정오표 PDF가 없습니다.</div>
                   <div class="upload-actions">
-                    <button id="clearFaqPdfButton" class="btn-inline hidden" type="button">?좏깮???뚯씪 ?쒓굅</button>
+                    <button id="clearFaqPdfButton" class="btn-inline hidden" type="button">선택한 파일 제거</button>
                   </div>
                 </div>
                 <p class="hint">
-                  怨듭떇 FAQ???뺤삤??PDF媛 ?덈떎硫??④퍡 ?낅줈?쒗븯硫????뺥솗??臾몄꽌媛 留뚮뱾?댁쭛?덈떎.
+                  공식 FAQ나 정오표 PDF가 있다면 함께 업로드하면 더 정확한 문서가 만들어집니다.
                 </p>
               </div>
 
               <div class="field">
-                <label for="extraFiles">異붽? ?먮즺 ?낅줈??/label>
+                <label for="extraFiles">추가 자료 업로드</label>
                 <div class="upload-box">
                   <input id="extraFiles" type="file" multiple accept=".txt,.md,.json,.csv,.html,.htm,.pdf" />
-                  <div id="extraMeta" class="file-meta">異붽? ?먮즺瑜??좏깮?섏? ?딆븘???⑸땲??</div>
+                  <div id="extraMeta" class="file-meta">추가 자료를 선택하지 않아도 됩니다.</div>
                   <div class="upload-actions">
-                    <button id="clearExtraButton" class="btn-inline hidden" type="button">?좏깮???뚯씪 ?쒓굅</button>
+                    <button id="clearExtraButton" class="btn-inline hidden" type="button">선택한 파일 제거</button>
                   </div>
                 </div>
               </div>
 
               <div class="cta-row">
-                <button id="startButton" class="btn-primary" type="button">臾몄꽌 ?앹꽦 ?쒖옉</button>
+                <button id="startButton" class="btn-primary" type="button">문서 생성 시작</button>
               </div>
               <div id="inputError" class="error-box hidden"></div>
               <p class="footer-note">
-                PDF??50MB瑜??섍린湲??꾩뿉 癒쇱? 李⑤떒?⑸땲?? ??⑸웾 ?뚯씪? 紐⑤컮?쇱뿉???낅줈???쒓컙??                ?ㅻ옒 嫄몃┫ ???덉뒿?덈떎.
+                PDF는 50MB를 넘기기 전에 먼저 차단됩니다. 대용량 파일은 모바일에서 업로드 시간이
+                오래 걸릴 수 있습니다.
               </p>
             </div>
 
             <aside class="panel-section">
-              <h2 class="section-title">???섏씠吏媛 留뚮뱾?댁＜??寃곌낵</h2>
+              <h2 class="section-title">이 페이지가 만들어주는 결과</h2>
               <p class="section-desc">
-                ??臾몄꽌???⑸룄媛 ?ㅻ쫭?덈떎. 怨듬??⑷낵 ?ㅻ챸?⑹쓣 ?섎닠??留뚮뱾湲??뚮Ц???ㅼ젣 ?뚮젅???꾩뿉
-                ?⑥뵮 鍮좊Ⅴ寃?以鍮꾪븷 ???덉뒿?덈떎.
+                두 문서는 용도가 다릅니다. 공부용과 설명용을 나눠서 만들기 때문에 실제 플레이 전에
+                훨씬 빠르게 준비할 수 있습니다.
               </p>
               <div class="tips-list">
                 <article class="tip-card">
-                  <strong>臾몄꽌 A | 怨듬????곸꽭 ?먮즺</strong>
-                  寃뚯엫 紐⑺몴, 援ъ꽦臾? ???쒖꽌, ?덉쇅 洹쒖튃, FAQ, ?꾨왂 ?곸쓣 李④렐李④렐 ?뺣━?⑸땲??
+                  <strong>문서 A | 공부용 상세 자료</strong>
+                  게임 목표, 구성물, 턴 순서, 예외 규칙, FAQ, 전략 팁을 차근차근 정리합니다.
                 </article>
                 <article class="tip-card">
-                  <strong>臾몄꽌 B | ?ㅻ챸??蹂댁“ ?먮즺</strong>
-                  ?뚭컻 ?ㅽ겕由쏀듃, ?뗭뾽 泥댄겕由ъ뒪?? 泥??쇱슫??吏꾪뻾 媛?대뱶, 李몄“ 移대뱶泥섎읆 諛붾줈 ?⑤㉨??                  援ъ꽦?쇰줈 ?뺣━?⑸땲??
+                  <strong>문서 B | 설명용 보조 자료</strong>
+                  소개 스크립트, 셋업 체크리스트, 첫 라운드 진행 가이드, 참조 카드처럼 바로 써먹는
+                  구성으로 정리합니다.
                 </article>
                 <article class="tip-card">
-                  <strong>?대?吏???④퍡 諛곗튂</strong>
-                  PDF媛 ?덈떎硫?猷곕턿 ?먮낯 ?대?吏瑜?愿???ㅻ챸 洹쇱쿂???ｌ뼱???묒뼱蹂닿린 ?쎄쾶 留뚮벊?덈떎.
+                  <strong>이미지도 함께 배치</strong>
+                  PDF가 있다면 룰북 원본 이미지를 관련 설명 근처에 넣어서 훑어보기 쉽게 만듭니다.
                 </article>
               </div>
             </aside>
           </div>
         </section>
 
-        <section id="screen-progress" class="screen" aria-label="吏꾪뻾 ?곹솴 ?붾㈃">
+        <section id="screen-progress" class="screen" aria-label="진행 상황 화면">
           <div class="panel progress-panel">
             <div class="stage-line">
-              <div class="stage-title" id="progressTitle">臾몄꽌瑜?以鍮꾪븯怨??덉뒿?덈떎</div>
+              <div class="stage-title" id="progressTitle">문서를 준비하고 있습니다</div>
               <div class="stage-copy" id="progressSubtitle">
-                泥??붿껌???뺣━?섎뒗 以묒엯?덈떎. ?좎떆留?湲곕떎?ㅼ＜?몄슂.
+                첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.
               </div>
             </div>
 
@@ -932,61 +935,61 @@
 
             <div class="progress-steps">
               <div id="step-bgg" class="step-chip">
-                <strong>1?④퀎 | BGG ?섏쭛</strong>
-                <small>?щ읆, FAQ, Q&A瑜?紐⑥쑝???④퀎?낅땲??</small>
+                <strong>1단계 | BGG 수집</strong>
+                <small>포럼, FAQ, Q&A를 모으는 단계입니다.</small>
               </div>
               <div id="step-pdf" class="step-chip">
-                <strong>2?④퀎 | PDF 遺꾩꽍</strong>
-                <small>?띿뒪?몄? ?대?吏瑜??뺣━?섎뒗 ?④퀎?낅땲??</small>
+                <strong>2단계 | PDF 분석</strong>
+                <small>텍스트와 이미지를 정리하는 단계입니다.</small>
               </div>
               <div id="step-ai" class="step-chip">
-                <strong>3?④퀎 | 臾몄꽌 ?앹꽦</strong>
-                <small>?쒓뎅??臾몄꽌瑜?留뚮뱶???④퀎?낅땲??</small>
+                <strong>3단계 | 문서 생성</strong>
+                <small>한국어 문서를 만드는 단계입니다.</small>
               </div>
             </div>
 
             <div class="working-indicator" id="workingIndicator" aria-live="polite">
               <div class="working-spinner" aria-hidden="true"></div>
               <div>
-                <strong>?꾩옱 ?묒뾽??怨꾩냽 吏꾪뻾 以묒엯?덈떎</strong>
-                <small>?ㅻ쪟媛 蹂댁씠吏 ?딅뒗?ㅻ㈃ 釉뚮씪?곗?瑜??レ? 留먭퀬 議곌툑 ??湲곕떎?ㅼ＜?몄슂.</small>
+                <strong>현재 작업이 계속 진행 중입니다</strong>
+                <small>오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.</small>
               </div>
             </div>
-            <div id="etaBox" class="eta-box">?덉긽 ?⑥? ?쒓컙: 怨꾩궛 以?..</div>
-            <div id="elapsedBox" class="elapsed-box">寃쎄낵 ?쒓컙: 0遺?00珥?/div>
+            <div id="etaBox" class="eta-box">예상 남은 시간: 계산 중...</div>
+            <div id="elapsedBox" class="elapsed-box">경과 시간: 0분 00초</div>
             <div id="heartbeatBox" class="heartbeat-box">
-              <span class="heartbeat-dot" aria-hidden="true"></span>?묒뾽 ?쒕쾭? 怨꾩냽 ?듭떊 以묒엯?덈떎.
+              <span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다.
             </div>
-            <div id="funBox" class="fun-box">BGG ?щ읆???대씍 ?좊줎???쎄퀬 ?덉뒿?덈떎...</div>
+            <div id="funBox" class="fun-box">BGG 포럼의 열띤 토론을 읽고 있습니다...</div>
             <div id="progressMessage" class="message-box">
-              ?묒뾽???쒖옉?섎㈃ ?ш린?먯꽌 ?먯꽭???곹깭瑜??뚮젮?쒕┰?덈떎.
+              작업이 시작되면 여기에서 자세한 상태를 알려드립니다.
             </div>
             <div id="progressError" class="error-box hidden"></div>
 
             <div class="progress-actions">
-              <button id="cancelButton" class="btn-danger" type="button">痍⑥냼</button>
+              <button id="cancelButton" class="btn-danger" type="button">취소</button>
             </div>
           </div>
         </section>
 
-        <section id="screen-result" class="screen" aria-label="寃곌낵 ?붾㈃">
+        <section id="screen-result" class="screen" aria-label="결과 화면">
           <div class="panel results-panel">
             <div class="result-header">
               <div>
-                <h2 class="section-title" id="resultTitle">臾몄꽌 ?앹꽦 ?꾨즺</h2>
+                <h2 class="section-title" id="resultTitle">문서 생성 완료</h2>
                 <p class="section-desc" id="resultSubtitle">
-                  臾몄꽌 A? 臾몄꽌 B瑜???쑝濡??꾪솚?섎㈃??諛붾줈 ?쎌쓣 ???덉뒿?덈떎.
+                  문서 A와 문서 B를 탭으로 전환하면서 바로 읽을 수 있습니다.
                 </p>
               </div>
               <div class="result-meta" id="resultMeta"></div>
             </div>
 
-            <div class="tab-row" role="tablist" aria-label="臾몄꽌 ??>
+            <div class="tab-row" role="tablist" aria-label="문서 탭">
               <button id="tabA" class="tab-btn is-active" type="button" role="tab" aria-selected="true">
-                臾몄꽌 A 誘몃━蹂닿린
+                문서 A 미리보기
               </button>
               <button id="tabB" class="tab-btn" type="button" role="tab" aria-selected="false">
-                臾몄꽌 B 誘몃━蹂닿린
+                문서 B 미리보기
               </button>
             </div>
 
@@ -994,9 +997,9 @@
             <div id="previewB" class="preview-frame hidden"></div>
 
             <div class="result-actions">
-              <button id="downloadA" class="btn-primary" type="button">臾몄꽌 A ?ㅼ슫濡쒕뱶 (HTML)</button>
-              <button id="downloadB" class="btn-secondary" type="button">臾몄꽌 B ?ㅼ슫濡쒕뱶 (HTML)</button>
-              <button id="restartButton" class="btn-secondary" type="button">泥섏쓬?쇰줈 ?뚯븘媛湲?/button>
+              <button id="downloadA" class="btn-primary" type="button">문서 A 다운로드 (HTML)</button>
+              <button id="downloadB" class="btn-secondary" type="button">문서 B 다운로드 (HTML)</button>
+              <button id="restartButton" class="btn-secondary" type="button">처음으로 돌아가기</button>
             </div>
           </div>
         </section>
@@ -1024,11 +1027,11 @@
       };
 
       const FUN_MESSAGES = [
-        "BGG ?щ읆???대씍 ?좊줎???쎄퀬 ?덉뒿?덈떎...",
-        "洹쒖튃?쒕? 瑗쇨세??踰덉뿭?섍퀬 ?덉뒿?덈떎...",
-        "?룰컝由ш린 ?ъ슫 ?덉쇅 洹쒖튃??紐⑥븘蹂대뒗 以묒엯?덈떎...",
-        "泥섏쓬 ?ㅻ챸????留됲엳吏 ?딅룄濡?臾몄옣???ㅻ벉怨??덉뒿?덈떎...",
-        "?뚮젅?댁뼱?ㅼ씠 ?먯＜ 臾쇱뼱蹂?吏덈Ц???뺣━?섍퀬 ?덉뒿?덈떎..."
+        "BGG 포럼의 열띤 토론을 읽고 있습니다...",
+        "규칙서를 꼼꼼히 번역하고 있습니다...",
+        "헷갈리기 쉬운 예외 규칙을 모아보는 중입니다...",
+        "처음 설명할 때 막히지 않도록 문장을 다듬고 있습니다...",
+        "플레이어들이 자주 물어본 질문을 정리하고 있습니다..."
       ];
 
       const state = {
@@ -1095,24 +1098,24 @@
       };
 
       elements.pdfFile.addEventListener("change", () =>
-        handlePdfSelection(elements.pdfFile, elements.pdfMeta, "猷곕턿 PDF")
+        handlePdfSelection(elements.pdfFile, elements.pdfMeta, "룰북 PDF")
       );
       elements.faqPdfFile.addEventListener("change", () =>
-        handlePdfSelection(elements.faqPdfFile, elements.faqPdfMeta, "FAQ/?뺤삤??PDF")
+        handlePdfSelection(elements.faqPdfFile, elements.faqPdfMeta, "FAQ/정오표 PDF")
       );
       elements.extraFiles.addEventListener("change", handleExtraSelection);
       elements.pdfFile.addEventListener("change", () =>
-        syncPdfSelection(elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "rulebook", "猷곕턿 PDF")
+        syncPdfSelection(elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "rulebook", "룰북 PDF")
       );
       elements.faqPdfFile.addEventListener("change", () =>
-        syncPdfSelection(elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "faq", "FAQ/?뺤삤??PDF")
+        syncPdfSelection(elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "faq", "FAQ/정오표 PDF")
       );
       elements.extraFiles.addEventListener("change", syncExtraSelection);
       elements.clearPdfButton.addEventListener("click", () =>
-        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "猷곕턿 PDF")
+        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "룰북 PDF")
       );
       elements.clearFaqPdfButton.addEventListener("click", () =>
-        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/?뺤삤??PDF")
+        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/정오표 PDF")
       );
       elements.clearExtraButton.addEventListener("click", clearExtraSelection);
       elements.startButton.addEventListener("click", startGeneration);
@@ -1131,7 +1134,7 @@
       }
 
       function getEmptyFileMessage(label) {
-        return `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
+        return `아직 선택한 ${label}가 없습니다.`;
       }
 
       function syncPdfSelection(fileInput, metaNode, clearButton, kind, label) {
@@ -1143,7 +1146,7 @@
 
         if (file.size > APP_CONFIG.MAX_PDF_BYTES) {
           clearSelectedUpload(kind, fileInput, metaNode, clearButton, label);
-          showInputError(`${label}??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎. ???묒? ?뚯씪濡??ㅼ떆 ?좏깮?댁＜?몄슂.`);
+          showInputError(`${label}는 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.`);
           return;
         }
 
@@ -1160,7 +1163,7 @@
         }
 
         state.selectedUploads.extras = files;
-        elements.extraMeta.textContent = `${files.length}媛??뚯씪 ?좏깮??| ${files
+        elements.extraMeta.textContent = `${files.length}개 파일 선택됨 | ${files
           .map((file) => file.name)
           .join(", ")}`;
         elements.clearExtraButton.classList.remove("hidden");
@@ -1177,13 +1180,13 @@
       function clearExtraSelection() {
         state.selectedUploads.extras = [];
         elements.extraFiles.value = "";
-        elements.extraMeta.textContent = "異붽? ?먮즺瑜??좏깮?섏? ?딆븘???⑸땲??";
+        elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
         elements.clearExtraButton.classList.add("hidden");
       }
 
       function resetUploadSelections() {
-        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "猷곕턿 PDF");
-        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/?뺤삤??PDF");
+        clearSelectedUpload("rulebook", elements.pdfFile, elements.pdfMeta, elements.clearPdfButton, "룰북 PDF");
+        clearSelectedUpload("faq", elements.faqPdfFile, elements.faqPdfMeta, elements.clearFaqPdfButton, "FAQ/정오표 PDF");
         clearExtraSelection();
       }
 
@@ -1191,14 +1194,14 @@
         clearInputError();
         const file = fileInput.files[0];
         if (!file) {
-          metaNode.textContent = `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
           return;
         }
 
         if (file.size > APP_CONFIG.MAX_PDF_BYTES) {
           fileInput.value = "";
-          metaNode.textContent = `?꾩쭅 ?좏깮??${label}媛 ?놁뒿?덈떎.`;
-          showInputError(`${label}??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎. ???묒? ?뚯씪濡??ㅼ떆 ?좏깮?댁＜?몄슂.`);
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
+          showInputError(`${label}는 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.`);
           return;
         }
 
@@ -1208,11 +1211,11 @@
       function handleExtraSelection() {
         const files = Array.from(elements.extraFiles.files || []);
         if (!files.length) {
-          elements.extraMeta.textContent = "異붽? ?먮즺瑜??좏깮?섏? ?딆븘???⑸땲??";
+          elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
           return;
         }
 
-        elements.extraMeta.textContent = `${files.length}媛??뚯씪 ?좏깮??| ${files
+        elements.extraMeta.textContent = `${files.length}개 파일 선택됨 | ${files
           .map((file) => file.name)
           .join(", ")}`;
       }
@@ -1226,22 +1229,22 @@
         const extraFiles = [...state.selectedUploads.extras];
 
         if (!gameName) {
-          showInputError("寃뚯엫 ?대쫫??癒쇱? ?낅젰?댁＜?몄슂. ?? ?꾪겕?몃컮 (Ark Nova)");
+          showInputError("게임 이름을 먼저 입력해주세요. 예: 아크노바 (Ark Nova)");
           return;
         }
 
         if (!bggId) {
-          showInputError("BGG 寃뚯엫 ID瑜??낅젰?댁＜?몄슂.");
+          showInputError("BGG 게임 ID를 입력해주세요.");
           return;
         }
 
         if (pdfFile && pdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
-          showInputError("猷곕턿 PDF??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎.");
+          showInputError("룰북 PDF는 최대 50MB까지 업로드할 수 있습니다.");
           return;
         }
 
         if (faqPdfFile && faqPdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
-          showInputError("FAQ/?뺤삤??PDF??理쒕? 50MB源뚯? ?낅줈?쒗븷 ???덉뒿?덈떎.");
+          showInputError("FAQ/정오표 PDF는 최대 50MB까지 업로드할 수 있습니다.");
           return;
         }
 
@@ -1260,7 +1263,7 @@
           });
           await streamGeneration(payload);
         } catch (error) {
-          showProgressError(error.message || "?붿껌??以鍮꾪븯??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.");
+          showProgressError(error.message || "요청을 준비하는 중 오류가 발생했습니다.");
           elements.startButton.disabled = false;
         }
       }
@@ -1357,7 +1360,7 @@
         }
 
         if (eventName === "error") {
-          showProgressError(parsed.message || "泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.");
+          showProgressError(parsed.message || "처리 중 오류가 발생했습니다.");
         }
       }
 
@@ -1367,29 +1370,29 @@
 
         const stageMap = {
           start: {
-            title: "?붿껌???뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "요청을 정리하고 있습니다",
             percent: 8,
-            subtitle: "?낅줈?쒗븳 ?뺣낫瑜?李⑤텇???뺤씤?섎뒗 以묒엯?덈떎."
+            subtitle: "업로드한 정보와 입력값을 차분히 확인하고 있습니다."
           },
           bgg: {
-            title: "BGG ?곗씠?곕? ?섏쭛?섍퀬 ?덉뒿?덈떎",
+            title: "BGG 데이터를 수집하고 있습니다",
             percent: 34,
-            subtitle: "?щ읆, FAQ, 吏덈Ц 湲??紐⑥쑝???④퀎?낅땲??"
+            subtitle: "포럼, FAQ, 질문 글을 모아 참고 자료를 만들고 있습니다."
           },
           pdf: {
-            title: "PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "PDF를 분석하고 있습니다",
             percent: 64,
-            subtitle: "?띿뒪??援ъ“? ?대?吏瑜??뺣━?섎뒗 ?④퀎?낅땲??"
+            subtitle: "텍스트 구조와 이미지를 정리하는 단계입니다."
           },
           "pdf-skip": {
             title: "PDF 없이 BGG 중심으로 진행합니다",
             percent: 70,
-            subtitle: "猷곕턿 PDF媛 ?놁뼱??臾몄꽌 ?앹꽦??怨꾩냽 吏꾪뻾?⑸땲??"
+            subtitle: "룰북 PDF가 없어도 문서 생성은 계속 진행됩니다."
           },
           ai: {
-            title: "?쒓뎅??臾몄꽌瑜??앹꽦?섍퀬 ?덉뒿?덈떎",
+            title: "학습용 문서를 생성하고 있습니다",
             percent: 90,
-            subtitle: "?⑹뼱瑜??듭씪?섍퀬 臾몄옣???ㅻ벉??以묒엯?덈떎."
+            subtitle: "용어를 통일하고 문장을 다듬는 중입니다."
           }
         };
 
@@ -1397,7 +1400,7 @@
         elements.progressTitle.textContent = info.title;
         elements.progressSubtitle.textContent = info.subtitle;
         elements.progressFill.style.width = `${info.percent}%`;
-        elements.progressMessage.textContent = payload.message || "?꾩옱 ?곹깭瑜??뺣━?섍퀬 ?덉뒿?덈떎.";
+        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
         resetEtaForStage(stage);
         paintStageChips(stage);
       }
@@ -1469,9 +1472,9 @@ function stopTimers() {
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "臾몄꽌瑜?以鍮꾪븯怨??덉뒿?덈떎";
-        elements.progressSubtitle.textContent = "泥??붿껌???뺣━?섎뒗 以묒엯?덈떎. ?좎떆留?湲곕떎?ㅼ＜?몄슂.";
-        elements.progressMessage.textContent = "?묒뾽???쒖옉?섎㈃ ?ш린?먯꽌 ?먯꽭???곹깭瑜??뚮젮?쒕┰?덈떎.";
+        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
+        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
+        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
         setProgressVisualState("working");
         paintStageChips("start");
         resetEtaForStage("start");
@@ -1488,18 +1491,18 @@ function stopTimers() {
       }
 
       function renderResult(data) {
-        const titleGame = data.gameName || "蹂대뱶寃뚯엫";
-        elements.resultTitle.textContent = `${titleGame} 臾몄꽌 ?앹꽦 ?꾨즺`;
+        const titleGame = data.gameName || "보드게임";
+        elements.resultTitle.textContent = `${titleGame} 문서 생성 완료`;
         elements.resultSubtitle.textContent =
-          "臾몄꽌 A? 臾몄꽌 B瑜???쑝濡?諛붽퓭媛硫??쎄굅??HTML ?뚯씪濡??대젮諛쏆쓣 ???덉뒿?덈떎.";
-        elements.previewA.innerHTML = data.documentAHtml || "<p>臾몄꽌 A 寃곌낵媛 ?놁뒿?덈떎.</p>";
-        elements.previewB.innerHTML = data.documentBHtml || "<p>臾몄꽌 B 寃곌낵媛 ?놁뒿?덈떎.</p>";
+          "문서 A와 문서 B를 탭으로 바꿔가며 읽고, HTML 파일로 내려받을 수 있습니다.";
+        elements.previewA.innerHTML = data.documentAHtml || "<p>문서 A 결과가 없습니다.</p>";
+        elements.previewB.innerHTML = data.documentBHtml || "<p>문서 B 결과가 없습니다.</p>";
         elements.resultMeta.innerHTML = "";
 
         const pills = [
-          `${data.meta?.forumCount || 0}媛??щ읆 臾띠쓬`,
-          `${data.meta?.imageCount || 0}媛??대?吏`,
-          `${(data.glossary || []).length}媛??⑹뼱`
+          `${data.meta?.forumCount || 0}개 포럼 묶음`,
+          `${data.meta?.imageCount || 0}개 이미지`,
+          `${(data.glossary || []).length}개 용어`
         ];
 
         pills.forEach((label) => {
@@ -1533,7 +1536,7 @@ function stopTimers() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(state.result.gameName || "playready")} - 臾몄꽌 ${which}</title>
+  <title>${escapeHtml(state.result.gameName || "playready")} - 문서 ${which}</title>
   <style>
     @page { size: A4; margin: 14mm 12mm 16mm; }
     * { box-sizing: border-box; }
@@ -1611,7 +1614,7 @@ function stopTimers() {
         stopTimers();
         elements.startButton.disabled = false;
         showScreen("input");
-        showInputError("臾몄꽌 ?앹꽦??痍⑥냼?덉뒿?덈떎. ?낅젰媛믪? 洹몃?濡??⑥븘 ?덉쑝???ㅼ떆 ?쒖옉?섏떆硫??⑸땲??");
+        showInputError("문서 생성이 취소되었습니다. 입력값은 그대로 남아 있으니 다시 시작하시면 됩니다.");
       }
 
       function resetToStart() {
@@ -1647,7 +1650,7 @@ function stopTimers() {
         resetUploadSelections();
         elements.startButton.disabled = false;
         showScreen("input");
-        showInputError("臾몄꽌 ?앹꽦??痍⑥냼?덉뒿?덈떎. ?뚯씪? ?ㅼ떆 泥⑤??섎룄濡?珥덇린?뷀뻽?듬땲??");
+        showInputError("문서 생성이 취소되었습니다. 파일은 다시 첨부하도록 초기화했습니다.");
       }
 
       function resetToStart() {
@@ -1666,7 +1669,7 @@ function stopTimers() {
         setProgressVisualState("failed");
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
-        elements.progressMessage.textContent = "?대쾲 ?쒕룄???꾨즺?섏? 紐삵뻽?듬땲??";
+        elements.progressMessage.textContent = "이번 시도는 완료되지 못했습니다.";
         elements.startButton.disabled = false;
       }
 
@@ -1682,8 +1685,8 @@ function stopTimers() {
           elements.workingIndicator.innerHTML = `
             <div class="working-spinner" aria-hidden="true"></div>
             <div>
-              <strong>?먮룞 ?ъ떆??以묒엯?덈떎</strong>
-              <small>${escapeHtml(message || "泥??쒕룄 ?묐떟??遺덉븞?뺥빐 媛숈? ?④퀎瑜???踰????쒕룄?섍퀬 ?덉뒿?덈떎.")}</small>
+              <strong>자동 재시도 중입니다</strong>
+              <small>${escapeHtml(message || "첫 시도 응답이 불안정해 같은 단계를 한 번 더 시도하고 있습니다.")}</small>
             </div>
           `;
           return;
@@ -1694,7 +1697,7 @@ function stopTimers() {
           elements.etaBox.classList.add("hidden");
           elements.heartbeatBox.classList.add("hidden");
           elements.funBox.classList.add("hidden");
-          elements.progressSubtitle.textContent = "?대쾲 ?쒕룄???ш린??硫덉톬?듬땲?? ?꾨옒 ?덈궡瑜?蹂닿퀬 ?ㅼ떆 ?쒕룄?댁＜?몄슂.";
+          elements.progressSubtitle.textContent = "이번 시도는 여기서 멈췄습니다. 아래 안내를 보고 다시 시도해주세요.";
           return;
         }
 
@@ -1703,8 +1706,8 @@ function stopTimers() {
           elements.workingIndicator.innerHTML = `
             <div class="working-spinner" aria-hidden="true"></div>
             <div>
-              <strong>臾몄꽌 ?앹꽦???꾨즺?섏뿀?듬땲??/strong>
-              <small>寃곌낵 ?붾㈃?쇰줈 ?대룞?⑸땲??</small>
+              <strong>문서 생성이 완료되었습니다</strong>
+              <small>결과 화면으로 이동합니다.</small>
             </div>
           `;
           elements.etaBox.classList.add("hidden");
@@ -1716,8 +1719,8 @@ function stopTimers() {
         elements.workingIndicator.innerHTML = `
           <div class="working-spinner" aria-hidden="true"></div>
           <div>
-            <strong>?꾩옱 ?묒뾽??怨꾩냽 吏꾪뻾 以묒엯?덈떎</strong>
-            <small>${escapeHtml(message || "?ㅻ쪟媛 蹂댁씠吏 ?딅뒗?ㅻ㈃ 釉뚮씪?곗?瑜??レ? 留먭퀬 議곌툑 ??湲곕떎?ㅼ＜?몄슂.")}</small>
+            <strong>현재 작업이 계속 진행 중입니다</strong>
+            <small>${escapeHtml(message || "오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.")}</small>
           </div>
         `;
       }
@@ -1750,64 +1753,64 @@ function stopTimers() {
 
         const stageMap = {
           start: {
-            title: "?붿껌???뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "요청을 정리하고 있습니다",
             percent: 8,
-            subtitle: "?낅줈?쒕맂 ?뺣낫? ?뚯씪???뺤씤?섎ŉ 泥??④퀎瑜?以鍮꾪븯怨??덉뒿?덈떎."
+            subtitle: "업로드한 정보와 파일을 확인하며 첫 단계를 준비하고 있습니다."
           },
           bgg: {
-            title: "BGG ?곗씠?곕? ?섏쭛?섍퀬 ?덉뒿?덈떎",
+            title: "BGG 데이터를 수집하고 있습니다",
             percent: 34,
-            subtitle: "寃뚯엫 湲곕낯 ?뺣낫? 怨듦컻 ?좊줎 ?댁슜??紐⑥븘 李멸퀬 ?먮즺瑜?留뚮뱾怨??덉뒿?덈떎."
+            subtitle: "게임 기본 정보와 공개 토론 내용을 모아 참고 자료를 만들고 있습니다."
           },
           pdf: {
-            title: "PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "PDF를 분석하고 있습니다",
             percent: 64,
-            subtitle: "猷곕턿怨?FAQ?먯꽌 ?띿뒪?몄? ?대?吏瑜??쎌뼱 臾몄꽌???먮즺濡??뺣━?섍퀬 ?덉뒿?덈떎."
+            subtitle: "룰북과 FAQ에서 텍스트와 이미지를 읽어 문서용 자료로 정리하고 있습니다."
           },
           "pdf-upload": {
-            title: "猷곕턿 PDF瑜?遺꾩꽍 ?쒕쾭濡?蹂대궡怨??덉뒿?덈떎",
+            title: "룰북 PDF를 분석 서버로 보내고 있습니다",
             percent: 52,
-            subtitle: "猷곕턿 ?뚯씪???쒕쾭濡??꾩넚?섍퀬 ?덉뒿?덈떎."
+            subtitle: "룰북 파일을 서버로 안전하게 전송하고 있습니다."
           },
           "pdf-extract": {
-            title: "猷곕턿 PDF?먯꽌 ?띿뒪?몄? ?대?吏瑜?異붿텧?섍퀬 ?덉뒿?덈떎",
+            title: "룰북 PDF에서 텍스트와 이미지를 추출하고 있습니다",
             percent: 60,
-            subtitle: "?섏씠吏 ?띿뒪?? ?대?吏, ?꾩튂 ?뺣낫瑜??쎈뒗 ???쒓컙??議곌툑 嫄몃┫ ???덉뒿?덈떎."
+            subtitle: "페이지 텍스트, 이미지, 위치 정보를 읽는 데 시간이 조금 걸릴 수 있습니다."
           },
           "pdf-faq-upload": {
-            title: "FAQ/?뺤삤??PDF瑜?遺꾩꽍 ?쒕쾭濡?蹂대궡怨??덉뒿?덈떎",
+            title: "FAQ/정오표 PDF를 분석 서버로 보내고 있습니다",
             percent: 66,
-            subtitle: "異붽? PDF媛 ?덉쑝硫??쒖꽌?濡??꾩넚?섏뿬 ?④퍡 遺꾩꽍?⑸땲??"
+            subtitle: "추가 PDF가 있으면 순서대로 전송하여 함께 분석합니다."
           },
           "pdf-faq-extract": {
-            title: "FAQ/?뺤삤??PDF瑜?遺꾩꽍?섍퀬 ?덉뒿?덈떎",
+            title: "FAQ/정오표 PDF를 분석하고 있습니다",
             percent: 72,
-            subtitle: "FAQ? ?뺤삤?쒖쓽 ?띿뒪?? ?대?吏, 蹂댁젙 洹쒖튃???뺣━?섍퀬 ?덉뒿?덈떎."
+            subtitle: "FAQ와 정오표의 텍스트, 이미지, 수정 규칙을 정리하고 있습니다."
           },
           "pdf-merge": {
-            title: "PDF 遺꾩꽍 寃곌낵瑜??뺣━?섍퀬 ?덉뒿?덈떎",
+            title: "PDF 분석 결과를 정리하고 있습니다",
             percent: 78,
-            subtitle: "猷곕턿怨?FAQ 遺꾩꽍 寃곌낵瑜??⑹퀜 臾몄꽌 ?앹꽦???щ즺濡?留덈Т由ы븯怨??덉뒿?덈떎."
+            subtitle: "룰북과 FAQ 분석 결과를 합쳐 문서 생성용 재료로 마무리하고 있습니다."
           },
           "pdf-warning": {
-            title: "PDF 遺꾩꽍??吏?곕릺??媛?ν븳 ?먮즺遺??怨꾩냽 吏꾪뻾?섍퀬 ?덉뒿?덈떎",
+            title: "PDF 분석이 지연되어 가능한 자료부터 계속 진행하고 있습니다",
             percent: 74,
-            subtitle: "PDF媛 ?ㅻ옒 嫄몃━硫??ㅻⅨ ?먮즺瑜?癒쇱? ?ъ슜???ㅼ쓬 ?④퀎濡??섏뼱媛묐땲??"
+            subtitle: "PDF가 오래 걸리면 다른 자료를 먼저 사용해 다음 단계로 넘어갑니다."
           },
           "pdf-skip": {
             title: "PDF 없이 BGG 중심으로 진행합니다",
             percent: 70,
-            subtitle: "猷곕턿 PDF媛 ?놁뼱??湲곕낯 ?뺣낫? 怨듦컻 ?먮즺瑜?諛뷀깢?쇰줈 怨꾩냽 吏꾪뻾?⑸땲??"
+            subtitle: "룰북 PDF가 없어도 기본 정보와 공개 자료를 바탕으로 계속 진행합니다."
           },
           ai: {
-            title: "?쒓뎅??臾몄꽌瑜??앹꽦?섍퀬 ?덉뒿?덈떎",
+            title: "학습용 문서를 생성하고 있습니다",
             percent: 90,
-            subtitle: "?⑹뼱瑜??듭씪?섍퀬 臾몄옣 援ъ“瑜??ㅻ벉??理쒖쥌 臾몄꽌瑜?留뚮뱶???④퀎?낅땲??"
+            subtitle: "용어를 통일하고 문장 구조를 다듬어 최종 문서를 만들고 있습니다."
           },
           "ai-retry": {
-            title: "AI ?쒕쾭媛 ?좎떆 ?쇱옟?섏뿬 ?ㅼ떆 ?쒕룄?섍퀬 ?덉뒿?덈떎",
+            title: "AI 서버가 잠시 혼잡하여 다시 시도하고 있습니다",
             percent: 92,
-            subtitle: "???덉젙?곸쑝濡?寃곌낵瑜?諛쏄린 ?꾪빐 ?좎떆 ?ъ떆?꾪븯怨??덉뒿?덈떎."
+            subtitle: "더 안정적으로 결과를 받기 위해 잠시 후 다시 시도하고 있습니다."
           }
         };
 
@@ -1815,9 +1818,9 @@ function stopTimers() {
         elements.progressTitle.textContent = info.title;
         elements.progressSubtitle.textContent = info.subtitle;
         elements.progressFill.style.width = `${info.percent}%`;
-        elements.progressMessage.textContent = payload.message || "?꾩옱 ?곹깭瑜??뺣━?섍퀬 ?덉뒿?덈떎.";
+        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>?묒뾽 ?쒕쾭? 怨꾩냽 ?듭떊 以묒엯?덈떎. ?좉퉸 硫덉텣 寃껋쿂??蹂댁뿬???대? ?묒뾽? 怨꾩냽?????덉뒿?덈떎.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다. 잠깐 멈춘 것처럼 보여도 내부 작업은 계속될 수 있습니다.';
 
         if (previousStage !== stage) {
           resetEtaForStage(stage);
@@ -1888,11 +1891,11 @@ function stopTimers() {
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "臾몄꽌瑜?以鍮꾪븯怨??덉뒿?덈떎";
-        elements.progressSubtitle.textContent = "泥??붿껌???뺣━?섎뒗 以묒엯?덈떎. ?좎떆留?湲곕떎?ㅼ＜?몄슂.";
-        elements.progressMessage.textContent = "?묒뾽???쒖옉?섎㈃ ?ш린?먯꽌 ?먯꽭???곹깭瑜??뚮젮?쒕┰?덈떎.";
+        elements.progressTitle.textContent = "문서를 준비하고 있습니다";
+        elements.progressSubtitle.textContent = "첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.";
+        elements.progressMessage.textContent = "작업이 시작되면 여기에서 자세한 상태를 알려드립니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>?묒뾽???쒖옉?섎㈃ ?쒕쾭? 怨꾩냽 ?듭떊 以묒씠?쇰뒗 ?쒖떆媛 ?ш린?먯꽌 蹂댁엯?덈떎.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업이 시작되면 서버와 계속 통신 중이라는 표시가 여기에서 보입니다.';
         paintStageChips("start");
         resetEtaForStage("start");
         renderElapsed();
@@ -1904,7 +1907,7 @@ function stopTimers() {
         const stage = payload.stage || state.currentStage;
         setProgressVisualState(
           stage === "ai-retry" ? "retrying" : "working",
-          stage === "ai-retry" ? "AI ?쒕쾭媛 ?좎떆 ?쇱옟??媛숈? ?④퀎瑜??먮룞?쇰줈 ??踰????쒕룄?섍퀬 ?덉뒿?덈떎." : ""
+          stage === "ai-retry" ? "AI 서버가 잠시 혼잡하여 같은 단계를 자동으로 한 번 더 시도하고 있습니다." : ""
         );
       };
 
@@ -1912,7 +1915,7 @@ function stopTimers() {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(new Error("?뚯씪???쎈뒗 以?臾몄젣媛 諛쒖깮?덉뒿?덈떎."));
+          reader.onerror = () => reject(new Error("파일을 읽는 중 문제가 발생했습니다."));
           reader.readAsDataURL(file);
         });
       }
@@ -1921,7 +1924,7 @@ function stopTimers() {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(new Error("異붽? ?먮즺瑜??쎈뒗 以?臾몄젣媛 諛쒖깮?덉뒿?덈떎."));
+          reader.onerror = () => reject(new Error("추가 자료를 읽는 중 문제가 발생했습니다."));
           reader.readAsText(file, "utf-8");
         });
       }
@@ -1934,7 +1937,7 @@ function stopTimers() {
           /\.(txt|md|json|csv|html|htm)$/i.test(file.name);
 
         if (!isTextLike) {
-          return `[泥⑤? ?뚯씪: ${file.name}] ???뚯씪 ?뺤떇? 蹂?踰꾩쟾?먯꽌 ?띿뒪???먮룞 異붿텧??吏?먰븯吏 ?딆븘 ?뚯씪紐낅쭔 李멸퀬?⑸땲??`;
+          return `[첨부 파일: ${file.name}] 이 파일 형식은 현 버전에서 텍스트 자동 추출을 지원하지 않아 파일명만 참고합니다.`;
         }
 
         const text = await readFileAsText(file);
@@ -1944,9 +1947,9 @@ function stopTimers() {
       async function extractErrorMessage(response) {
         try {
           const data = await response.json();
-          return data?.error?.message || "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
+          return data?.error?.message || "요청 처리 중 오류가 발생했습니다.";
         } catch {
-          return "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
+          return "요청 처리 중 오류가 발생했습니다.";
         }
       }
 
