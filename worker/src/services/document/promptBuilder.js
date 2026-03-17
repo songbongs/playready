@@ -7,7 +7,13 @@ function stripImageBase64(images = []) {
     bbox: image.bbox,
     mimeType: image.mimeType,
     nearestTextBlockId: image.nearestTextBlockId || null,
-    sourceType: image.sourceType || "rulebook"
+    sourceType: image.sourceType || "rulebook",
+    width: image.width ?? null,
+    height: image.height ?? null,
+    pixelWidth: image.pixelWidth ?? null,
+    pixelHeight: image.pixelHeight ?? null,
+    areaRatio: image.areaRatio ?? null,
+    renderMode: image.renderMode ?? null
   }));
 }
 
@@ -68,7 +74,7 @@ export function buildGlossaryPayload(input) {
     '{"glossary":[{"term":"","selectedKorean":"","source":"official|community|literal","note":""}]}',
     "",
     "주의:",
-    "- PDF 추출 결과와 FAQ/정오표, BGG 포럼 데이터를 함께 참고하세요.",
+    "- PDF 추출 결과와 FAQ/정오표, BGG 포럼 데이터를 모두 참고하세요.",
     "- FAQ/정오표가 룰북과 다르면 FAQ/정오표를 우선하세요.",
     "- 용어는 최대 40개까지 허용합니다.",
     "",
@@ -112,13 +118,17 @@ export function buildDocumentPayload(input, glossary, documentType) {
     '{"documentHtml":"<section>...</section>"}',
     "",
     "주의:",
-    "- 확정 용어집을 반드시 따르세요.",
+    "- 확정 용어집을 반드시 일관되게 따르세요.",
     "- FAQ/정오표가 제공되면 룰북보다 우선합니다.",
-    '- FAQ/정오표에서 수정된 내용은 "※ 정오표 반영" 표시를 붙이세요.',
-    "- 이미지가 필요한 위치에는 [IMAGE_SLOT:image-id] 토큰을 넣으세요.",
+    '- FAQ/정오표에서 수정된 규칙은 반드시 "※ 정오표 반영" 표시를 붙이세요.',
+    "- 이미지가 꼭 필요한 위치에는 [IMAGE_SLOT:image-id] 토큰을 사용할 수 있습니다.",
+    "- 문서 A와 문서 B 모두 실제 플레이어가 자기 턴에 무엇을 할 수 있는지 빠르게 파악할 수 있도록 액션 흐름 도식화 섹션을 반드시 포함하세요.",
+    '- 액션 흐름 도식화는 반드시 <section class="action-flow-section">로 시작하세요.',
+    '- 섹션 안에는 <div class="action-flow">를 만들고, 각 단계는 <div class="action-flow-step">로 작성하세요.',
+    "- 분기가 있으면 한 단계 안에 선택지 2~3개를 짧게 정리하고, 흐름은 '시작 -> 선택 가능한 행동 -> 결과 처리 -> 정리' 형태로 보이게 하세요.",
     "- 입력 자료에 없는 사실은 추가하지 마세요.",
     "- BGG 내용은 '커뮤니티 의견'과 '디자이너 공식 답변'을 구분하세요.",
-    "- 불확실한 내용은 '확인 필요'라고 표시하세요.",
+    "- 불확실한 내용은 '확인 필요'로 표시하세요.",
     "",
     `확정 용어집: ${JSON.stringify(glossary || [])}`,
     `원본 자료: ${JSON.stringify(sources)}`

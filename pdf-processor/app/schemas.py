@@ -30,6 +30,12 @@ class ExtractedImage(BaseModel):
     mimeType: str
     base64: str
     nearestTextBlockId: str | None = None
+    width: float | None = None
+    height: float | None = None
+    pixelWidth: int | None = None
+    pixelHeight: int | None = None
+    areaRatio: float | None = None
+    renderMode: str | None = None
 
 
 class ExtractResponse(BaseModel):
