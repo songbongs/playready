@@ -193,19 +193,31 @@ async function requestRenderGeneration(config, payload) {
     );
   }
 
+  const responseText = await response.text();
+
   if (!response.ok) {
-    let detail = "";
+    let detail = responseText;
     try {
-      const parsed = await response.json();
+      const parsed = JSON.parse(responseText || "{}");
       detail = parsed?.detail || parsed?.message || "";
     } catch {
-      detail = await response.text();
+      detail = responseText;
     }
 
     throw parseAiServiceError(response.status, detail);
   }
 
-  const parsed = await response.json();
+  let parsed;
+  try {
+    parsed = JSON.parse(responseText || "{}");
+  } catch {
+    throw createUserError(
+      "Render AI 서버가 올바른 JSON 응답을 반환하지 않았습니다. 잠시 후 다시 시도해주세요.",
+      502,
+      "AI_SERVICE_INVALID_RESPONSE"
+    );
+  }
+
   return parsed?.result || parsed;
 }
 
