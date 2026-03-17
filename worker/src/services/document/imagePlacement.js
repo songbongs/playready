@@ -268,7 +268,7 @@ function containsHeading(html, headingPatterns) {
   return Boolean(findHeadingMatchText(html, headingPatterns));
 }
 
-function buildSectionPlan(docType) {
+function legacyBuildSectionPlan(docType) {
   if (docType === "B") {
     return [
       {
@@ -366,7 +366,7 @@ function buildSectionPlan(docType) {
   ];
 }
 
-function pickItemsForPlan(plan, classified) {
+function legacyPickItemsForPlan(plan, classified) {
   const selected = [];
   const used = new Set();
 
@@ -387,7 +387,7 @@ function pickItemsForPlan(plan, classified) {
   return selected;
 }
 
-function injectAutomaticGalleries(html, extraction, docType) {
+function legacyInjectAutomaticGalleries(html, extraction, docType) {
   const plan = buildSectionPlan(docType);
   const classified = collectClassifiedImages(extraction);
   let result = html;
@@ -485,6 +485,134 @@ function ensureActionFlowSection(html, docType) {
 
   const inserted = insertAfterHeading(html, headingPatterns, sectionHtml);
   return inserted === html ? `${html}${sectionHtml}` : inserted;
+}
+
+function buildSectionPlan(docType) {
+  if (docType === "B") {
+    return [
+      {
+        title: "셋업 참고 이미지",
+        lead: "설명 전에 실제 배치 상태를 빠르게 확인할 수 있는 이미지만 넣습니다.",
+        variant: "standard",
+        maxCount: 1,
+        minScore: 78,
+        headingPatterns: ["셋업 체크리스트"],
+        requiredBuckets: ["setup", "boards"]
+      },
+      {
+        title: "핵심 아이콘 카드",
+        lead: "설명 중 자주 가리키는 아이콘만 작은 카드 형태로 정리합니다.",
+        variant: "icon",
+        maxCount: 6,
+        minScore: 82,
+        headingPatterns: ["핵심 아이콘 카드"],
+        requiredBuckets: ["icons"]
+      },
+      {
+        title: "보드 위치 안내 이미지",
+        lead: "설명자가 바로 가리킬 수 있는 위치 이미지가 있을 때만 넣습니다.",
+        variant: "standard",
+        maxCount: 1,
+        minScore: 82,
+        headingPatterns: ["보드 위치 안내"],
+        requiredBuckets: ["boards", "setup"]
+      }
+    ];
+  }
+
+  return [
+    {
+      title: "셋업 참고 이미지",
+      lead: "게임 준비와 시작 상태를 이해하는 데 직접 도움이 되는 이미지만 넣습니다.",
+      variant: "standard",
+      maxCount: 2,
+      minScore: 76,
+      headingPatterns: ["게임 준비와 시작 상태", "게임 준비 개요"],
+      requiredBuckets: ["setup", "boards"]
+    },
+    {
+      title: "점수/트랙 참고 이미지",
+      lead: "점수 계산이나 트랙 연결을 빠르게 이해하는 데 도움이 되는 이미지만 넣습니다.",
+      variant: "standard",
+      maxCount: 1,
+      minScore: 82,
+      headingPatterns: ["자원·트랙·상태·위치의 연결", "점수/승리 조건 이해"],
+      requiredBuckets: ["scoring", "boards"]
+    },
+    {
+      title: "구성물 해설 이미지",
+      lead: "구성물을 실제로 구분할 필요가 있을 때만 넣습니다.",
+      variant: "standard",
+      maxCount: 3,
+      minScore: 78,
+      headingPatterns: ["구성물 해설"],
+      requiredBuckets: ["components"]
+    },
+    {
+      title: "아이콘/기호 사전",
+      lead: "아이콘 중심 게임일 때만 핵심 아이콘을 작게 정리합니다.",
+      variant: "icon",
+      maxCount: 8,
+      minScore: 82,
+      headingPatterns: ["아이콘/기호 사전"],
+      requiredBuckets: ["icons"]
+    },
+    {
+      title: "보드/개인판 구조 참고 이미지",
+      lead: "보드 구조가 실제 이해에 중요할 때만 넣습니다.",
+      variant: "standard",
+      maxCount: 2,
+      minScore: 82,
+      headingPatterns: ["보드/개인판 구조 설명"],
+      requiredBuckets: ["boards"]
+    }
+  ];
+}
+
+function pickItemsForPlan(plan, classified, usedGlobal = new Set()) {
+  const selected = [];
+
+  for (const bucket of plan.requiredBuckets) {
+    const bucketItems = dedupeAndLimit(classified[bucket] || [], plan.maxCount * 2);
+    for (const item of bucketItems) {
+      if (usedGlobal.has(item.image.id)) {
+        continue;
+      }
+      if ((item.score || 0) < (plan.minScore || 0)) {
+        continue;
+      }
+      selected.push(item);
+      usedGlobal.add(item.image.id);
+      if (selected.length >= plan.maxCount) {
+        return selected;
+      }
+    }
+  }
+
+  return selected;
+}
+
+function injectAutomaticGalleries(html, extraction, docType) {
+  const plan = buildSectionPlan(docType);
+  const classified = collectClassifiedImages(extraction);
+  const usedGlobal = new Set();
+  let result = html;
+
+  for (const section of plan) {
+    if (!containsHeading(result, section.headingPatterns)) {
+      continue;
+    }
+
+    const items = pickItemsForPlan(section, classified, usedGlobal);
+    if (!items.length) {
+      continue;
+    }
+
+    const galleryHtml = buildGallerySection(section.title, section.lead, items, section.variant);
+    result = insertAfterHeading(result, section.headingPatterns, galleryHtml);
+  }
+
+  return result;
 }
 
 export function injectImagesIntoHtml(html, extraction, docType = "A") {
