@@ -45,10 +45,17 @@ def generate_with_retry(model: str, payload: dict[str, Any], retries: int = 1) -
             raise
         except urllib.error.HTTPError as exc:
             last_status = exc.code or 502
-            last_body = exc.read().decode("utf-8", errors="replace") or str(exc)
+            raw_body = exc.read().decode("utf-8", errors="replace").strip()
+            if raw_body:
+                last_body = raw_body
+            elif last_status == 502:
+                last_body = "Gemini upstream returned 502 Bad Gateway"
+            else:
+                last_body = str(exc)
         except urllib.error.URLError as exc:
             last_status = 502
-            last_body = str(exc.reason or exc)
+            reason = str(exc.reason or exc).strip()
+            last_body = reason or "Gemini upstream network error"
         except TimeoutError:
             last_status = 504
             last_body = "Gemini request timed out"

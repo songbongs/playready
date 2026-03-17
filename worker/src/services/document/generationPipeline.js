@@ -170,6 +170,14 @@ function parseAiServiceError(status, message) {
     );
   }
 
+  if (status === 502 || /502|bad gateway|upstream/i.test(normalized)) {
+    return createUserError(
+      "AI 서버와 모델 서버 사이 연결이 잠시 불안정했습니다. 잠시 후 다시 시도해주세요. 같은 문제가 반복되면 모델 혼잡 시간대일 수 있습니다.",
+      502,
+      "GEMINI_UPSTREAM_BAD_GATEWAY"
+    );
+  }
+
   if (
     status === 413 ||
     /token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized)
