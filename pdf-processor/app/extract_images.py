@@ -5,6 +5,10 @@ from typing import Any
 
 import fitz
 
+MAX_TOTAL_IMAGES = 24
+MAX_IMAGES_PER_PAGE = 6
+MAX_RENDER_EDGE = 900
+
 
 def _bbox_to_dict(rect: fitz.Rect) -> dict[str, float]:
     return {
@@ -17,16 +21,27 @@ def _bbox_to_dict(rect: fitz.Rect) -> dict[str, float]:
 
 def _pick_scale(area_ratio: float) -> float:
     if area_ratio <= 0.01:
-        return 3.0
+        return 2.0
     if area_ratio <= 0.05:
-        return 2.2
-    return 1.6
+        return 1.6
+    return 1.2
+
+
+def _fit_pixmap(pixmap: fitz.Pixmap) -> fitz.Pixmap:
+    if max(pixmap.width, pixmap.height) <= MAX_RENDER_EDGE:
+        return pixmap
+
+    scale = MAX_RENDER_EDGE / max(pixmap.width, pixmap.height)
+    target_width = max(1, int(pixmap.width * scale))
+    target_height = max(1, int(pixmap.height * scale))
+    return fitz.Pixmap(pixmap, target_width, target_height)
 
 
 def _render_clipped_image(page: fitz.Page, rect: fitz.Rect, area_ratio: float) -> tuple[bytes, str, int, int]:
     matrix = fitz.Matrix(_pick_scale(area_ratio), _pick_scale(area_ratio))
     pixmap = page.get_pixmap(clip=rect, matrix=matrix, alpha=False, annots=False)
-    return pixmap.tobytes("png"), "image/png", pixmap.width, pixmap.height
+    fitted = _fit_pixmap(pixmap)
+    return fitted.tobytes("png"), "image/png", fitted.width, fitted.height
 
 
 def extract_images(document: fitz.Document) -> list[dict[str, Any]]:
@@ -34,13 +49,20 @@ def extract_images(document: fitz.Document) -> list[dict[str, Any]]:
     seen: set[tuple[int, int, int, int, int]] = set()
 
     for page_index in range(document.page_count):
+        if len(extracted) >= MAX_TOTAL_IMAGES:
+            break
+
         try:
             page = document.load_page(page_index)
             image_infos = page.get_image_info(xrefs=True)
         except Exception:
             continue
 
+        page_image_count = 0
         for image_index, info in enumerate(image_infos):
+            if len(extracted) >= MAX_TOTAL_IMAGES or page_image_count >= MAX_IMAGES_PER_PAGE:
+                break
+
             xref = info.get("xref")
             if not xref:
                 continue
@@ -80,6 +102,9 @@ def extract_images(document: fitz.Document) -> list[dict[str, Any]]:
                 except Exception:
                     continue
 
+            if not image_bytes:
+                continue
+
             extracted.append(
                 {
                     "id": f"page-{page_index + 1}-image-{image_index + 1}",
@@ -95,5 +120,6 @@ def extract_images(document: fitz.Document) -> list[dict[str, Any]]:
                     "renderMode": render_mode,
                 }
             )
+            page_image_count += 1
 
     return extracted
