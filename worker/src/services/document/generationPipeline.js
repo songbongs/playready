@@ -7,37 +7,67 @@ import {
 } from "./promptBuilder.js";
 import { injectImagesIntoHtml } from "./imagePlacement.js";
 
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchPdfExtraction(payload, config) {
   if (!config.pdfExtractorUrl) {
     throw createUserError("PDF 추출 서비스 주소가 설정되지 않았습니다.", 500, "MISSING_PDF_SERVICE");
   }
 
-  let response;
-  try {
-    response = await fetch(config.pdfExtractorUrl, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-  } catch {
+  const retryableStatuses = new Set([500, 502, 503, 504]);
+  const delays = [2000, 5000];
+  let lastResponse = null;
+
+  for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    try {
+      const response = await fetch(config.pdfExtractorUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        return response.json();
+      }
+
+      lastResponse = response;
+      if (retryableStatuses.has(response.status) && attempt < delays.length) {
+        await sleep(delays[attempt]);
+        continue;
+      }
+
+      break;
+    } catch {
+      if (attempt < delays.length) {
+        await sleep(delays[attempt]);
+        continue;
+      }
+
+      throw createUserError(
+        "PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.",
+        502,
+        "PDF_SERVICE_UNAVAILABLE"
+      );
+    }
+  }
+
+  if (lastResponse?.status >= 500) {
     throw createUserError(
-      "PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.",
+      "PDF 분석 서버가 잠시 불안정합니다. 잠시 후 다시 시도해주세요.",
       502,
       "PDF_SERVICE_UNAVAILABLE"
     );
   }
 
-  if (!response.ok) {
-    throw createUserError(
-      "PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.",
-      400,
-      "PDF_PARSE_FAILED"
-    );
-  }
-
-  return response.json();
+  throw createUserError(
+    "PDF 파일을 읽을 수 없습니다. 파일이 손상되었거나 암호화되어 있을 수 있습니다.",
+    400,
+    "PDF_PARSE_FAILED"
+  );
 }
 
 async function fetchOptionalPdfExtraction(payload, config, onProgress, warningMessage) {
@@ -117,7 +147,7 @@ function cleanupSensitiveData(state) {
 
 function getRenderGenerateUrl(config) {
   if (!config.pdfExtractorUrl) {
-    throw createUserError("AI 생성 서버 주소가 설정되지 않았습니다.", 500, "MISSING_AI_SERVICE");
+    throw createUserError("AI 생성 서비스 주소가 설정되지 않았습니다.", 500, "MISSING_AI_SERVICE");
   }
 
   if (config.pdfExtractorUrl.endsWith("/extract")) {
@@ -148,7 +178,7 @@ function parseAiServiceError(status, message) {
 
   if (/api key|authentication/i.test(normalized)) {
     return createUserError(
-      "Render 서버의 Gemini API 키 설정이 올바르지 않습니다. Render 환경변수 GEMINI_API_KEY를 다시 확인해주세요.",
+      "Render 서버의 Gemini API 키가 올바르지 않습니다. Render 환경변수 GEMINI_API_KEY를 다시 확인해주세요.",
       401,
       "GEMINI_INVALID_KEY"
     );
@@ -183,7 +213,7 @@ function parseAiServiceError(status, message) {
     /token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized)
   ) {
     return createUserError(
-      "AI에 전달한 자료가 너무 많아 문서 생성에 실패했습니다. 입력 자료를 줄이거나 더 큰 입력을 지원하는 모델을 사용해주세요.",
+      "AI에 전달할 자료가 너무 많아 문서 생성에 실패했습니다. 입력 자료를 줄이거나 더 큰 입력을 지원하는 모델을 사용해주세요.",
       413,
       "GEMINI_INPUT_TOO_LARGE"
     );
@@ -255,7 +285,7 @@ async function generateJsonSection(config, payload) {
   } catch (error) {
     if (error?.code === "GEMINI_OUTPUT_TOO_LARGE") {
       throw createUserError(
-        "AI가 문서를 거의 완성했지만 출력 길이가 너무 길어 마지막 JSON 정리에 실패했습니다. 문서 분량을 더 잘게 나누는 방식으로 조정이 필요합니다.",
+        "AI가 문서를 거의 완성했지만 출력 길이가 너무 길어 마지막 JSON 정리에 실패했습니다. 문서를 더 작은 단위로 나누는 조정이 필요합니다.",
         502,
         "GEMINI_OUTPUT_TOO_LARGE"
       );
@@ -291,7 +321,7 @@ async function generateJsonSectionWithRetry(config, payload, onProgress, retryMe
       }
 
       await onProgress(retryMessage, { stage: "ai-retry", attempt: attempt + 1 });
-      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+      await sleep(delays[attempt]);
     }
   }
 
@@ -312,7 +342,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
 
   try {
     await onProgress("BGG 포럼 데이터를 수집하고 있습니다... (1/3)", { stage: "bgg" });
-    state.bggForumData = await collectBggForumData(state.request.bggId, config, onProgress);
+    state.bggForumData = await collectBggForumData(
+      state.request.bggId,
+      state.request.gameName,
+      config,
+      onProgress
+    );
     assertTime();
 
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });

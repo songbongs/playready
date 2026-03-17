@@ -118,7 +118,23 @@ function parseThingInfo(xml) {
   };
 }
 
-export async function collectBggForumData(bggId, config, onProgress) {
+function buildFallbackThingInfo(bggId, gameName, thingInfo) {
+  return {
+    id: String(thingInfo?.id || bggId || ""),
+    name: thingInfo?.name || gameName || "",
+    yearPublished: thingInfo?.yearPublished || null,
+    minPlayers: thingInfo?.minPlayers || null,
+    maxPlayers: thingInfo?.maxPlayers || null,
+    playingTime: thingInfo?.playingTime || null,
+    minAge: thingInfo?.minAge || null,
+    description: thingInfo?.description || "",
+    mechanics: thingInfo?.mechanics || [],
+    categories: thingInfo?.categories || [],
+    families: thingInfo?.families || []
+  };
+}
+
+export async function collectBggForumData(bggId, gameName, config, onProgress) {
   const thingUrl = `${config.bggApiBase}/thing?id=${bggId}&stats=1`;
   const thingXml = await fetchXmlOrNull(
     thingUrl,
@@ -126,7 +142,7 @@ export async function collectBggForumData(bggId, config, onProgress) {
     "BGG 서버에서 게임 기본 정보를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.",
     onProgress
   );
-  const thingInfo = thingXml ? parseThingInfo(thingXml) : null;
+  const thingInfo = buildFallbackThingInfo(bggId, gameName, thingXml ? parseThingInfo(thingXml) : null);
 
   const forumListUrl = `${config.bggApiBase}/forumlist?id=${bggId}&type=thing`;
   const forumListXml = await fetchXmlOrNull(
