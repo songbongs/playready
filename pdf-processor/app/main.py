@@ -41,12 +41,29 @@ def extract(request: ExtractRequest) -> ExtractResponse:
         if document.needs_pass and not document.authenticate(""):
             raise ValueError("password-protected pdf")
 
-        text_blocks = extract_text_blocks(document)
-        images = extract_images(document)
-        linked_images = link_images_to_text(images, text_blocks)
-
         if document.page_count == 0:
             raise ValueError("empty extraction result")
+
+        try:
+            text_blocks = extract_text_blocks(document)
+        except Exception:
+            text_blocks = []
+
+        try:
+            images = extract_images(document)
+        except Exception:
+            images = []
+
+        try:
+            linked_images = link_images_to_text(images, text_blocks)
+        except Exception:
+            linked_images = images
+
+        if not text_blocks and not linked_images:
+            # The PDF was opened successfully, so keep processing with page metadata
+            # instead of failing the whole request for a partial extractor issue.
+            linked_images = []
+            text_blocks = []
 
         return ExtractResponse(
             gameName=request.gameName,
