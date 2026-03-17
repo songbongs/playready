@@ -314,14 +314,20 @@ async function requestRenderGeneration(config, payload) {
     );
   }
 
-  return parsed?.result || parsed;
+  return {
+    result: parsed?.result || parsed,
+    modelInfo: parsed?.modelInfo || null
+  };
 }
 
 async function generateJsonSection(config, payload) {
-  const result = await requestRenderGeneration(config, payload);
+  const renderResponse = await requestRenderGeneration(config, payload);
 
   try {
-    return parseGeminiJsonResponse(result);
+    return {
+      data: parseGeminiJsonResponse(renderResponse.result),
+      modelInfo: renderResponse.modelInfo
+    };
   } catch (error) {
     if (error?.code === "GEMINI_OUTPUT_TOO_LARGE") {
       throw createUserError(
@@ -346,6 +352,57 @@ function isRetryableAiError(error) {
     "GEMINI_UPSTREAM_TIMEOUT",
     "AI_SERVICE_UNAVAILABLE"
   ].includes(error?.code);
+}
+
+function formatModelUsageSummary(sectionInfos = []) {
+  const usableInfos = sectionInfos.filter((info) => info?.usedModel);
+  if (!usableInfos.length) {
+    return {
+      label: "사용 모델: 확인 불가",
+      detail: "이번 결과에서 실제 사용 모델 정보를 받지 못했습니다."
+    };
+  }
+
+  const uniqueModels = [...new Set(usableInfos.map((info) => info.usedModel))];
+  const fallbackUsed = usableInfos.some((info) => info.fallbackUsed);
+
+  if (uniqueModels.length === 1 && !fallbackUsed) {
+    return {
+      label: `사용 모델: ${uniqueModels[0]}`,
+      detail: `이번 작업은 전체 단계가 ${uniqueModels[0]}로 처리되었습니다.`
+    };
+  }
+
+  if (uniqueModels.length === 1 && fallbackUsed) {
+    return {
+      label: `사용 모델: ${uniqueModels[0]} (fallback 사용)`,
+      detail: `기본 모델 재시도 후 ${uniqueModels[0]}로 처리된 단계가 있습니다.`
+    };
+  }
+
+  return {
+    label: `사용 모델: 혼합 (${uniqueModels.join(", ")})`,
+    detail: "단계별로 사용된 모델이 달랐습니다. 아래 세부 정보를 확인하세요."
+  };
+}
+
+function buildModelUsageDetails(sectionMap) {
+  const sectionLabels = {
+    glossary: "용어집",
+    documentA: "문서 A",
+    documentB: "문서 B"
+  };
+
+  return Object.entries(sectionMap)
+    .map(([key, info]) => {
+      if (!info?.usedModel) {
+        return null;
+      }
+
+      const suffix = info.fallbackUsed ? " (fallback)" : "";
+      return `${sectionLabels[key]}: ${info.usedModel}${suffix}`;
+    })
+    .filter(Boolean);
 }
 
 async function generateJsonSectionWithRetry(config, payload, onProgress, retryMessage) {
@@ -495,35 +552,42 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     );
     const documentAResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "A"),
+      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "A"),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 A를 다시 시도하고 있습니다... (3/3)"
     );
     const documentBResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.glossary || [], "B"),
+      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "B"),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 B를 다시 시도하고 있습니다... (3/3)"
     );
 
     const images = state.pdfExtraction?.images || [];
     const documentAHtml = injectImagesIntoHtml(
-      documentAResult.documentHtml || "",
+      documentAResult.data.documentHtml || "",
       state.pdfExtraction,
       "A"
     );
     const documentBHtml = injectImagesIntoHtml(
-      documentBResult.documentHtml || "",
+      documentBResult.data.documentHtml || "",
       state.pdfExtraction,
       "B"
     );
+    const modelUsageBySection = {
+      glossary: glossaryResult.modelInfo,
+      documentA: documentAResult.modelInfo,
+      documentB: documentBResult.modelInfo
+    };
+    const modelUsageSummary = formatModelUsageSummary(Object.values(modelUsageBySection));
+    const modelUsageDetails = buildModelUsageDetails(modelUsageBySection);
 
     return {
       ok: true,
       data: {
         gameName: state.request.gameName,
         bggId: state.request.bggId,
-        glossary: glossaryResult.glossary || [],
+        glossary: glossaryResult.data.glossary || [],
         documentAHtml,
         documentBHtml,
         meta: {
@@ -533,7 +597,10 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           faqPageCount: state.faqExtraction?.pageCount || 0,
           rulebookPageCount: state.rulebookExtraction?.pageCount || 0,
           faqIncluded: Boolean(state.faqExtraction?.pageCount),
-          hasBggThingInfo: Boolean(state.bggForumData?.thingInfo?.name)
+          hasBggThingInfo: Boolean(state.bggForumData?.thingInfo?.name),
+          modelUsageSummary,
+          modelUsageDetails,
+          modelUsageBySection
         }
       }
     };

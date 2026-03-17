@@ -51,6 +51,13 @@ class GenerateJsonRequest(BaseModel):
     payload: dict[str, Any]
 
 
+class GenerateJsonModelInfo(BaseModel):
+    requestedModel: str
+    usedModel: str
+    fallbackUsed: bool = False
+
+
 class GenerateJsonResponse(BaseModel):
     ok: bool = True
     result: dict[str, Any]
+    modelInfo: GenerateJsonModelInfo

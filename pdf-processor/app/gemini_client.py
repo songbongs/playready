@@ -119,7 +119,14 @@ def _should_try_fallback(primary_model: str, status: int, message: str) -> bool:
 def generate_with_retry(model: str, payload: dict[str, Any], retries: int = 1) -> dict[str, Any]:
     primary_attempt = _request_with_retry(model, payload)
     if primary_attempt["ok"]:
-        return primary_attempt["result"]
+        return {
+            "result": primary_attempt["result"],
+            "modelInfo": {
+                "requestedModel": model,
+                "usedModel": primary_attempt["model"],
+                "fallbackUsed": False,
+            },
+        }
 
     fallback_model = _resolve_fallback_model(model)
     if fallback_model and _should_try_fallback(
@@ -127,7 +134,14 @@ def generate_with_retry(model: str, payload: dict[str, Any], retries: int = 1) -
     ):
         fallback_attempt = _request_with_retry(fallback_model, payload)
         if fallback_attempt["ok"]:
-            return fallback_attempt["result"]
+            return {
+                "result": fallback_attempt["result"],
+                "modelInfo": {
+                    "requestedModel": model,
+                    "usedModel": fallback_attempt["model"],
+                    "fallbackUsed": True,
+                },
+            }
 
         raise RuntimeError(
             json.dumps(

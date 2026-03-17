@@ -98,8 +98,11 @@ def extract(request: ExtractRequest) -> ExtractResponse:
 @app.post("/generate-json", response_model=GenerateJsonResponse)
 def generate_json(request: GenerateJsonRequest) -> GenerateJsonResponse:
     try:
-        result = generate_with_retry(request.model, request.payload)
-        return GenerateJsonResponse(result=result)
+        generated = generate_with_retry(request.model, request.payload)
+        return GenerateJsonResponse(
+            result=generated["result"],
+            modelInfo=generated["modelInfo"],
+        )
     except GeminiConfigurationError as exc:
         raise HTTPException(
             status_code=500,

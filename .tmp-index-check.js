@@ -530,6 +530,35 @@ function stopTimers() {
           elements.resultMeta.appendChild(span);
         });
 
+        const modelSummary = data.meta?.modelUsageSummary;
+        if (modelSummary?.label) {
+          const note = document.createElement("div");
+          note.className = "result-model-note";
+
+          const title = document.createElement("strong");
+          title.textContent = modelSummary.label;
+          note.appendChild(title);
+
+          if (modelSummary.detail) {
+            const detail = document.createElement("div");
+            detail.textContent = modelSummary.detail;
+            note.appendChild(detail);
+          }
+
+          const details = data.meta?.modelUsageDetails || [];
+          if (details.length) {
+            const list = document.createElement("ul");
+            details.forEach((item) => {
+              const li = document.createElement("li");
+              li.textContent = item;
+              list.appendChild(li);
+            });
+            note.appendChild(list);
+          }
+
+          elements.resultMeta.appendChild(note);
+        }
+
         activateTab("A");
       }
 
