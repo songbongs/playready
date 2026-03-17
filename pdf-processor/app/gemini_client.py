@@ -33,12 +33,14 @@ def _build_request(model: str, payload: dict[str, Any]) -> urllib.request.Reques
 def generate_with_retry(model: str, payload: dict[str, Any], retries: int = 1) -> dict[str, Any]:
     last_status = 502
     last_body = "Gemini request failed"
-    retry_delays = [2, 5, 10, 20, 30]
+    # Keep one Render request short enough to avoid upstream 524 timeouts.
+    retry_delays = [2, 5]
+    request_timeout_seconds = 90
 
     for attempt in range(len(retry_delays) + 1):
         try:
             request = _build_request(model, payload)
-            with urllib.request.urlopen(request, timeout=180) as response:
+            with urllib.request.urlopen(request, timeout=request_timeout_seconds) as response:
                 body = response.read().decode("utf-8")
                 return json.loads(body)
         except GeminiConfigurationError:
