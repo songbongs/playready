@@ -284,7 +284,7 @@ function buildSectionPlan(docType) {
         lead: "내 턴에 어떤 위치를 보며 설명해야 하는지 한눈에 볼 수 있는 이미지입니다.",
         variant: "standard",
         maxCount: 2,
-        headingPatterns: ["내 턴에는 이렇게 진행합니다", "핵심 행동 요약"],
+        headingPatterns: ["플레이어 턴 흐름도 (간소화)", "핵심 행동 요약"],
         requiredBuckets: ["boards"]
       },
       {
@@ -323,14 +323,14 @@ function buildSectionPlan(docType) {
       headingPatterns: ["게임 준비 개요"],
       requiredBuckets: ["setup", "boards"]
     },
-    {
-      title: "행동 위치 참고 이미지",
-      lead: "핵심 행동이 보드에서 어디와 연결되는지 보기 쉽게 정리한 이미지입니다.",
-      variant: "standard",
-      maxCount: 2,
-      headingPatterns: ["핵심 행동/선택지 설명", "플레이 흐름 개요"],
-      requiredBuckets: ["boards"]
-    },
+      {
+        title: "행동 위치 참고 이미지",
+        lead: "핵심 행동이 보드에서 어디와 연결되는지 보기 쉽게 정리한 이미지입니다.",
+        variant: "standard",
+        maxCount: 2,
+        headingPatterns: ["플레이어 턴 흐름도", "핵심 행동 상세 설명"],
+        requiredBuckets: ["boards"]
+      },
     {
       title: "점수·트랙 참고 이미지",
       lead: "트랙, 보드, 점수 구조가 어떻게 이어지는지 참고할 수 있는 이미지입니다.",
@@ -412,21 +412,24 @@ function injectAutomaticGalleries(html, extraction, docType) {
 function buildActionFlowSteps(docType) {
   if (docType === "B") {
     return [
-      { title: "내 차례 시작", detail: "차례 시작 효과가 있는지 먼저 확인합니다.", tone: "neutral" },
-      { title: "이번 턴 행동 선택", detail: "지금 할 수 있는 대표 행동 가운데 하나를 고릅니다.", tone: "primary" },
-      { title: "효과 처리", detail: "비용, 보상, 이동, 배치 같은 즉시 효과를 처리합니다.", tone: "secondary" },
-      { title: "추가 확인", detail: "목표 달성, 예외 처리, 종료 조건이 있는지 짧게 확인합니다.", tone: "warning" },
-      { title: "턴 종료", detail: "다음 플레이어에게 차례를 넘기거나 라운드 종료 처리를 진행합니다.", tone: "neutral" }
+      { title: "내 차례 시작", detail: "차례 시작 효과와 현재 상태를 먼저 확인합니다.", tone: "neutral" },
+      { title: "가능한 행동 확인", detail: "이번 턴에 할 수 있는 대표 행동을 확인합니다.", tone: "primary" },
+      { title: "행동 1개 선택", detail: "핵심 선택지 가운데 하나를 고릅니다.", tone: "secondary" },
+      { title: "효과 처리", detail: "비용, 보상, 배치, 이동 같은 즉시 효과를 처리합니다.", tone: "secondary" },
+      { title: "종료 확인", detail: "추가 처리나 종료 조건이 있는지 짧게 확인합니다.", tone: "warning" },
+      { title: "다음 플레이어 또는 라운드 종료", detail: "조건에 따라 다음 차례로 넘기거나 종료 처리를 진행합니다.", tone: "neutral" }
     ];
   }
 
   return [
     { title: "내 차례 시작", detail: "시작 효과와 현재 상태를 먼저 확인합니다.", tone: "neutral" },
-    { title: "선택 가능한 행동 파악", detail: "이번 턴에 가능한 대표 행동, 선택지, 제한 조건을 확인합니다.", tone: "primary" },
-    { title: "행동 실행", detail: "선택한 행동의 비용, 보상, 배치, 이동, 연쇄 효과를 순서대로 처리합니다.", tone: "secondary" },
-    { title: "추가 처리 / 예외 확인", detail: "추가 효과, 목표 달성, 예외 규칙, 즉시 반응이 있는지 점검합니다.", tone: "warning" },
-    { title: "턴 종료 준비", detail: "정리 단계나 종료 체크가 필요하면 처리합니다.", tone: "secondary" },
-    { title: "다음 플레이어 또는 라운드 종료", detail: "종료 조건을 확인한 뒤 다음 차례로 넘어가거나 라운드를 마칩니다.", tone: "neutral" }
+    { title: "현재 상태 / 시작 효과 확인", detail: "턴 시작 시 확인해야 하는 조건과 즉시 효과를 점검합니다.", tone: "primary" },
+    { title: "선택 가능한 행동 또는 결정 지점", detail: "이번 턴에 할 수 있는 행동과 선택 조건을 파악합니다.", tone: "warning" },
+    { title: "행동 선택", detail: "가능한 행동 가운데 하나를 고릅니다.", tone: "secondary" },
+    { title: "행동 효과 처리", detail: "비용, 보상, 이동, 배치, 연쇄 효과를 순서대로 처리합니다.", tone: "secondary" },
+    { title: "추가 처리 / 예외 확인", detail: "목표 달성, 즉시 반응, 예외 규칙이 있는지 확인합니다.", tone: "warning" },
+    { title: "종료 조건 확인", detail: "턴 종료 또는 라운드 종료 조건이 충족되는지 확인합니다.", tone: "primary" },
+    { title: "다음 플레이어 또는 라운드 종료", detail: "조건에 따라 다음 플레이어 차례로 넘기거나 종료 처리를 진행합니다.", tone: "neutral" }
   ];
 }
 
@@ -452,7 +455,7 @@ function buildVerticalActionFlow(steps) {
 }
 
 function buildActionFlowSection(docType) {
-  const title = docType === "B" ? "3-1. 턴 흐름도" : "3-1. 턴 흐름도";
+  const title = docType === "B" ? "2-1. 플레이어 턴 흐름도 (간소화)" : "2-1. 플레이어 턴 흐름도";
   const lead =
     docType === "B"
       ? "설명할 때 바로 보여줄 수 있도록 한 턴의 기본 흐름을 위에서 아래로 정리했습니다."
@@ -477,8 +480,8 @@ function ensureActionFlowSection(html, docType) {
   const sectionHtml = buildActionFlowSection(docType);
   const headingPatterns =
     docType === "B"
-      ? ["내 턴에는 이렇게 진행합니다", "핵심 행동 요약"]
-      : ["플레이 흐름 개요", "핵심 행동/선택지 설명"];
+      ? ["플레이어 턴 흐름도 (간소화)", "핵심 행동 요약"]
+      : ["플레이어 턴 흐름도", "핵심 행동 상세 설명"];
 
   const inserted = insertAfterHeading(html, headingPatterns, sectionHtml);
   return inserted === html ? `${html}${sectionHtml}` : inserted;
