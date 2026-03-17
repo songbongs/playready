@@ -152,6 +152,14 @@ function parseAiServiceError(status, message) {
     );
   }
 
+  if (status === 503 || /high demand|temporar|unavailable/i.test(normalized)) {
+    return createUserError(
+      "AI 서버가 현재 매우 혼잡합니다. 잠시 후 다시 시도해주세요. 보통 몇 분 안에 다시 정상화됩니다.",
+      503,
+      "GEMINI_TEMPORARILY_UNAVAILABLE"
+    );
+  }
+
   if (
     status === 413 ||
     /token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized)
