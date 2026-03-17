@@ -49,7 +49,7 @@ async function fetchXmlOrNull(url, init, errorMessage, onProgress) {
   try {
     return await fetchXml(url, init, errorMessage);
   } catch {
-    await onProgress?.("BGG 응답이 지연되어 일부 커뮤니티 자료를 건너뛰고 있습니다... (1/3)", {
+    await onProgress?.("BGG 응답이 지연되어 일부 자료를 건너뛰고 있습니다... (1/3)", {
       stage: "bgg-warning",
       url
     });
@@ -83,7 +83,50 @@ function parseArticles(rawArticles) {
     .filter((article) => SUPPORTED_POST_LANGUAGES.includes(article.language));
 }
 
+function pickName(names) {
+  const items = ensureArray(names);
+  const primary = items.find((item) => item.type === "primary");
+  return primary?.value || items[0]?.value || "";
+}
+
+function parseThingInfo(xml) {
+  const item = ensureArray(xml?.items?.item || xml?.item)[0] || {};
+  const links = ensureArray(item.link);
+
+  return {
+    id: String(item.id || ""),
+    name: pickName(item.name),
+    yearPublished: Number(item.yearpublished?.value || 0) || null,
+    minPlayers: Number(item.minplayers?.value || 0) || null,
+    maxPlayers: Number(item.maxplayers?.value || 0) || null,
+    playingTime: Number(item.playingtime?.value || 0) || null,
+    minAge: Number(item.minage?.value || 0) || null,
+    description: item.description?.value || "",
+    mechanics: links
+      .filter((link) => link.type === "boardgamemechanic")
+      .map((link) => link.value)
+      .filter(Boolean),
+    categories: links
+      .filter((link) => link.type === "boardgamecategory")
+      .map((link) => link.value)
+      .filter(Boolean),
+    families: links
+      .filter((link) => link.type === "boardgamefamily")
+      .map((link) => link.value)
+      .filter(Boolean)
+  };
+}
+
 export async function collectBggForumData(bggId, config, onProgress) {
+  const thingUrl = `${config.bggApiBase}/thing?id=${bggId}&stats=1`;
+  const thingXml = await fetchXmlOrNull(
+    thingUrl,
+    {},
+    "BGG 서버에서 게임 기본 정보를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.",
+    onProgress
+  );
+  const thingInfo = thingXml ? parseThingInfo(thingXml) : null;
+
   const forumListUrl = `${config.bggApiBase}/forumlist?id=${bggId}&type=thing`;
   const forumListXml = await fetchXmlOrNull(
     forumListUrl,
@@ -96,7 +139,8 @@ export async function collectBggForumData(bggId, config, onProgress) {
     return {
       bggId,
       collectedAt: new Date().toISOString(),
-      warning: "BGG 응답이 지연되어 커뮤니티 자료 없이 계속 진행했습니다.",
+      warning: "BGG 포럼 응답이 지연되어 포럼 자료 없이 계속 진행합니다.",
+      thingInfo,
       forums: []
     };
   }
@@ -168,6 +212,7 @@ export async function collectBggForumData(bggId, config, onProgress) {
   return {
     bggId,
     collectedAt: new Date().toISOString(),
+    thingInfo,
     forums: forumResults
   };
 }

@@ -95,6 +95,16 @@ function mergeExtractions(gameName, rulebookExtraction, faqExtraction) {
   };
 }
 
+function hasUsableBggData(bggForumData) {
+  return Boolean(
+    bggForumData?.forums?.length ||
+      bggForumData?.thingInfo?.description ||
+      bggForumData?.thingInfo?.mechanics?.length ||
+      bggForumData?.thingInfo?.categories?.length ||
+      bggForumData?.thingInfo?.name
+  );
+}
+
 function cleanupSensitiveData(state) {
   state.request.pdfBase64 = "";
   state.request.faqPdfBase64 = "";
@@ -130,7 +140,7 @@ function parseAiServiceError(status, message) {
 
   if (/quota|billing|rate limit|exceeded your current quota/i.test(normalized)) {
     return createUserError(
-      "Gemini 사용량 또는 결제 한도에 도달했습니다. Google AI Studio 또는 Google Cloud 결제 상태를 확인해주세요.",
+      "Gemini 사용량 또는 결제 한도를 초과했습니다. Google AI Studio 또는 Google Cloud 결제 상태를 확인해주세요.",
       403,
       "GEMINI_QUOTA_OR_BILLING"
     );
@@ -154,7 +164,7 @@ function parseAiServiceError(status, message) {
 
   if (status === 503 || /high demand|temporar|unavailable/i.test(normalized)) {
     return createUserError(
-      "AI 서버가 현재 매우 혼잡합니다. 잠시 후 다시 시도해주세요. 보통 몇 분 안에 다시 정상화됩니다.",
+      "AI 서버가 현재 매우 혼잡합니다. 잠시 후 다시 시도해주세요. 보통 몇 분 내로 다시 정상화됩니다.",
       503,
       "GEMINI_TEMPORARILY_UNAVAILABLE"
     );
@@ -165,7 +175,7 @@ function parseAiServiceError(status, message) {
     /token limit|context length|request too large|input too large|too many tokens|too large/i.test(normalized)
   ) {
     return createUserError(
-      "AI에 전달할 자료가 너무 많아 문서 생성에 실패했습니다. 입력 자료를 줄이거나 더 큰 한도의 모델을 사용해주세요.",
+      "AI에 전달한 자료가 너무 많아 문서 생성에 실패했습니다. 입력 자료를 줄이거나 더 큰 입력을 지원하는 모델을 사용해주세요.",
       413,
       "GEMINI_INPUT_TOO_LARGE"
     );
@@ -237,7 +247,7 @@ async function generateJsonSection(config, payload) {
   } catch (error) {
     if (error?.code === "GEMINI_OUTPUT_TOO_LARGE") {
       throw createUserError(
-        "AI가 문서를 거의 완성했지만 출력 길이가 너무 길어 마지막 JSON 정리에 실패했습니다. 문서 분량을 더 나눠 생성하거나 출력 한도를 더 큰 방식으로 조정해야 합니다.",
+        "AI가 문서를 거의 완성했지만 출력 길이가 너무 길어 마지막 JSON 정리에 실패했습니다. 문서 분량을 더 잘게 나누는 방식으로 조정이 필요합니다.",
         502,
         "GEMINI_OUTPUT_TOO_LARGE"
       );
@@ -280,7 +290,9 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           },
           config,
           onProgress,
-          "룰북 PDF는 읽지 못했지만 BGG 자료 기준으로 계속 진행합니다... (2/3)"
+          hasUsableBggData(state.bggForumData)
+            ? "룰북 PDF는 읽지 못했지만 BGG 자료 기준으로 계속 진행합니다... (2/3)"
+            : "룰북 PDF를 읽지 못했습니다. BGG 기본 정보만으로 계속 진행 가능한지 확인하고 있습니다... (2/3)"
         )) || buildEmptyExtraction(state.request.gameName);
     } else {
       state.rulebookExtraction = buildEmptyExtraction(state.request.gameName);
@@ -305,11 +317,11 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
 
     if (
       !state.rulebookExtraction?.pageCount &&
-      !state.bggForumData?.forums?.length &&
+      !hasUsableBggData(state.bggForumData) &&
       !state.request.additionalMaterials?.length
     ) {
       throw createUserError(
-        "룰북 PDF를 읽지 못했고 사용할 수 있는 다른 자료도 없어 문서를 생성할 수 없습니다. 다른 PDF 파일로 다시 시도해주세요.",
+        "룰북 PDF를 읽지 못했고 사용할 수 있는 BGG 포럼 또는 게임 기본 정보도 충분하지 않아 문서를 생성할 수 없습니다. 다른 PDF 파일로 다시 시도해주세요.",
         400,
         "RULEBOOK_PDF_PARSE_FAILED"
       );
@@ -331,6 +343,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     assertTime();
 
     await onProgress("한국어 문서를 생성하고 있습니다... (3/3)", { stage: "ai" });
+
     const payloadInput = {
       gameName: state.request.gameName,
       bggId: state.request.bggId,
@@ -376,7 +389,8 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           forumCount: state.bggForumData?.forums?.length || 0,
           faqPageCount: state.faqExtraction?.pageCount || 0,
           rulebookPageCount: state.rulebookExtraction?.pageCount || 0,
-          faqIncluded: Boolean(state.faqExtraction?.pageCount)
+          faqIncluded: Boolean(state.faqExtraction?.pageCount),
+          hasBggThingInfo: Boolean(state.bggForumData?.thingInfo?.name)
         }
       }
     };
