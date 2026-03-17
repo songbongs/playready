@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -36,3 +38,13 @@ class ExtractResponse(BaseModel):
     pageCount: int
     textBlocks: list[TextBlock]
     images: list[ExtractedImage]
+
+
+class GenerateJsonRequest(BaseModel):
+    model: str = Field(min_length=1)
+    payload: dict[str, Any]
+
+
+class GenerateJsonResponse(BaseModel):
+    ok: bool = True
+    result: dict[str, Any]

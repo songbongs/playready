@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import json
 
 import fitz
 from fastapi import FastAPI, HTTPException
@@ -9,8 +10,9 @@ from fastapi import FastAPI, HTTPException
 from .cleanup import delete_temp_file, write_temp_pdf
 from .extract_images import extract_images
 from .extract_text import extract_text_blocks
+from .gemini_client import GeminiConfigurationError, generate_with_retry
 from .layout_matcher import link_images_to_text
-from .schemas import ExtractRequest, ExtractResponse
+from .schemas import ExtractRequest, ExtractResponse, GenerateJsonRequest, GenerateJsonResponse
 
 app = FastAPI(title="playready-pdf-extractor")
 
@@ -69,3 +71,25 @@ def extract(request: ExtractRequest) -> ExtractResponse:
         if document is not None:
             document.close()
         delete_temp_file(temp_path)
+
+
+@app.post("/generate-json", response_model=GenerateJsonResponse)
+def generate_json(request: GenerateJsonRequest) -> GenerateJsonResponse:
+    try:
+        result = generate_with_retry(request.model, request.payload)
+        return GenerateJsonResponse(result=result)
+    except GeminiConfigurationError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Render 서버에 Gemini API 키가 설정되지 않았습니다.",
+        ) from exc
+    except RuntimeError as exc:
+        try:
+            parsed = json.loads(str(exc))
+        except json.JSONDecodeError:
+            parsed = {"status": 502, "message": str(exc)}
+
+        raise HTTPException(
+            status_code=int(parsed.get("status", 502)),
+            detail=str(parsed.get("message", "Gemini request failed")),
+        ) from exc

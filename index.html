@@ -575,6 +575,17 @@
               </div>
 
               <div class="field">
+                <label for="faqPdfFile">FAQ/정오표 PDF 업로드</label>
+                <div class="upload-box">
+                  <input id="faqPdfFile" type="file" accept="application/pdf,.pdf" />
+                  <div id="faqPdfMeta" class="file-meta">아직 선택한 FAQ/정오표 PDF가 없습니다.</div>
+                </div>
+                <p class="hint">
+                  공식 FAQ나 정오표 PDF가 있다면 함께 업로드하면 더 정확한 문서가 만들어집니다.
+                </p>
+              </div>
+
+              <div class="field">
                 <label for="extraFiles">추가 자료 업로드</label>
                 <div class="upload-box">
                   <input id="extraFiles" type="file" multiple accept=".txt,.md,.json,.csv,.html,.htm,.pdf" />
@@ -733,8 +744,10 @@
         gameName: document.getElementById("gameName"),
         bggId: document.getElementById("bggId"),
         pdfFile: document.getElementById("pdfFile"),
+        faqPdfFile: document.getElementById("faqPdfFile"),
         extraFiles: document.getElementById("extraFiles"),
         pdfMeta: document.getElementById("pdfMeta"),
+        faqPdfMeta: document.getElementById("faqPdfMeta"),
         extraMeta: document.getElementById("extraMeta"),
         inputError: document.getElementById("inputError"),
         startButton: document.getElementById("startButton"),
@@ -761,7 +774,12 @@
         stepAi: document.getElementById("step-ai")
       };
 
-      elements.pdfFile.addEventListener("change", handlePdfSelection);
+      elements.pdfFile.addEventListener("change", () =>
+        handlePdfSelection(elements.pdfFile, elements.pdfMeta, "룰북 PDF")
+      );
+      elements.faqPdfFile.addEventListener("change", () =>
+        handlePdfSelection(elements.faqPdfFile, elements.faqPdfMeta, "FAQ/정오표 PDF")
+      );
       elements.extraFiles.addEventListener("change", handleExtraSelection);
       elements.startButton.addEventListener("click", startGeneration);
       elements.cancelButton.addEventListener("click", cancelGeneration);
@@ -778,22 +796,22 @@
         state.currentScreen = name;
       }
 
-      function handlePdfSelection() {
+      function handlePdfSelection(fileInput, metaNode, label) {
         clearInputError();
-        const file = elements.pdfFile.files[0];
+        const file = fileInput.files[0];
         if (!file) {
-          elements.pdfMeta.textContent = "아직 선택한 PDF가 없습니다.";
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
           return;
         }
 
         if (file.size > APP_CONFIG.MAX_PDF_BYTES) {
-          elements.pdfFile.value = "";
-          elements.pdfMeta.textContent = "아직 선택한 PDF가 없습니다.";
-          showInputError("PDF 파일은 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.");
+          fileInput.value = "";
+          metaNode.textContent = `아직 선택한 ${label}가 없습니다.`;
+          showInputError(`${label}는 최대 50MB까지 업로드할 수 있습니다. 더 작은 파일로 다시 선택해주세요.`);
           return;
         }
 
-        elements.pdfMeta.textContent = `${file.name} | ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+        metaNode.textContent = `${file.name} | ${(file.size / 1024 / 1024).toFixed(2)}MB`;
       }
 
       function handleExtraSelection() {
@@ -813,6 +831,7 @@
         const gameName = elements.gameName.value.trim();
         const bggId = elements.bggId.value.trim();
         const pdfFile = elements.pdfFile.files[0] || null;
+        const faqPdfFile = elements.faqPdfFile.files[0] || null;
         const extraFiles = Array.from(elements.extraFiles.files || []);
 
         if (!gameName) {
@@ -826,7 +845,12 @@
         }
 
         if (pdfFile && pdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
-          showInputError("PDF 파일은 최대 50MB까지 업로드할 수 있습니다.");
+          showInputError("룰북 PDF는 최대 50MB까지 업로드할 수 있습니다.");
+          return;
+        }
+
+        if (faqPdfFile && faqPdfFile.size > APP_CONFIG.MAX_PDF_BYTES) {
+          showInputError("FAQ/정오표 PDF는 최대 50MB까지 업로드할 수 있습니다.");
           return;
         }
 
@@ -836,7 +860,13 @@
         startFunMessages();
 
         try {
-          const payload = await buildRequestPayload({ gameName, bggId, pdfFile, extraFiles });
+          const payload = await buildRequestPayload({
+            gameName,
+            bggId,
+            pdfFile,
+            faqPdfFile,
+            extraFiles
+          });
           await streamGeneration(payload);
         } catch (error) {
           showProgressError(error.message || "요청을 준비하는 중 오류가 발생했습니다.");
@@ -844,8 +874,9 @@
         }
       }
 
-      async function buildRequestPayload({ gameName, bggId, pdfFile, extraFiles }) {
+      async function buildRequestPayload({ gameName, bggId, pdfFile, faqPdfFile, extraFiles }) {
         const pdfBase64 = pdfFile ? await readFileAsDataUrl(pdfFile) : "";
+        const faqPdfBase64 = faqPdfFile ? await readFileAsDataUrl(faqPdfFile) : "";
 
         const additionalMaterials = await Promise.all(
           extraFiles.slice(0, 5).map(async (file) => ({
@@ -861,6 +892,9 @@
           pdfBase64,
           pdfFileName: pdfFile ? pdfFile.name : "",
           pdfMimeType: pdfFile ? pdfFile.type || "application/pdf" : "application/pdf",
+          faqPdfBase64,
+          faqPdfFileName: faqPdfFile ? faqPdfFile.name : "",
+          faqPdfMimeType: faqPdfFile ? faqPdfFile.type || "application/pdf" : "application/pdf",
           additionalMaterials
         };
       }

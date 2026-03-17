@@ -7,9 +7,10 @@ function escapeHtml(value) {
 }
 
 function buildImageTag(image) {
-  const alt = escapeHtml(`${image.page}페이지 이미지`);
+  const sourceLabel = image.sourceType === "faq" ? "FAQ/정오표" : "룰북";
+  const alt = escapeHtml(`${sourceLabel} ${image.page}페이지 이미지`);
   const style = "max-width:100%;height:auto;border-radius:12px;margin:16px 0;";
-  return `<figure class="rulebook-image" data-image-id="${escapeHtml(image.id)}"><img src="data:${image.mimeType};base64,${image.base64}" alt="${alt}" style="${style}" /><figcaption>${image.page}페이지 · 좌표 (${image.bbox.x0}, ${image.bbox.y0})</figcaption></figure>`;
+  return `<figure class="rulebook-image" data-image-id="${escapeHtml(image.id)}"><img src="data:${image.mimeType};base64,${image.base64}" alt="${alt}" style="${style}" /><figcaption>${sourceLabel} ${image.page}페이지 · 좌표 (${image.bbox.x0}, ${image.bbox.y0})</figcaption></figure>`;
 }
 
 export function injectImagesIntoHtml(html, images) {

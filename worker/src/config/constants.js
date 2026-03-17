@@ -14,7 +14,12 @@ export const GEMINI_SYSTEM_PROMPT = `당신은 보드게임 룰북 분석 전문
 [정확성 규칙]
 - 룰북 원문에 없는 내용은 추가하지 않습니다.
 - BGG 포럼 내용은 "커뮤니티 의견" 또는 "디자이너 공식 답변"으로 명확히 구분합니다.
-- 불확실한 내용은 반드시 "확인 필요" 표시를 합니다.`;
+- 불확실한 내용은 반드시 "확인 필요" 표시를 합니다.
+
+[FAQ/정오표 우선 처리 규칙]
+- FAQ 또는 정오표 PDF가 제공된 경우, 해당 내용이 룰북 원문보다 항상 우선합니다.
+- FAQ에서 수정된 규칙은 반드시 "※ 정오표 반영" 표시를 붙여서 안내합니다.
+- 룰북에 오타나 수정사항이 있다고 FAQ에서 명시한 경우, 수정된 내용으로 작성합니다.`;
 
 export const SUPPORTED_POST_LANGUAGES = ["en", "de", "fr", "es", "ko", "ja"];
 
@@ -22,12 +27,12 @@ export function getRuntimeConfig(env) {
   return {
     allowedOrigin: env.ALLOWED_ORIGIN,
     bggApiBase: env.BGG_API_BASE || "https://boardgamegeek.com/xmlapi2",
-    geminiModel: env.GEMINI_MODEL || "gemini-2.0-flash",
+    geminiModel: env.GEMINI_MODEL || "gemini-2.5-pro",
     pdfExtractorUrl: env.PDF_EXTRACTOR_URL,
     requestMaxBytes: Number(env.REQUEST_MAX_BYTES || 50 * 1024 * 1024),
     processingTimeoutMs: Number(env.PROCESSING_TIMEOUT_MS || 10 * 60 * 1000),
-    bggDelayMs: Number(env.BGG_DELAY_MS || 2000),
-    bggMaxThreadsPerForum: Number(env.BGG_MAX_THREADS_PER_FORUM || 10),
-    bggMaxCommentsPerThread: Number(env.BGG_MAX_COMMENTS_PER_THREAD || 20)
+    bggDelayMs: Number(env.BGG_DELAY_MS || 5000),
+    bggMaxThreadsPerForum: Number(env.BGG_MAX_THREADS_PER_FORUM || 9999),
+    bggMaxCommentsPerThread: Number(env.BGG_MAX_COMMENTS_PER_THREAD || 9999)
   };
 }

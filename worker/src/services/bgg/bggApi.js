@@ -17,7 +17,7 @@ async function fetchXml(url, init, errorMessage) {
       response = await fetch(url, {
         ...init,
         headers: {
-          "accept": "application/xml",
+          accept: "application/xml",
           "user-agent": "playready-worker/1.0 (+https://songbongs.github.io/playready)",
           ...(init?.headers || {})
         }
@@ -46,7 +46,6 @@ async function fetchXml(url, init, errorMessage) {
 }
 
 async function fetchXmlOrNull(url, init, errorMessage, onProgress) {
-  let response;
   try {
     return await fetchXml(url, init, errorMessage);
   } catch {
@@ -70,14 +69,7 @@ function normalizeLanguage(raw) {
   return "unknown";
 }
 
-function pickForums(rawForums) {
-  return ensureArray(rawForums).filter((forum) => {
-    const title = String(forum.title || "").toLowerCase();
-    return /faq|rules|strategy|general|clarification|question|variant/.test(title);
-  });
-}
-
-function parseArticles(rawArticles, maxComments) {
+function parseArticles(rawArticles) {
   return ensureArray(rawArticles)
     .map((article) => ({
       username: article.username || "unknown",
@@ -88,8 +80,7 @@ function parseArticles(rawArticles, maxComments) {
       body: article.body || article.content || "",
       isDesignerReply: /designer/i.test(String(article.username || "")) || Boolean(article.designer)
     }))
-    .filter((article) => SUPPORTED_POST_LANGUAGES.includes(article.language))
-    .slice(0, maxComments);
+    .filter((article) => SUPPORTED_POST_LANGUAGES.includes(article.language));
 }
 
 export async function collectBggForumData(bggId, config, onProgress) {
@@ -110,8 +101,7 @@ export async function collectBggForumData(bggId, config, onProgress) {
     };
   }
 
-  const rawForums = forumListXml?.items?.forum || forumListXml?.forums?.forum;
-  const forums = pickForums(rawForums);
+  const forums = ensureArray(forumListXml?.items?.forum || forumListXml?.forums?.forum);
   const forumResults = [];
 
   for (const [forumIndex, forum] of forums.entries()) {
@@ -136,15 +126,12 @@ export async function collectBggForumData(bggId, config, onProgress) {
       continue;
     }
 
-    const threads = ensureArray(forumXml?.forum?.threads?.thread || forumXml?.forum?.thread).slice(
-      0,
-      config.bggMaxThreadsPerForum
-    );
-
+    const threads = ensureArray(forumXml?.forum?.threads?.thread || forumXml?.forum?.thread);
     const threadResults = [];
+
     for (const thread of threads) {
       await sleep(config.bggDelayMs);
-      const threadUrl = `${config.bggApiBase}/thread?id=${thread.id}&count=${config.bggMaxCommentsPerThread}`;
+      const threadUrl = `${config.bggApiBase}/thread?id=${thread.id}`;
       const threadXml = await fetchXmlOrNull(
         threadUrl,
         {},
@@ -156,12 +143,10 @@ export async function collectBggForumData(bggId, config, onProgress) {
         continue;
       }
 
-      const comments = parseArticles(
-        threadXml?.thread?.articles?.article || threadXml?.thread?.article,
-        config.bggMaxCommentsPerThread
-      );
-
-      if (!comments.length) continue;
+      const comments = parseArticles(threadXml?.thread?.articles?.article || threadXml?.thread?.article);
+      if (!comments.length) {
+        continue;
+      }
 
       threadResults.push({
         id: thread.id,
@@ -172,14 +157,12 @@ export async function collectBggForumData(bggId, config, onProgress) {
       });
     }
 
-    if (threadResults.length) {
-      forumResults.push({
-        id: forum.id,
-        title: forum.title || "",
-        group: forum.group || "",
-        threads: threadResults
-      });
-    }
+    forumResults.push({
+      id: forum.id,
+      title: forum.title || "",
+      group: forum.group || "",
+      threads: threadResults
+    });
   }
 
   return {
