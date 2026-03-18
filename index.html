@@ -692,6 +692,18 @@
         color: var(--ink-soft);
       }
 
+      .preview-frame .playready-outline {
+        margin: 0;
+        padding-left: 22px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .preview-frame .playready-outline li {
+        color: var(--ink);
+        line-height: 1.7;
+      }
+
       .preview-frame .auto-image-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -781,6 +793,32 @@
         display: block;
         margin-bottom: 8px;
         color: var(--brand-strong);
+      }
+
+      .preview-frame .action-flow-step__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .preview-frame .action-flow-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .preview-frame .action-flow-badge--requirement {
+        background: rgba(159, 79, 43, 0.12);
+        color: #8a3d1c;
+      }
+
+      .preview-frame .action-flow-badge--timing {
+        background: rgba(59, 111, 85, 0.12);
+        color: #2f624a;
       }
 
       .preview-frame .action-flow-step p {
@@ -907,6 +945,11 @@
 
         .preview-frame .action-flow-branch__options {
           grid-template-columns: 1fr;
+        }
+
+        .preview-frame .playready-outline {
+          padding-left: 20px;
+          gap: 8px;
         }
       }
 
@@ -1824,6 +1867,8 @@ function stopTimers() {
     blockquote { margin: 18px 0; padding: 14px 18px; border-left: 4px solid rgba(159, 79, 43, 0.4); background: rgba(255, 245, 232, 0.8); }
     .auto-image-gallery, .action-flow-section { margin: 18px 0 24px; padding: 18px; border: 1px solid rgba(117, 90, 51, 0.14); border-radius: 18px; background: rgba(255, 248, 236, 0.88); }
     .auto-image-gallery__lead, .action-flow-section__lead { margin: 0 0 14px; color: #5d4f3f; }
+    .playready-outline { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+    .playready-outline li { line-height: 1.7; color: #2f2418; }
     .auto-image-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
     .auto-image-grid--icons { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
     .auto-image-card { margin: 0; padding: 12px; border-radius: 14px; background: #fffdf8; border: 1px solid rgba(117, 90, 51, 0.1); }
@@ -1840,6 +1885,10 @@ function stopTimers() {
     .action-flow-node--decision .action-flow-step { background: rgba(255, 242, 214, 0.96); border-color: rgba(184, 132, 47, 0.28); }
     .action-flow-node--merge .action-flow-step { background: rgba(219, 233, 220, 0.92); border-color: rgba(59, 111, 85, 0.24); }
     .action-flow-step strong { display: block; margin-bottom: 8px; color: #7f3614; }
+    .action-flow-step__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .action-flow-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 800; }
+    .action-flow-badge--requirement { background: rgba(159, 79, 43, 0.12); color: #8a3d1c; }
+    .action-flow-badge--timing { background: rgba(59, 111, 85, 0.12); color: #2f624a; }
     .action-flow-step p { margin: 0; color: #5d4f3f; }
     .action-flow-arrow { display: flex; align-items: center; justify-content: center; width: 100%; height: 30px; color: #9f4f2b; font-size: 18px; font-weight: 800; }
     .action-flow-branch { width: min(100%, 760px); padding: 14px 16px 6px; border-radius: 20px; border: 1px dashed rgba(121, 98, 184, 0.28); background: rgba(247, 243, 255, 0.92); }
@@ -1858,6 +1907,7 @@ function stopTimers() {
       .action-flow-node, .action-flow-branch { width: 100%; }
       .action-flow-branch__options { grid-template-columns: 1fr; }
       .action-flow-step, .action-flow-branch-option { padding: 14px; }
+      .playready-outline { padding-left: 20px; gap: 8px; }
     }
     @media print {
       body { padding: 0; background: #ffffff; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

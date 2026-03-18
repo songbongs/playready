@@ -126,6 +126,10 @@ export function buildTurnFlowPayload(input, glossary) {
     "Rules:",
     "- Use the actual turn structure from the supplied sources.",
     "- Reflect real branch points when the player must choose between major actions.",
+    "- Make the flow specific to this game, not a generic board-game template.",
+    "- Show where free actions or pre-actions can happen if the sources support them.",
+    "- Mark whether each step is required, optional, free, or cleanup.",
+    "- If timing matters, say when the player can do it during the turn.",
     "- Keep each title short.",
     "- Keep each detail to one short sentence.",
     "- branch options should usually be 2 to 4 items.",
@@ -134,7 +138,7 @@ export function buildTurnFlowPayload(input, glossary) {
     "- If FAQ/errata changes the turn flow, follow FAQ/errata.",
     "",
     "Return format:",
-    '{"detailed":{"lead":"","steps":[{"kind":"start|decision|branch|merge|end","title":"","detail":"","tone":"neutral|primary|secondary|warning","options":[{"title":"","detail":"","tone":"secondary"}]}]},"simplified":{"lead":"","steps":[]}}',
+    '{"detailed":{"lead":"","steps":[{"kind":"start|decision|branch|merge|end","title":"","detail":"","tone":"neutral|primary|secondary|warning","requirement":"required|optional|free|cleanup","timing":"","options":[{"title":"","detail":"","tone":"secondary","requirement":"required|optional|free","timing":""}]}]},"simplified":{"lead":"","steps":[]}}',
     "",
     `Glossary: ${JSON.stringify(glossary || [])}`,
     `Sources: ${JSON.stringify(sources)}`
@@ -156,6 +160,8 @@ export function buildTurnFlowPayload(input, glossary) {
                 title: { type: "STRING" },
                 detail: { type: "STRING" },
                 tone: { type: "STRING" },
+                requirement: { type: "STRING" },
+                timing: { type: "STRING" },
                 options: {
                   type: "ARRAY",
                   items: {
@@ -163,7 +169,9 @@ export function buildTurnFlowPayload(input, glossary) {
                     properties: {
                       title: { type: "STRING" },
                       detail: { type: "STRING" },
-                      tone: { type: "STRING" }
+                      tone: { type: "STRING" },
+                      requirement: { type: "STRING" },
+                      timing: { type: "STRING" }
                     },
                     required: ["title", "detail", "tone"]
                   }
@@ -188,6 +196,8 @@ export function buildTurnFlowPayload(input, glossary) {
                 title: { type: "STRING" },
                 detail: { type: "STRING" },
                 tone: { type: "STRING" },
+                requirement: { type: "STRING" },
+                timing: { type: "STRING" },
                 options: {
                   type: "ARRAY",
                   items: {
@@ -195,7 +205,9 @@ export function buildTurnFlowPayload(input, glossary) {
                     properties: {
                       title: { type: "STRING" },
                       detail: { type: "STRING" },
-                      tone: { type: "STRING" }
+                      tone: { type: "STRING" },
+                      requirement: { type: "STRING" },
+                      timing: { type: "STRING" }
                     },
                     required: ["title", "detail", "tone"]
                   }
@@ -338,6 +350,25 @@ export function buildDocumentPayload(input, glossary, documentType, turnFlowData
     documentType === "A" ? buildDocumentAStructurePrompt() : buildDocumentBStructurePrompt();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
   const turnFlowGuide = summarizeTurnFlowForPrompt(turnFlowData, documentType);
+  const sectionTuning =
+    documentType === "A"
+      ? [
+          "Document A section tuning:",
+          "- Use bullet lists or numbered lists for almost all body content.",
+          "- '4. 게임 준비와 시작 상태' should read like a step-by-step setup guide the reader can follow in order.",
+          "- '5. 자원·보드·트랙·상태 연결' must explain the game-specific systems: what each key card, resource, track, state, or board area does, why it matters, and how it changes during play.",
+          "- In '아이콘/기호 사전', explain every symbol meaning in text. Do not depend on images there.",
+          "- Avoid helper copy such as '참고 이미지' or '이미지만 넣습니다'."
+        ].join("\n")
+      : [
+          "Document B section tuning:",
+          "- Use bullets, checklist lines, or short script lines for almost all body content.",
+          "- Keep every line short enough to say aloud naturally.",
+          "- '셋업 체크리스트' should be checklist bullets only. Do not add setup image helper copy.",
+          "- Use the heading '핵심 아이콘 설명' instead of '핵심 아이콘 카드'.",
+          "- In '핵심 아이콘 설명', explain only the most important symbols in text and keep each item very short.",
+          "- Avoid helper copy such as '참고 이미지' or '이미지만 넣습니다'."
+        ].join("\n");
   const brevityRules = [
     "Keep sentences short and direct.",
     "One sentence should express only one idea.",
@@ -345,7 +376,8 @@ export function buildDocumentPayload(input, glossary, documentType, turnFlowData
     "Document A must stay complete enough for self-study, but avoid long paragraphs.",
     "Document B must sound easy to speak aloud and stay shorter than Document A.",
     "Do not recreate the turn flowchart in prose. The dedicated flow section handles that job.",
-    "If an image is not clearly matched to the section meaning, do not rely on that image in the writing."
+    "If an image is not clearly matched to the section meaning, do not rely on that image in the writing.",
+    "Use bullet lists and short checklist structures instead of paragraph-heavy prose."
   ].join("\n");
 
   const prompt = [
@@ -355,6 +387,7 @@ export function buildDocumentPayload(input, glossary, documentType, turnFlowData
     structurePrompt,
     turnFlowGuide,
     brevityRules,
+    sectionTuning,
     "",
     "반환 형식:",
     '{"documentHtml":"<section>...</section>"}',

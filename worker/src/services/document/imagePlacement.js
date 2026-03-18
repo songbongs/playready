@@ -20,6 +20,54 @@ function normalizeText(value) {
   return sanitizeText(value).toLowerCase();
 }
 
+function completeSentence(value, fallback = "") {
+  const cleaned = sanitizeText(value || fallback).replace(/[.。…]+$/g, "").trim();
+  if (!cleaned) {
+    return sanitizeText(fallback);
+  }
+
+  return /[.!?]$/.test(cleaned) ? cleaned : `${cleaned}.`;
+}
+
+function shortenAtBoundary(value, maxLength, fallback = "") {
+  const completed = completeSentence(value, fallback);
+  if (completed.length <= maxLength) {
+    return completed;
+  }
+
+  const sliced = completed.slice(0, maxLength);
+  const lastBoundary = Math.max(
+    sliced.lastIndexOf(". "),
+    sliced.lastIndexOf("! "),
+    sliced.lastIndexOf("? "),
+    sliced.lastIndexOf(" "),
+    sliced.lastIndexOf("·")
+  );
+  const trimmed = (lastBoundary > 8 ? sliced.slice(0, lastBoundary) : sliced).trim();
+  return completeSentence(trimmed, fallback);
+}
+
+function stripTags(html) {
+  return String(html || "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitIntoBulletLines(text) {
+  const normalized = sanitizeText(text)
+    .replace(/\s*[:：]\s*/g, ". ")
+    .replace(/\s*;\s*/g, ". ")
+    .replace(/\s*·\s*/g, ". ");
+
+  return normalized
+    .split(/(?<=[.!?])\s+/)
+    .map((line) => sanitizeText(line))
+    .filter(Boolean)
+    .filter((line, index, arr) => arr.indexOf(line) === index);
+}
+
 function sourceLabel(sourceType) {
   return sourceType === "faq" ? "FAQ" : "룰북";
 }
@@ -585,9 +633,11 @@ function clampFlowText(value, maxLength) {
 
 function normalizeFlowOption(option, fallbackTitle) {
   return {
-    title: clampFlowText(option?.title || fallbackTitle, 18),
-    detail: clampFlowText(option?.detail, 42),
-    tone: sanitizeFlowText(option?.tone, "secondary")
+    title: shortenAtBoundary(option?.title || fallbackTitle, 24, fallbackTitle),
+    detail: shortenAtBoundary(option?.detail, 58, ""),
+    tone: sanitizeFlowText(option?.tone, "secondary"),
+    requirement: sanitizeFlowText(option?.requirement, ""),
+    timing: shortenAtBoundary(option?.timing, 34, "")
   };
 }
 
@@ -647,15 +697,62 @@ function getFallbackFlowData(docType) {
   };
 }
 
+function normalizeFlowStepV2(step, index, docType) {
+  const kind = sanitizeFlowText(step?.kind, index === 0 ? "start" : "action").toLowerCase();
+  const title = shortenAtBoundary(step?.title || `단계 ${index + 1}`, docType === "B" ? 22 : 26);
+  const detail = shortenAtBoundary(step?.detail, docType === "B" ? 62 : 80);
+  const tone = sanitizeFlowText(step?.tone, kind === "decision" ? "primary" : "neutral").toLowerCase();
+  const requirement = sanitizeFlowText(step?.requirement, "");
+  const timing = shortenAtBoundary(step?.timing, 40, "");
+  const options = Array.isArray(step?.options)
+    ? step.options
+        .slice(0, 4)
+        .map((item, optionIndex) => ({
+          title: shortenAtBoundary(item?.title || `선택 ${optionIndex + 1}`, 24, `선택 ${optionIndex + 1}`),
+          detail: shortenAtBoundary(item?.detail, 58, ""),
+          tone: sanitizeFlowText(item?.tone, "secondary"),
+          requirement: sanitizeFlowText(item?.requirement, ""),
+          timing: shortenAtBoundary(item?.timing, 34, "")
+        }))
+    : [];
+
+  return { kind, title, detail, tone, requirement, timing, options };
+}
+
 function normalizeFlowData(flowData, docType) {
   const source = flowData && Array.isArray(flowData.steps) && flowData.steps.length ? flowData : getFallbackFlowData(docType);
 
   return {
-    lead: clampFlowText(source.lead || getFallbackFlowData(docType).lead, docType === "B" ? 56 : 72),
+    lead: shortenAtBoundary(source.lead || getFallbackFlowData(docType).lead, docType === "B" ? 78 : 96),
     steps: source.steps
       .slice(0, docType === "B" ? 6 : 8)
-      .map((step, index) => normalizeFlowStep(step, index, docType))
+      .map((step, index) => normalizeFlowStepV2(step, index, docType))
   };
+}
+
+function requirementLabel(value) {
+  const normalized = sanitizeText(value).toLowerCase();
+  if (normalized === "required") return "필수";
+  if (normalized === "optional") return "선택";
+  if (normalized === "free") return "프리액션";
+  if (normalized === "cleanup") return "정리";
+  return "";
+}
+
+function buildFlowMetaBadges(requirement, timing) {
+  const chips = [];
+  const requirementText = requirementLabel(requirement);
+  const timingText = sanitizeText(timing);
+
+  if (requirementText) {
+    chips.push(`<span class="action-flow-badge action-flow-badge--requirement">${escapeHtml(requirementText)}</span>`);
+  }
+
+  if (timingText) {
+    chips.push(`<span class="action-flow-badge action-flow-badge--timing">${escapeHtml(timingText)}</span>`);
+  }
+
+  return chips.length ? `<div class="action-flow-step__meta">${chips.join("")}</div>` : "";
 }
 
 function renderFlowSteps(flowData) {
@@ -671,6 +768,7 @@ function renderFlowSteps(flowData) {
           .map(
             (option) => `
               <div class="action-flow-branch-option">
+                ${buildFlowMetaBadges(option.requirement, option.timing)}
                 <strong>${escapeHtml(option.title)}</strong>
                 <p>${escapeHtml(option.detail)}</p>
               </div>
@@ -698,6 +796,7 @@ function renderFlowSteps(flowData) {
       return `
         <div class="action-flow-node action-flow-node--${escapeHtml(item.tone || "neutral")} ${extraClass}">
           <div class="action-flow-step">
+            ${buildFlowMetaBadges(item.requirement, item.timing)}
             <strong>${escapeHtml(item.title)}</strong>
             <p>${escapeHtml(item.detail)}</p>
           </div>
@@ -823,6 +922,52 @@ function buildSectionPlan(docType) {
   ];
 }
 
+function buildSectionPlanV2(docType) {
+  if (docType === "B") {
+    return [
+      {
+        title: "보드 위치 안내 이미지",
+        lead: "설명자가 실제 위치를 가리키기 쉬운 경우에만 이미지를 넣습니다.",
+        variant: "standard",
+        maxCount: 1,
+        minScore: 84,
+        headingPatterns: ["보드 위치 안내"],
+        requiredBuckets: ["boards", "setup"]
+      }
+    ];
+  }
+
+  return [
+    {
+      title: "점수/트랙 참고 이미지",
+      lead: "점수 흐름이나 트랙 연결을 이해하는 데 직접 도움이 될 때만 이미지를 넣습니다.",
+      variant: "standard",
+      maxCount: 1,
+      minScore: 86,
+      headingPatterns: ["자원", "트랙", "점수/승리 조건", "점수"],
+      requiredBuckets: ["scoring", "boards"]
+    },
+    {
+      title: "구성물 해설 이미지",
+      lead: "실제로 구분이 필요한 구성물만 제한적으로 보여줍니다.",
+      variant: "standard",
+      maxCount: 1,
+      minScore: 86,
+      headingPatterns: ["구성물 해설"],
+      requiredBuckets: ["components"]
+    },
+    {
+      title: "보드 구조 참고 이미지",
+      lead: "보드 구조를 글만으로 이해하기 어려울 때만 보조 이미지를 넣습니다.",
+      variant: "standard",
+      maxCount: 1,
+      minScore: 88,
+      headingPatterns: ["보드/개인판 구조 설명"],
+      requiredBuckets: ["boards"]
+    }
+  ];
+}
+
 function pickItemsForPlan(plan, classified, usedGlobal = new Set()) {
   const selected = [];
 
@@ -847,7 +992,7 @@ function pickItemsForPlan(plan, classified, usedGlobal = new Set()) {
 }
 
 function injectAutomaticGalleries(html, extraction, docType) {
-  const plan = buildSectionPlan(docType);
+  const plan = buildSectionPlanV2(docType);
   const classified = collectClassifiedImages(extraction);
   const usedGlobal = new Set();
   let result = html;
@@ -869,9 +1014,92 @@ function injectAutomaticGalleries(html, extraction, docType) {
   return result;
 }
 
+function normalizeSectionNames(html) {
+  return html
+    .replace(/핵심 아이콘 카드/g, "핵심 아이콘 설명")
+    .replace(/셋업 참고 이미지/g, "")
+    .replace(/행동 위치 참고 이미지/g, "")
+    .replace(/핵심 아이콘 설명\s*\/\s*설명 중 자주 가리키는 아이콘만 작은 카드 형태로 정리합니다\./g, "핵심 아이콘 설명")
+    .replace(/셋업 참고 이미지\s*\/\s*설명 전에 실제 배치 상태를 빠르게 확인할 수 있는 이미지만 넣습니다\./g, "")
+    .replace(/핵심 아이콘 카드\s*\/\s*설명 중 자주 가리키는 아이콘만 작은 카드 형태로 정리합니다\./g, "핵심 아이콘 설명");
+}
+
+function removeHelperCopy(html) {
+  return html
+    .replace(/<p[^>]*>[^<]*(참고 이미지|이미지만 넣습니다|작은 카드 형태|빠르게 확인할 수 있는 이미지만)[^<]*<\/p>/gi, "")
+    .replace(/<li[^>]*>[^<]*(참고 이미지|이미지만 넣습니다|작은 카드 형태|빠르게 확인할 수 있는 이미지만)[^<]*<\/li>/gi, "");
+}
+
+function removeForbiddenGalleries(html, docType) {
+  const forbidden =
+    docType === "B"
+      ? ["셋업 체크리스트", "핵심 아이콘 설명", "핵심 아이콘 카드", "플레이어 턴 흐름도 (간소화)"]
+      : ["게임 준비와 시작 상태", "아이콘/기호 사전", "플레이어 턴 흐름도"];
+
+  let result = html;
+  for (const heading of forbidden) {
+    const regex = new RegExp(
+      `(<h[23][^>]*>[^<]*${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^<]*<\\/h[23]>)([\\s\\S]*?)(<section class="auto-image-gallery[\\s\\S]*?<\\/section>)`,
+      "i"
+    );
+    result = result.replace(regex, "$1$2");
+  }
+
+  return result;
+}
+
+function sectionShouldUseOrderedList(headingText) {
+  return /게임 준비와 시작 상태|셋업 체크리스트/i.test(headingText);
+}
+
+function convertSectionParagraphsToOutline(sectionHtml) {
+  if (/action-flow-section|auto-image-gallery/i.test(sectionHtml)) {
+    return sectionHtml;
+  }
+
+  const headingMatch = sectionHtml.match(/<h[23][^>]*>(.*?)<\/h[23]>/i);
+  if (!headingMatch) {
+    return sectionHtml;
+  }
+
+  const headingText = stripTags(headingMatch[1]);
+  const paragraphMatches = [...sectionHtml.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)];
+  if (!paragraphMatches.length) {
+    return sectionHtml;
+  }
+
+  const bulletLines = paragraphMatches
+    .flatMap((match) => splitIntoBulletLines(stripTags(match[1])))
+    .filter(Boolean)
+    .filter((line) => !/(참고 이미지|이미지만 넣습니다|작은 카드 형태|빠르게 확인)/i.test(line));
+
+  if (!bulletLines.length) {
+    return sectionHtml.replace(/<p[^>]*>[\s\S]*?<\/p>/gi, "");
+  }
+
+  const listTag = sectionShouldUseOrderedList(headingText) ? "ol" : "ul";
+  const listHtml = `<${listTag} class="playready-outline">${bulletLines
+    .map((line) => `<li>${escapeHtml(completeSentence(line, line))}</li>`)
+    .join("")}</${listTag}>`;
+
+  return sectionHtml
+    .replace(/<p[^>]*>[\s\S]*?<\/p>/gi, "")
+    .replace(/(<h[23][^>]*>[\s\S]*?<\/h[23]>)/i, `$1${listHtml}`);
+}
+
+function convertHtmlToOutline(html) {
+  return html.replace(/<section\b[^>]*>[\s\S]*?<\/section>/gi, (section) =>
+    convertSectionParagraphsToOutline(section)
+  );
+}
+
 export function injectImagesIntoHtml(html, extraction, docType = "A", flowData = null) {
   const images = extraction?.images || [];
   const withSlots = replaceImageSlots(html, images);
   const withActionFlow = ensureActionFlowSectionV2(withSlots, docType, flowData);
-  return injectAutomaticGalleries(withActionFlow, extraction, docType);
+  const withNormalizedTitles = normalizeSectionNames(withActionFlow);
+  const withOutline = convertHtmlToOutline(withNormalizedTitles);
+  const withGalleries = injectAutomaticGalleries(withOutline, extraction, docType);
+  const withoutForbiddenGalleries = removeForbiddenGalleries(withGalleries, docType);
+  return removeHelperCopy(withoutForbiddenGalleries);
 }
