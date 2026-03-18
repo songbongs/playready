@@ -68,6 +68,13 @@ export function buildGlossaryPayload(input) {
   const prompt = [
     `게임 이름: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
+    "- Keep sentences short and direct.",
+    "- One sentence should express only one idea.",
+    "- Prefer two short sentences over one long sentence.",
+    "- Document A must stay complete enough for self-study, but avoid long paragraphs.",
+    "- Document B must sound easy to speak aloud and stay shorter than Document A.",
+    "- Do not recreate the turn flowchart in prose. The dedicated flow section handles that job.",
+    "- If an image is not clearly matched to the section meaning, do not rely on that image in the writing.",
     "",
     "아래 자료를 바탕으로 문서 전체에서 공통으로 쓸 용어집만 JSON으로 정리하세요.",
     "반환 형식:",
@@ -205,6 +212,33 @@ export function buildTurnFlowPayload(input, glossary) {
   });
 }
 
+function summarizeTurnFlowForPrompt(turnFlowData, documentType) {
+  const flow = documentType === "B" ? turnFlowData?.simplified : turnFlowData?.detailed;
+  const steps = Array.isArray(flow?.steps) ? flow.steps.slice(0, documentType === "B" ? 5 : 7) : [];
+
+  if (!steps.length) {
+    return "";
+  }
+
+  const summary = steps
+    .map((step) => {
+      const base = [step?.title, step?.detail].filter(Boolean).join(": ");
+      if (step?.kind === "branch" && Array.isArray(step?.options) && step.options.length) {
+        const options = step.options
+          .slice(0, 4)
+          .map((item) => item?.title)
+          .filter(Boolean)
+          .join(", ");
+        return `${base} [options: ${options}]`;
+      }
+      return base;
+    })
+    .filter(Boolean)
+    .join(" -> ");
+
+  return `게임별 턴 흐름 요약 (${documentType === "B" ? "설명용 간소 버전" : "학습용 상세 버전"}): ${summary}`;
+}
+
 function buildDocumentAStructurePrompt() {
   return [
     "문서 A는 개인 학습용 가이드입니다.",
@@ -298,17 +332,29 @@ function buildDocumentBStructurePrompt() {
   ].join("\n");
 }
 
-export function buildDocumentPayload(input, glossary, documentType) {
+export function buildDocumentPayload(input, glossary, documentType, turnFlowData = null) {
   const sources = buildSourceBundle(input);
   const structurePrompt =
     documentType === "A" ? buildDocumentAStructurePrompt() : buildDocumentBStructurePrompt();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
+  const turnFlowGuide = summarizeTurnFlowForPrompt(turnFlowData, documentType);
+  const brevityRules = [
+    "Keep sentences short and direct.",
+    "One sentence should express only one idea.",
+    "Prefer two short sentences over one long sentence.",
+    "Document A must stay complete enough for self-study, but avoid long paragraphs.",
+    "Document B must sound easy to speak aloud and stay shorter than Document A.",
+    "Do not recreate the turn flowchart in prose. The dedicated flow section handles that job.",
+    "If an image is not clearly matched to the section meaning, do not rely on that image in the writing."
+  ].join("\n");
 
   const prompt = [
     `게임 이름: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
     "",
     structurePrompt,
+    turnFlowGuide,
+    brevityRules,
     "",
     "반환 형식:",
     '{"documentHtml":"<section>...</section>"}',

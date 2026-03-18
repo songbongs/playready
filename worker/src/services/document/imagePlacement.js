@@ -574,18 +574,27 @@ function sanitizeFlowText(value, fallback = "") {
   return cleaned || fallback;
 }
 
+function clampFlowText(value, maxLength) {
+  const cleaned = sanitizeFlowText(value);
+  if (!cleaned || cleaned.length <= maxLength) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
 function normalizeFlowOption(option, fallbackTitle) {
   return {
-    title: sanitizeFlowText(option?.title, fallbackTitle),
-    detail: sanitizeFlowText(option?.detail, ""),
+    title: clampFlowText(option?.title || fallbackTitle, 18),
+    detail: clampFlowText(option?.detail, 42),
     tone: sanitizeFlowText(option?.tone, "secondary")
   };
 }
 
-function normalizeFlowStep(step, index) {
+function normalizeFlowStep(step, index, docType) {
   const kind = sanitizeFlowText(step?.kind, index === 0 ? "start" : "action").toLowerCase();
-  const title = sanitizeFlowText(step?.title, `단계 ${index + 1}`);
-  const detail = sanitizeFlowText(step?.detail, "");
+  const title = clampFlowText(step?.title || `단계 ${index + 1}`, docType === "B" ? 16 : 18);
+  const detail = clampFlowText(step?.detail, docType === "B" ? 38 : 52);
   const tone = sanitizeFlowText(step?.tone, kind === "decision" ? "primary" : "neutral").toLowerCase();
   const options = Array.isArray(step?.options)
     ? step.options
@@ -642,8 +651,10 @@ function normalizeFlowData(flowData, docType) {
   const source = flowData && Array.isArray(flowData.steps) && flowData.steps.length ? flowData : getFallbackFlowData(docType);
 
   return {
-    lead: sanitizeFlowText(source.lead, getFallbackFlowData(docType).lead),
-    steps: source.steps.slice(0, docType === "B" ? 6 : 8).map((step, index) => normalizeFlowStep(step, index))
+    lead: clampFlowText(source.lead || getFallbackFlowData(docType).lead, docType === "B" ? 56 : 72),
+    steps: source.steps
+      .slice(0, docType === "B" ? 6 : 8)
+      .map((step, index) => normalizeFlowStep(step, index, docType))
   };
 }
 
@@ -738,7 +749,7 @@ function buildSectionPlan(docType) {
         lead: "설명 전에 실제 배치 상태를 빠르게 확인할 수 있는 이미지만 넣습니다.",
         variant: "standard",
         maxCount: 1,
-        minScore: 78,
+        minScore: 82,
         headingPatterns: ["셋업 체크리스트"],
         requiredBuckets: ["setup", "boards"]
       },
@@ -746,8 +757,8 @@ function buildSectionPlan(docType) {
         title: "핵심 아이콘 카드",
         lead: "설명 중 자주 가리키는 아이콘만 작은 카드 형태로 정리합니다.",
         variant: "icon",
-        maxCount: 6,
-        minScore: 82,
+        maxCount: 4,
+        minScore: 86,
         headingPatterns: ["핵심 아이콘 카드"],
         requiredBuckets: ["icons"]
       },
@@ -768,8 +779,8 @@ function buildSectionPlan(docType) {
       title: "셋업 참고 이미지",
       lead: "게임 준비와 시작 상태를 이해하는 데 직접 도움이 되는 이미지만 넣습니다.",
       variant: "standard",
-      maxCount: 2,
-      minScore: 76,
+        maxCount: 1,
+        minScore: 82,
       headingPatterns: ["게임 준비와 시작 상태", "게임 준비 개요"],
       requiredBuckets: ["setup", "boards"]
     },
@@ -778,7 +789,7 @@ function buildSectionPlan(docType) {
       lead: "점수 계산이나 트랙 연결을 빠르게 이해하는 데 도움이 되는 이미지만 넣습니다.",
       variant: "standard",
       maxCount: 1,
-      minScore: 82,
+        minScore: 86,
       headingPatterns: ["자원·트랙·상태·위치의 연결", "점수/승리 조건 이해"],
       requiredBuckets: ["scoring", "boards"]
     },
@@ -786,8 +797,8 @@ function buildSectionPlan(docType) {
       title: "구성물 해설 이미지",
       lead: "구성물을 실제로 구분할 필요가 있을 때만 넣습니다.",
       variant: "standard",
-      maxCount: 3,
-      minScore: 78,
+        maxCount: 2,
+        minScore: 84,
       headingPatterns: ["구성물 해설"],
       requiredBuckets: ["components"]
     },
@@ -795,8 +806,8 @@ function buildSectionPlan(docType) {
       title: "아이콘/기호 사전",
       lead: "아이콘 중심 게임일 때만 핵심 아이콘을 작게 정리합니다.",
       variant: "icon",
-      maxCount: 8,
-      minScore: 82,
+        maxCount: 4,
+        minScore: 88,
       headingPatterns: ["아이콘/기호 사전"],
       requiredBuckets: ["icons"]
     },
@@ -804,8 +815,8 @@ function buildSectionPlan(docType) {
       title: "보드/개인판 구조 참고 이미지",
       lead: "보드 구조가 실제 이해에 중요할 때만 넣습니다.",
       variant: "standard",
-      maxCount: 2,
-      minScore: 82,
+        maxCount: 1,
+        minScore: 86,
       headingPatterns: ["보드/개인판 구조 설명"],
       requiredBuckets: ["boards"]
     }

@@ -579,13 +579,13 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     );
     const documentAResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "A"),
+      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "A", turnFlowResult.data || null),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 A를 다시 시도하고 있습니다... (3/3)"
     );
     const documentBResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "B"),
+      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "B", turnFlowResult.data || null),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 B를 다시 시도하고 있습니다... (3/3)"
     );
