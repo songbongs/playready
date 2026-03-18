@@ -501,40 +501,143 @@
       }
 
       .result-meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        width: 100%;
+      }
+
+      .result-header {
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+
+      .result-header-main {
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .result-header-actions {
         display: flex;
+        gap: 10px;
         flex-wrap: wrap;
+      }
+
+      .result-stat-card,
+      .result-model-card,
+      .result-source-card {
+        display: grid;
+        gap: 10px;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(117, 90, 51, 0.12);
+        background: linear-gradient(180deg, rgba(255, 252, 245, 0.98), rgba(248, 241, 226, 0.98));
+        box-shadow: 0 10px 24px rgba(81, 54, 23, 0.05);
+        min-width: 0;
+      }
+
+      .result-meta-label {
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--ink-soft);
+      }
+
+      .result-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
 
-      .pill {
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(59, 111, 85, 0.12);
-        color: var(--accent);
-        font-size: 0.85rem;
-        font-weight: 700;
+      .result-stat-item {
+        display: grid;
+        gap: 4px;
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(59, 111, 85, 0.08);
       }
 
-      .result-model-note {
-        margin-top: 14px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: rgba(255, 248, 232, 0.92);
-        border: 1px solid rgba(159, 79, 43, 0.16);
+      .result-stat-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--brand-strong);
+      }
+
+      .result-stat-copy {
+        font-size: 0.84rem;
+        color: var(--ink-soft);
+        line-height: 1.5;
+      }
+
+      .result-model-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .result-model-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: rgba(159, 79, 43, 0.11);
+        color: var(--brand-strong);
+        font-size: 0.9rem;
+        font-weight: 800;
+      }
+
+      .result-model-copy {
         color: var(--ink-soft);
         line-height: 1.7;
         font-size: 0.92rem;
       }
 
-      .result-model-note strong {
-        display: block;
-        margin-bottom: 6px;
+      .result-model-list,
+      .result-source-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .result-mini-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(93, 79, 63, 0.08);
+        color: var(--ink);
+        font-size: 0.84rem;
+        font-weight: 700;
+      }
+
+      .result-mini-pill strong {
         color: var(--brand-strong);
       }
 
-      .result-model-note ul {
-        margin: 8px 0 0;
-        padding-left: 18px;
+      .result-source-item {
+        display: inline-grid;
+        gap: 3px;
+        min-width: 112px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: rgba(219, 233, 220, 0.45);
+        border: 1px solid rgba(59, 111, 85, 0.12);
+      }
+
+      .result-source-item strong {
+        font-size: 0.98rem;
+        color: var(--accent);
+      }
+
+      .result-source-item span {
+        font-size: 0.82rem;
+        color: var(--ink-soft);
       }
 
       .preview-frame {
@@ -784,6 +887,27 @@
         .results-panel {
           padding: 18px;
         }
+
+        .result-header {
+          flex-direction: column;
+        }
+
+        .result-header-actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .result-meta {
+          grid-template-columns: 1fr;
+        }
+
+        .result-stat-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-frame .action-flow-branch__options {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 560px) {
@@ -817,12 +941,27 @@
           grid-template-columns: 1fr;
         }
 
-        .preview-frame .action-flow-node {
+        .preview-frame .action-flow-node,
+        .preview-frame .action-flow-branch {
           width: 100%;
         }
 
         .preview-frame .action-flow-branch__options {
           grid-template-columns: 1fr;
+        }
+
+        .preview-frame .action-flow-step,
+        .preview-frame .action-flow-branch-option {
+          padding: 14px;
+        }
+
+        .result-header-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .result-header-actions button {
+          width: 100%;
         }
       }
     </style>
@@ -834,8 +973,8 @@
         <h1>보드게임 룰북을<br />읽기 쉬운 한국어 자료로 정리합니다</h1>
         <p>
           게임 이름, BGG ID, 룰북 PDF를 넣으면 학습용 문서와 설명용 문서를 자동으로
-          만들어줍니다. PDF가 없어도 시작할 수 있고, PDF가 있으면 이미지와 규칙 문맥까지
-          더 풍부하게 반영합니다.
+          만들어줍니다. BGG에 없는 게임도 PDF나 추가 자료만 있으면 시작할 수 있고, PDF가
+          있으면 이미지와 규칙 문맥까지 더 풍부하게 반영합니다.
         </p>
       </header>
 
@@ -854,22 +993,23 @@
                 <input
                   id="gameName"
                   type="text"
-                  placeholder="예: 아크노바 (Ark Nova)"
+                  placeholder="예: 아크노바 (Ark Nova) | 모르면 비워도 됩니다"
                   autocomplete="off"
                 />
               </div>
 
               <div class="field">
-                <label for="bggId">BGG 게임 ID</label>
+                <label for="bggId">BGG 게임 ID (선택)</label>
                 <input
                   id="bggId"
                   type="number"
                   inputmode="numeric"
-                  placeholder="예: 342942"
+                  placeholder="예: 342942 | 모르면 비워도 됩니다"
                 />
                 <p class="hint">
                   BGG ID는 boardgamegeek.com에서 게임을 검색한 후, 주소창의 숫자입니다.
                   예: boardgamegeek.com/boardgame/342942/ark-nova 에서 342942가 ID입니다.
+                  BGG에 없는 게임이면 비워두고 PDF/추가 자료만으로 진행할 수 있습니다.
                 </p>
               </div>
 
@@ -883,8 +1023,8 @@
                   </div>
                 </div>
                 <p class="hint">
-                  PDF가 없어도 BGG 데이터만으로 문서를 생성할 수 있습니다. PDF가 있으면 더
-                  상세한 문서가 만들어집니다.
+                  PDF가 없어도 시작은 가능하지만, BGG에 없는 게임은 PDF나 추가 자료가 있으면
+                  훨씬 안정적으로 문서를 만들 수 있습니다.
                 </p>
               </div>
 
@@ -963,8 +1103,8 @@
 
             <div class="progress-steps">
               <div id="step-bgg" class="step-chip">
-                <strong>1단계 | BGG 수집</strong>
-                <small>포럼, FAQ, Q&A를 모으는 단계입니다.</small>
+                <strong>1단계 | BGG 수집(선택)</strong>
+                <small>BGG ID가 있을 때만 포럼, FAQ, Q&A를 모읍니다.</small>
               </div>
               <div id="step-pdf" class="step-chip">
                 <strong>2단계 | PDF 분석</strong>
@@ -1003,11 +1143,16 @@
         <section id="screen-result" class="screen" aria-label="결과 화면">
           <div class="panel results-panel">
             <div class="result-header">
-              <div>
+              <div class="result-header-main">
                 <h2 class="section-title" id="resultTitle">문서 생성 완료</h2>
                 <p class="section-desc" id="resultSubtitle">
                   문서 A와 문서 B를 탭으로 전환하면서 바로 읽을 수 있습니다.
                 </p>
+                <div class="result-header-actions">
+                  <button id="restartTopButton" class="btn-secondary" type="button">처음으로 돌아가기</button>
+                  <button id="downloadTopA" class="btn-primary" type="button">문서 A 다운로드</button>
+                  <button id="downloadTopB" class="btn-secondary" type="button">문서 B 다운로드</button>
+                </div>
               </div>
               <div class="result-meta" id="resultMeta"></div>
             </div>
@@ -1040,6 +1185,7 @@
         ETA_SECONDS: {
           start: 240,
           bgg: 180,
+          "bgg-skip": 150,
           pdf: 120,
           "pdf-upload": 110,
           "pdf-extract": 105,
@@ -1117,8 +1263,11 @@
         previewB: document.getElementById("previewB"),
         tabA: document.getElementById("tabA"),
         tabB: document.getElementById("tabB"),
+        downloadTopA: document.getElementById("downloadTopA"),
+        downloadTopB: document.getElementById("downloadTopB"),
         downloadA: document.getElementById("downloadA"),
         downloadB: document.getElementById("downloadB"),
+        restartTopButton: document.getElementById("restartTopButton"),
         restartButton: document.getElementById("restartButton"),
         stepBgg: document.getElementById("step-bgg"),
         stepPdf: document.getElementById("step-pdf"),
@@ -1150,8 +1299,11 @@
       elements.cancelButton.addEventListener("click", cancelGeneration);
       elements.tabA.addEventListener("click", () => activateTab("A"));
       elements.tabB.addEventListener("click", () => activateTab("B"));
+      elements.downloadTopA.addEventListener("click", () => downloadHtml("A"));
+      elements.downloadTopB.addEventListener("click", () => downloadHtml("B"));
       elements.downloadA.addEventListener("click", () => downloadHtml("A"));
       elements.downloadB.addEventListener("click", () => downloadHtml("B"));
+      elements.restartTopButton.addEventListener("click", resetToStart);
       elements.restartButton.addEventListener("click", resetToStart);
 
       function showScreen(name) {
@@ -1256,13 +1408,13 @@
         const faqPdfFile = state.selectedUploads.faq;
         const extraFiles = [...state.selectedUploads.extras];
 
-        if (!gameName) {
-          showInputError("게임 이름을 먼저 입력해주세요. 예: 아크노바 (Ark Nova)");
+        if (!bggId && !pdfFile && !faqPdfFile && !extraFiles.length) {
+          showInputError("BGG ID가 없으면 룰북 PDF, FAQ PDF, 추가 자료 중 하나 이상은 넣어주세요.");
           return;
         }
 
-        if (!bggId) {
-          showInputError("BGG 게임 ID를 입력해주세요.");
+        if (bggId && !/^\d+$/.test(bggId)) {
+          showInputError("BGG 게임 ID는 숫자로만 입력해주세요.");
           return;
         }
 
@@ -1287,7 +1439,9 @@
             subtitle: "선택한 PDF와 추가 자료를 브라우저에서 안전하게 읽는 중입니다.",
             message: pdfFile || faqPdfFile || extraFiles.length
               ? "파일 크기에 따라 10초에서 1분 이상 걸릴 수 있습니다. 지금은 서버로 보내기 전 준비 단계입니다."
-              : "첨부 파일이 없어 게임 이름과 BGG ID 중심으로 요청을 준비하고 있습니다.",
+              : bggId
+                ? "첨부 파일이 없어 게임 이름과 BGG 정보 중심으로 요청을 준비하고 있습니다."
+                : "첨부 파일이나 입력한 게임 이름을 바탕으로 요청을 준비하고 있습니다.",
             percent: 12
           });
           const payload = await buildRequestPayload({
@@ -1458,9 +1612,16 @@
         order.forEach((key, index) => {
           const node = stepMap[key];
           node.classList.remove("is-current", "is-done");
-          const currentIndex = stage === "pdf-skip" ? 1 : order.indexOf(stage);
+          const currentIndex =
+            stage === "bgg-skip" ? 0 : stage === "pdf-skip" ? 1 : order.indexOf(stage);
           if (currentIndex > index) node.classList.add("is-done");
-          if ((stage === "pdf-skip" && key === "pdf") || stage === key) node.classList.add("is-current");
+          if (
+            (stage === "bgg-skip" && key === "bgg") ||
+            (stage === "pdf-skip" && key === "pdf") ||
+            stage === key
+          ) {
+            node.classList.add("is-current");
+          }
         });
 
         if (stage === "ai") {
@@ -1552,47 +1713,73 @@ function stopTimers() {
         elements.previewB.innerHTML = data.documentBHtml || "<p>문서 B 결과가 없습니다.</p>";
         elements.resultMeta.innerHTML = "";
 
-        const pills = [
-          `${data.meta?.forumCount || 0}개 포럼 묶음`,
-          `${data.meta?.imageCount || 0}개 이미지`,
-          `${(data.glossary || []).length}개 용어`
-        ];
+        const statCard = document.createElement("section");
+        statCard.className = "result-stat-card";
+        statCard.innerHTML = `
+          <div class="result-meta-label">요약 지표</div>
+          <div class="result-stat-grid">
+            <div class="result-stat-item">
+              <div class="result-stat-value">${data.meta?.forumCount || 0}</div>
+              <div class="result-stat-copy">포럼 묶음</div>
+            </div>
+            <div class="result-stat-item">
+              <div class="result-stat-value">${data.meta?.imageCount || 0}</div>
+              <div class="result-stat-copy">추출 이미지</div>
+            </div>
+            <div class="result-stat-item">
+              <div class="result-stat-value">${(data.glossary || []).length}</div>
+              <div class="result-stat-copy">용어 정리</div>
+            </div>
+          </div>
+        `;
+        elements.resultMeta.appendChild(statCard);
 
-        pills.forEach((label) => {
-          const span = document.createElement("span");
-          span.className = "pill";
-          span.textContent = label;
-          elements.resultMeta.appendChild(span);
+        const modelSummary = data.meta?.modelUsageSummary || null;
+        const modelCard = document.createElement("section");
+        modelCard.className = "result-model-card";
+        modelCard.innerHTML = `
+          <div class="result-meta-label">사용 모델</div>
+          <div class="result-model-head">
+            <div class="result-model-chip">${escapeHtml(modelSummary?.label || "사용 모델: 확인 불가")}</div>
+          </div>
+          <div class="result-model-copy">${escapeHtml(
+            modelSummary?.detail || "이번 결과에서 사용 모델 정보를 모두 받지 못했습니다."
+          )}</div>
+          <div class="result-model-list"></div>
+        `;
+        const modelList = modelCard.querySelector(".result-model-list");
+        (data.meta?.modelUsageDetails || []).forEach((item) => {
+          const chip = document.createElement("div");
+          chip.className = "result-mini-pill";
+          chip.textContent = item;
+          modelList.appendChild(chip);
         });
+        elements.resultMeta.appendChild(modelCard);
 
-        const modelSummary = data.meta?.modelUsageSummary;
-        if (modelSummary?.label) {
-          const note = document.createElement("div");
-          note.className = "result-model-note";
-
-          const title = document.createElement("strong");
-          title.textContent = modelSummary.label;
-          note.appendChild(title);
-
-          if (modelSummary.detail) {
-            const detail = document.createElement("div");
-            detail.textContent = modelSummary.detail;
-            note.appendChild(detail);
-          }
-
-          const details = data.meta?.modelUsageDetails || [];
-          if (details.length) {
-            const list = document.createElement("ul");
-            details.forEach((item) => {
-              const li = document.createElement("li");
-              li.textContent = item;
-              list.appendChild(li);
-            });
-            note.appendChild(list);
-          }
-
-          elements.resultMeta.appendChild(note);
+        const sourceCard = document.createElement("section");
+        sourceCard.className = "result-source-card";
+        sourceCard.innerHTML = `
+          <div class="result-meta-label">사용 소스</div>
+          <div class="result-source-list"></div>
+        `;
+        const sourceList = sourceCard.querySelector(".result-source-list");
+        const sourceKinds = Array.isArray(data.meta?.sourceKinds) ? data.meta.sourceKinds : [];
+        sourceKinds.forEach((item) => {
+          if (!item?.active) return;
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = `<strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(
+            `${item.value}${item.suffix || ""}`
+          )}</span>`;
+          sourceList.appendChild(block);
+        });
+        if (!sourceList.children.length) {
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = "<strong>입력 자료</strong><span>최소 정보 기반</span>";
+          sourceList.appendChild(block);
         }
+        elements.resultMeta.appendChild(sourceCard);
 
         activateTab("A");
       }
@@ -1662,6 +1849,16 @@ function stopTimers() {
     .action-flow-branch-option { padding: 14px 14px 12px; border-radius: 16px; background: #fffdf8; border: 1px solid rgba(121, 98, 184, 0.18); box-shadow: 0 8px 18px rgba(81, 54, 23, 0.04); }
     .action-flow-branch-option strong { display: block; margin-bottom: 6px; color: #6d5aa4; }
     .action-flow-branch-option p { margin: 0; color: #5d4f3f; }
+    @media screen and (max-width: 720px) {
+      body { padding: 14px; font-size: 14px; }
+      main { padding: 18px 14px; border-radius: 18px; }
+      h1 { font-size: 24px; }
+      h2 { font-size: 19px; }
+      .auto-image-grid, .auto-image-grid--icons { grid-template-columns: 1fr; }
+      .action-flow-node, .action-flow-branch { width: 100%; }
+      .action-flow-branch__options { grid-template-columns: 1fr; }
+      .action-flow-step, .action-flow-branch-option { padding: 14px; }
+    }
     @media print {
       body { padding: 0; background: #ffffff; font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       main { max-width: none; margin: 0; padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
@@ -1811,6 +2008,7 @@ function stopTimers() {
       function normalizeStage(stage) {
         if (
           [
+            "bgg-skip",
             "pdf",
             "pdf-upload",
             "pdf-extract",
@@ -1844,6 +2042,11 @@ function stopTimers() {
             title: "BGG 데이터를 수집하고 있습니다",
             percent: 34,
             subtitle: "게임 기본 정보와 공개 토론 내용을 모아 참고 자료를 만들고 있습니다."
+          },
+          "bgg-skip": {
+            title: "BGG 없이 입력값과 PDF 기준으로 진행합니다",
+            percent: 26,
+            subtitle: "BGG ID가 없어 입력한 게임 정보와 PDF, 추가 자료를 중심으로 문서를 준비합니다."
           },
           pdf: {
             title: "PDF를 분석하고 있습니다",

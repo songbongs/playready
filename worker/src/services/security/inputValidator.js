@@ -11,7 +11,7 @@ export async function readAndValidateJsonRequest(request, config) {
     throw createUserError("요청 형식을 읽을 수 없습니다. 다시 시도해주세요.", 400);
   }
 
-  const gameName = String(body?.gameName || "").trim();
+  const rawGameName = String(body?.gameName || "").trim();
   const bggId = String(body?.bggId || "").trim();
   const pdfBase64 = String(body?.pdfBase64 || "").trim();
   const pdfFileName = String(body?.pdfFileName || "rulebook.pdf").trim();
@@ -20,12 +20,19 @@ export async function readAndValidateJsonRequest(request, config) {
   const faqPdfFileName = String(body?.faqPdfFileName || "faq.pdf").trim();
   const faqPdfMimeType = String(body?.faqPdfMimeType || "application/pdf").trim();
   const additionalMaterials = normalizeAdditionalMaterials(body?.additionalMaterials || []);
+  const gameName =
+    rawGameName ||
+    deriveGameNameFromInputs(pdfFileName, faqPdfFileName, additionalMaterials, bggId);
 
-  if (!gameName) {
-    throw createUserError("게임 이름을 입력해주세요.", 400, "INVALID_GAME_NAME");
-  }
-  if (!bggId || !/^\d+$/.test(bggId)) {
+  if (bggId && !/^\d+$/.test(bggId)) {
     throw createUserError("BGG ID는 숫자로만 입력해주세요.", 400, "INVALID_BGG_ID");
+  }
+  if (!bggId && !pdfBase64 && !faqPdfBase64 && !additionalMaterials.length) {
+    throw createUserError(
+      "BGG ID가 없으면 룰북 PDF, FAQ PDF, 추가 자료 중 하나 이상은 넣어주세요.",
+      400,
+      "MISSING_ALL_SOURCES"
+    );
   }
   if (pdfBase64 && pdfMimeType !== "application/pdf") {
     throw createUserError("룰북은 PDF 파일만 업로드할 수 있습니다.", 400, "INVALID_PDF_TYPE");
@@ -57,6 +64,47 @@ export async function readAndValidateJsonRequest(request, config) {
     faqEstimatedBytes,
     additionalMaterials
   };
+}
+
+function deriveGameNameFromInputs(pdfFileName, faqPdfFileName, additionalMaterials, bggId) {
+  const candidates = [
+    pdfFileName,
+    faqPdfFileName,
+    ...(additionalMaterials || []).map((item) => item.fileName)
+  ];
+
+  for (const fileName of candidates) {
+    const derived = deriveGameNameFromFileName(fileName);
+    if (derived) {
+      return derived;
+    }
+  }
+
+  if (bggId) {
+    return `BGG ${bggId}`;
+  }
+
+  return "";
+}
+
+function deriveGameNameFromFileName(fileName) {
+  const value = String(fileName || "").trim();
+  if (!value) {
+    return "";
+  }
+
+  const withoutExtension = value.replace(/\.[^.]+$/, "");
+  const cleaned = withoutExtension
+    .replace(/\b(rulebook|rules?|faq|errata|reference|teach|study|guide)\b/gi, " ")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned || /^rulebook$/i.test(cleaned) || /^faq$/i.test(cleaned)) {
+    return "";
+  }
+
+  return cleaned;
 }
 
 function normalizeAdditionalMaterials(items) {

@@ -168,6 +168,67 @@ function hasUsableBggData(bggForumData) {
   );
 }
 
+function resolveEffectiveGameName(request, bggForumData, rulebookExtraction, faqExtraction) {
+  return (
+    String(request?.gameName || "").trim() ||
+    String(bggForumData?.thingInfo?.name || "").trim() ||
+    String(rulebookExtraction?.gameName || "").trim() ||
+    String(faqExtraction?.gameName || "").trim() ||
+    "게임명 미확인"
+  );
+}
+
+function buildSourceUsageMeta(state) {
+  const bggInfoCount = state.bggForumData?.thingInfo?.name ? 1 : 0;
+  const forumCount = state.bggForumData?.forums?.length || 0;
+  const rulebookPages = state.rulebookExtraction?.pageCount || 0;
+  const faqPages = state.faqExtraction?.pageCount || 0;
+  const additionalMaterialsCount = state.request.additionalMaterials?.length || 0;
+
+  const sourceKinds = [
+    {
+      key: "rulebook",
+      label: "룰북 PDF",
+      value: rulebookPages,
+      suffix: "쪽",
+      active: rulebookPages > 0
+    },
+    {
+      key: "faq",
+      label: "FAQ/정오표",
+      value: faqPages,
+      suffix: "쪽",
+      active: faqPages > 0
+    },
+    {
+      key: "bgg-info",
+      label: "BGG 기본 정보",
+      value: bggInfoCount,
+      suffix: "건",
+      active: bggInfoCount > 0
+    },
+    {
+      key: "bgg-forum",
+      label: "BGG 포럼",
+      value: forumCount,
+      suffix: "묶음",
+      active: forumCount > 0
+    },
+    {
+      key: "extra",
+      label: "추가 자료",
+      value: additionalMaterialsCount,
+      suffix: "개",
+      active: additionalMaterialsCount > 0
+    }
+  ];
+
+  return {
+    sourceKinds,
+    sourceKindsUsed: sourceKinds.filter((item) => item.active).map((item) => item.label)
+  };
+}
+
 function cleanupSensitiveData(state) {
   state.request.pdfBase64 = "";
   state.request.faqPdfBase64 = "";
@@ -460,13 +521,39 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
   };
 
   try {
-    await onProgress("BGG 포럼 데이터를 수집하고 있습니다... (1/3)", { stage: "bgg" });
-    state.bggForumData = await collectBggForumData(
-      state.request.bggId,
-      state.request.gameName,
-      config,
-      onProgress
-    );
+    if (state.request.bggId) {
+      await onProgress("BGG 포럼 데이터를 수집하고 있습니다... (1/3)", { stage: "bgg" });
+      state.bggForumData = await collectBggForumData(
+        state.request.bggId,
+        state.request.gameName,
+        config,
+        onProgress
+      );
+      state.request.gameName = resolveEffectiveGameName(state.request, state.bggForumData, null, null);
+    } else {
+      state.bggForumData = {
+        bggId: "",
+        collectedAt: new Date().toISOString(),
+        warning: "BGG ID가 없어 PDF와 입력한 자료를 중심으로 진행합니다.",
+        thingInfo: {
+          id: "",
+          name: state.request.gameName || "",
+          yearPublished: null,
+          minPlayers: null,
+          maxPlayers: null,
+          playingTime: null,
+          minAge: null,
+          description: "",
+          mechanics: [],
+          categories: [],
+          families: []
+        },
+        forums: []
+      };
+      await onProgress("BGG ID 없이 입력값과 PDF 기준으로 진행합니다... (1/3)", {
+        stage: "bgg-skip"
+      });
+    }
     assertTime();
 
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
@@ -491,6 +578,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
             ? "룰북 PDF는 읽지 못했지만 BGG 자료 기준으로 계속 진행합니다... (2/3)"
             : "룰북 PDF를 읽지 못했습니다. BGG 기본 정보만으로 계속 진행 가능한지 확인하고 있습니다... (2/3)"
         )) || buildEmptyExtraction(state.request.gameName);
+      state.request.gameName = resolveEffectiveGameName(
+        state.request,
+        state.bggForumData,
+        state.rulebookExtraction,
+        null
+      );
       await onProgress("FAQ/정오표 PDF 분석 결과를 정리하고 있습니다... (2/3)", {
         stage: "pdf-merge"
       });
@@ -523,6 +616,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           onProgress,
           "FAQ/정오표 PDF는 읽지 못했지만 룰북과 BGG 자료 기준으로 계속 진행합니다... (2/3)"
         )) || buildEmptyExtraction(state.request.gameName);
+      state.request.gameName = resolveEffectiveGameName(
+        state.request,
+        state.bggForumData,
+        state.rulebookExtraction,
+        state.faqExtraction
+      );
     } else {
       state.faqExtraction = buildEmptyExtraction(state.request.gameName);
     }
@@ -549,6 +648,12 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
 
     state.pdfExtraction = mergeExtractions(
       state.request.gameName,
+      state.rulebookExtraction,
+      state.faqExtraction
+    );
+    state.request.gameName = resolveEffectiveGameName(
+      state.request,
+      state.bggForumData,
       state.rulebookExtraction,
       state.faqExtraction
     );
@@ -611,6 +716,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     };
     const modelUsageSummary = formatModelUsageSummary(Object.values(modelUsageBySection));
     const modelUsageDetails = buildModelUsageDetailsV2(modelUsageBySection);
+    const sourceUsageMeta = buildSourceUsageMeta(state);
 
     return {
       ok: true,
@@ -631,7 +737,9 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           hasBggThingInfo: Boolean(state.bggForumData?.thingInfo?.name),
           modelUsageSummary,
           modelUsageDetails,
-          modelUsageBySection
+          modelUsageBySection,
+          sourceKinds: sourceUsageMeta.sourceKinds,
+          sourceKindsUsed: sourceUsageMeta.sourceKindsUsed
         }
       }
     };
