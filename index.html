@@ -162,9 +162,35 @@
         margin-bottom: 18px;
       }
 
+      .field-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
       .field label {
         font-size: 0.95rem;
         font-weight: 700;
+      }
+
+      .field-badges {
+        display: inline-flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .field-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(59, 111, 85, 0.1);
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
       }
 
       .field input[type="text"],
@@ -193,6 +219,10 @@
         color: #335746;
         font-size: 0.88rem;
         line-height: 1.65;
+      }
+
+      .hint strong {
+        color: var(--accent);
       }
 
       .upload-box {
@@ -358,7 +388,52 @@
         border-color: rgba(59, 111, 85, 0.25);
       }
 
+      .step-chip.is-failed {
+        background: rgba(156, 47, 47, 0.08);
+        border-color: rgba(156, 47, 47, 0.2);
+      }
+
       .step-chip small {
+        color: var(--ink-soft);
+      }
+
+      .step-chip strong {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .step-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 72px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: rgba(93, 79, 63, 0.08);
+        color: var(--ink-soft);
+      }
+
+      .step-status[data-status="active"] {
+        background: rgba(159, 79, 43, 0.14);
+        color: var(--brand-strong);
+      }
+
+      .step-status[data-status="done"] {
+        background: rgba(59, 111, 85, 0.14);
+        color: var(--accent);
+      }
+
+      .step-status[data-status="failed"] {
+        background: rgba(156, 47, 47, 0.12);
+        color: var(--danger);
+      }
+
+      .step-status[data-status="blocked"] {
+        background: rgba(117, 90, 51, 0.12);
         color: var(--ink-soft);
       }
 
@@ -602,6 +677,31 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+      }
+
+      .result-time-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .result-time-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(59, 111, 85, 0.08);
+      }
+
+      .result-time-item strong {
+        color: var(--ink);
+      }
+
+      .result-time-item span {
+        font-weight: 800;
+        color: var(--brand-strong);
+        white-space: nowrap;
       }
 
       .result-mini-pill {
@@ -1108,11 +1208,10 @@
     <div class="app-shell">
       <header class="hero">
         <span class="eyebrow">playready | 룰북 학습 보조 도구</span>
-        <h1>보드게임 룰북을<br />읽기 쉬운 한국어 자료로 정리합니다</h1>
+        <h1>playready<br />복잡한 룰북을, 바로 플레이 가능한 한국어 자료로</h1>
         <p>
-          게임 이름, BGG ID, 룰북 PDF를 넣으면 학습용 문서와 설명용 문서를 자동으로
-          만들어줍니다. BGG에 없는 게임도 PDF나 추가 자료만 있으면 시작할 수 있고, PDF가
-          있으면 이미지와 규칙 문맥까지 더 풍부하게 반영합니다.
+          게임 이름, BGG ID, 룰북 PDF를 바탕으로 문서 A와 문서 B를 자동으로 만듭니다.
+          BGG 정보가 없어도 시작할 수 있고, 룰북과 FAQ가 있으면 더 정확하고 풍부하게 정리됩니다.
         </p>
       </header>
 
@@ -1120,24 +1219,28 @@
         <section id="screen-input" class="screen is-active" aria-label="입력 화면">
           <div class="panel form-panel">
             <div class="panel-section">
-              <h2 class="section-title">1. 게임 정보를 입력해주세요</h2>
+              <h2 class="section-title">게임 정보를 입력하세요</h2>
               <p class="section-desc">
-                예시를 그대로 따라 적으면 가장 안전합니다. 처음에는 작은 PDF나 익숙한 게임으로
-                테스트해보는 것을 추천합니다.
+                알고 있는 정보만 넣어도 됩니다. 모르는 항목은 비워둘 수 있습니다.
               </p>
 
               <div class="field">
-                <label for="gameName">게임 이름</label>
+                <div class="field-head">
+                  <label for="gameName">게임 이름</label>
+                </div>
                 <input
                   id="gameName"
                   type="text"
                   placeholder="예: 아크노바 (Ark Nova) | 모르면 비워도 됩니다"
                   autocomplete="off"
                 />
+                <p class="hint">룰북 표지 제목 그대로 넣는 것을 권장합니다.</p>
               </div>
 
               <div class="field">
-                <label for="bggId">BGG 게임 ID (선택)</label>
+                <div class="field-head">
+                  <label for="bggId">BGG 게임 ID (선택)</label>
+                </div>
                 <input
                   id="bggId"
                   type="number"
@@ -1145,14 +1248,19 @@
                   placeholder="예: 342942 | 모르면 비워도 됩니다"
                 />
                 <p class="hint">
-                  BGG ID는 boardgamegeek.com에서 게임을 검색한 후, 주소창의 숫자입니다.
-                  예: boardgamegeek.com/boardgame/342942/ark-nova 에서 342942가 ID입니다.
-                  BGG에 없는 게임이면 비워두고 PDF/추가 자료만으로 진행할 수 있습니다.
+                  <strong>있으면 더 정확합니다.</strong> BoardGameGeek 주소의 숫자 ID입니다.
+                  예: boardgamegeek.com/boardgame/342942/... 에서 342942
                 </p>
               </div>
 
               <div class="field">
-                <label for="pdfFile">룰북 PDF 업로드</label>
+                <div class="field-head">
+                  <label for="pdfFile">룰북 PDF</label>
+                  <div class="field-badges">
+                    <span class="field-badge">최대 1개</span>
+                    <span class="field-badge">PDF</span>
+                  </div>
+                </div>
                 <div class="upload-box">
                   <input id="pdfFile" type="file" accept="application/pdf,.pdf" />
                   <div id="pdfMeta" class="file-meta">아직 선택한 PDF가 없습니다.</div>
@@ -1161,13 +1269,18 @@
                   </div>
                 </div>
                 <p class="hint">
-                  PDF가 없어도 시작은 가능하지만, BGG에 없는 게임은 PDF나 추가 자료가 있으면
-                  훨씬 안정적으로 문서를 만들 수 있습니다.
+                  <strong>가장 중요한 파일입니다.</strong> 공식 룰북 PDF를 넣어주세요.
                 </p>
               </div>
 
               <div class="field">
-                <label for="faqPdfFile">FAQ/정오표 PDF 업로드</label>
+                <div class="field-head">
+                  <label for="faqPdfFile">FAQ / 정오표 PDF (선택)</label>
+                  <div class="field-badges">
+                    <span class="field-badge">최대 1개</span>
+                    <span class="field-badge">PDF</span>
+                  </div>
+                </div>
                 <div class="upload-box">
                   <input id="faqPdfFile" type="file" accept="application/pdf,.pdf" />
                   <div id="faqPdfMeta" class="file-meta">아직 선택한 FAQ/정오표 PDF가 없습니다.</div>
@@ -1176,12 +1289,18 @@
                   </div>
                 </div>
                 <p class="hint">
-                  공식 FAQ나 정오표 PDF가 있다면 함께 업로드하면 더 정확한 문서가 만들어집니다.
+                  최신 예외 규칙이나 수정 내용을 반영할 때 사용합니다. 없으면 생략해도 됩니다.
                 </p>
               </div>
 
               <div class="field">
-                <label for="extraFiles">추가 자료 업로드</label>
+                <div class="field-head">
+                  <label for="extraFiles">추가 자료 (선택)</label>
+                  <div class="field-badges">
+                    <span class="field-badge">최대 5개</span>
+                    <span class="field-badge">텍스트/PDF</span>
+                  </div>
+                </div>
                 <div class="upload-box">
                   <input id="extraFiles" type="file" multiple accept=".txt,.md,.json,.csv,.html,.htm,.pdf" />
                   <div id="extraMeta" class="file-meta">추가 자료를 선택하지 않아도 됩니다.</div>
@@ -1189,6 +1308,7 @@
                     <button id="clearExtraButton" class="btn-inline hidden" type="button">선택한 파일 제거</button>
                   </div>
                 </div>
+                <p class="hint">참고표, 시나리오 설명, 요약표 같은 보조 자료를 넣을 수 있습니다.</p>
               </div>
 
               <div class="cta-row">
@@ -1196,30 +1316,27 @@
               </div>
               <div id="inputError" class="error-box hidden"></div>
               <p class="footer-note">
-                PDF는 50MB를 넘기기 전에 먼저 차단됩니다. 대용량 파일은 모바일에서 업로드 시간이
-                오래 걸릴 수 있습니다.
+                업로드 가능 형식: PDF, TXT, MD, JSON, CSV, HTML / 파일당 최대 50MB
               </p>
             </div>
 
             <aside class="panel-section">
-              <h2 class="section-title">이 페이지가 만들어주는 결과</h2>
+              <h2 class="section-title">playready가 만들어주는 자료</h2>
               <p class="section-desc">
-                두 문서는 용도가 다릅니다. 공부용과 설명용을 나눠서 만들기 때문에 실제 플레이 전에
-                훨씬 빠르게 준비할 수 있습니다.
+                혼자 읽는 문서 A와 설명할 때 쓰는 문서 B를 함께 만듭니다.
               </p>
               <div class="tips-list">
                 <article class="tip-card">
-                  <strong>문서 A | 공부용 상세 자료</strong>
-                  게임 목표, 구성물, 턴 순서, 예외 규칙, FAQ, 전략 팁을 차근차근 정리합니다.
+                  <strong>문서 A | 학습용</strong>
+                  혼자 읽으며 규칙을 이해하는 문서
                 </article>
                 <article class="tip-card">
-                  <strong>문서 B | 설명용 보조 자료</strong>
-                  소개 스크립트, 셋업 체크리스트, 첫 라운드 진행 가이드, 참조 카드처럼 바로 써먹는
-                  구성으로 정리합니다.
+                  <strong>문서 B | 설명용</strong>
+                  다른 사람에게 설명할 때 쓰는 문서
                 </article>
                 <article class="tip-card">
-                  <strong>이미지도 함께 배치</strong>
-                  PDF가 있다면 룰북 원본 이미지를 관련 설명 근처에 넣어서 훑어보기 쉽게 만듭니다.
+                  <strong>시각 자료 정리</strong>
+                  필요한 이미지를 문서 안에 함께 배치
                 </article>
               </div>
             </aside>
@@ -1229,9 +1346,9 @@
         <section id="screen-progress" class="screen" aria-label="진행 상황 화면">
           <div class="panel progress-panel">
             <div class="stage-line">
-              <div class="stage-title" id="progressTitle">문서를 준비하고 있습니다</div>
+              <div class="stage-title" id="progressTitle">자료를 만들고 있습니다</div>
               <div class="stage-copy" id="progressSubtitle">
-                첫 요청을 정리하는 중입니다. 잠시만 기다려주세요.
+                지금 어떤 작업이 진행 중인지 아래에서 확인할 수 있습니다.
               </div>
             </div>
 
@@ -1241,24 +1358,24 @@
 
             <div class="progress-steps">
               <div id="step-bgg" class="step-chip">
-                <strong>1단계 | BGG 수집(선택)</strong>
-                <small>BGG ID가 있을 때만 포럼, FAQ, Q&A를 모읍니다.</small>
+                <strong><span>1단계 | 게임 정보 확인</span><span class="step-status" id="step-status-bgg" data-status="pending">대기</span></strong>
+                <small>입력한 게임 정보와 BGG 메타 정보를 확인합니다.</small>
               </div>
               <div id="step-pdf" class="step-chip">
-                <strong>2단계 | PDF 분석</strong>
-                <small>텍스트와 이미지를 정리하는 단계입니다.</small>
+                <strong><span>2단계 | PDF 읽기</span><span class="step-status" id="step-status-pdf" data-status="pending">대기</span></strong>
+                <small>룰북과 FAQ의 텍스트, 이미지, 표를 정리합니다.</small>
               </div>
               <div id="step-ai" class="step-chip">
-                <strong>3단계 | 문서 생성</strong>
-                <small>한국어 문서를 만드는 단계입니다.</small>
+                <strong><span>3단계 | 문서 만들기</span><span class="step-status" id="step-status-ai" data-status="pending">대기</span></strong>
+                <small>문서 A, 문서 B, 턴 흐름 도식을 최종 생성합니다.</small>
               </div>
             </div>
 
             <div class="working-indicator" id="workingIndicator" aria-live="polite">
               <div class="working-spinner" aria-hidden="true"></div>
               <div>
-                <strong>현재 작업이 계속 진행 중입니다</strong>
-                <small>오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.</small>
+                <strong>현재 작업이 진행 중입니다</strong>
+                <small>단계가 바뀌지 않아도 내부 작업은 계속 진행될 수 있습니다.</small>
               </div>
             </div>
             <div id="etaBox" class="eta-box">예상 남은 시간: 계산 중...</div>
@@ -1266,9 +1383,9 @@
             <div id="heartbeatBox" class="heartbeat-box">
               <span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다.
             </div>
-            <div id="funBox" class="fun-box">BGG 포럼의 열띤 토론을 읽고 있습니다...</div>
+            <div id="funBox" class="fun-box">게임 정보를 확인하고 있습니다</div>
             <div id="progressMessage" class="message-box">
-              작업이 시작되면 여기에서 자세한 상태를 알려드립니다.
+              현재 단계 기준으로 필요한 작업을 순서대로 진행합니다.
             </div>
             <div id="progressError" class="error-box hidden"></div>
 
@@ -1320,6 +1437,7 @@
       const APP_CONFIG = {
         WORKER_BASE_URL: "https://playready-worker.iamsangmin.workers.dev",
         MAX_PDF_BYTES: 50 * 1024 * 1024,
+        MAX_EXTRA_FILES: 5,
         ETA_SECONDS: {
           start: 240,
           bgg: 180,
@@ -1338,17 +1456,43 @@
         }
       };
 
-      const FUN_MESSAGES = [
-        "BGG 포럼의 열띤 토론을 읽고 있습니다...",
-        "규칙서를 꼼꼼히 번역하고 있습니다...",
-        "헷갈리기 쉬운 예외 규칙을 모아보는 중입니다...",
-        "처음 설명할 때 막히지 않도록 문장을 다듬고 있습니다...",
-        "플레이어들이 자주 물어본 질문을 정리하고 있습니다..."
-      ];
+      const STAGE_LOOP_MESSAGES = {
+        start: [
+          "입력한 정보와 업로드 파일을 점검하고 있습니다",
+          "작업에 필요한 요청 데이터를 준비하고 있습니다",
+          "첫 진행 상태를 받을 준비를 하고 있습니다"
+        ],
+        bgg: [
+          "게임 정보를 확인하고 있습니다",
+          "BGG와 연결할 수 있는 정보를 찾고 있습니다",
+          "입력한 정보와 메타 데이터를 정리하고 있습니다"
+        ],
+        pdf: [
+          "룰북 PDF에서 텍스트를 추출하고 있습니다",
+          "페이지별 내용과 이미지를 정리하고 있습니다",
+          "FAQ와 정오표가 있으면 함께 반영하고 있습니다"
+        ],
+        ai: [
+          "문서 A 구조를 정리하고 있습니다",
+          "문서 B 설명 흐름을 다듬고 있습니다",
+          "턴 흐름 도식을 구성하고 있습니다",
+          "최종 미리보기용 문서를 정리하고 있습니다"
+        ],
+        failed: [
+          "작업이 중단되었습니다"
+        ]
+      };
+
+      const STAGE_DETAILS = {
+        bgg: { label: "게임 정보 확인" },
+        pdf: { label: "PDF 읽기" },
+        ai: { label: "문서 만들기" }
+      };
 
       const state = {
         currentScreen: "input",
         currentStage: "start",
+        currentDisplayStage: "bgg",
         abortController: null,
         etaSeconds: APP_CONFIG.ETA_SECONDS.start,
         etaTimer: null,
@@ -1356,7 +1500,14 @@
         elapsedTimer: null,
         funTimer: null,
         funIndex: 0,
+        funStageKey: "start",
         result: null,
+        stageTimings: {
+          bgg: 0,
+          pdf: 0,
+          ai: 0
+        },
+        stageTimingStartedAt: null,
         selectedUploads: {
           rulebook: null,
           faq: null,
@@ -1409,7 +1560,10 @@
         restartButton: document.getElementById("restartButton"),
         stepBgg: document.getElementById("step-bgg"),
         stepPdf: document.getElementById("step-pdf"),
-        stepAi: document.getElementById("step-ai")
+        stepAi: document.getElementById("step-ai"),
+        stepStatusBgg: document.getElementById("step-status-bgg"),
+        stepStatusPdf: document.getElementById("step-status-pdf"),
+        stepStatusAi: document.getElementById("step-status-ai")
       };
 
       elements.pdfFile.addEventListener("change", () =>
@@ -1451,6 +1605,76 @@
         state.currentScreen = name;
       }
 
+      function formatDurationLabel(totalSeconds) {
+        const safeSeconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+        const minutes = Math.floor(safeSeconds / 60);
+        const seconds = safeSeconds % 60;
+        if (minutes <= 0) {
+          return `${seconds}초`;
+        }
+        return `${minutes}분 ${String(seconds).padStart(2, "0")}초`;
+      }
+
+      function updateStageLoop(stageKey) {
+        const messages = STAGE_LOOP_MESSAGES[stageKey] || STAGE_LOOP_MESSAGES.start;
+        state.funStageKey = stageKey;
+        state.funIndex = 0;
+        elements.funBox.textContent = messages[0];
+
+        if (state.funTimer) {
+          clearInterval(state.funTimer);
+        }
+
+        if (messages.length <= 1) {
+          state.funTimer = null;
+          return;
+        }
+
+        state.funTimer = window.setInterval(() => {
+          const activeMessages = STAGE_LOOP_MESSAGES[state.funStageKey] || messages;
+          state.funIndex = (state.funIndex + 1) % activeMessages.length;
+          elements.funBox.textContent = activeMessages[state.funIndex];
+        }, 3800);
+      }
+
+      function syncStageTiming(stageKey) {
+        if (!stageKey || !STAGE_DETAILS[stageKey]) {
+          return;
+        }
+
+        const now = Date.now();
+        if (state.currentDisplayStage && state.stageTimingStartedAt && STAGE_DETAILS[state.currentDisplayStage]) {
+          state.stageTimings[state.currentDisplayStage] += Math.max(
+            0,
+            Math.round((now - state.stageTimingStartedAt) / 1000)
+          );
+        }
+
+        state.currentDisplayStage = stageKey;
+        state.stageTimingStartedAt = now;
+      }
+
+      function finalizeStageTiming() {
+        if (!state.currentDisplayStage || !state.stageTimingStartedAt || !STAGE_DETAILS[state.currentDisplayStage]) {
+          return;
+        }
+
+        state.stageTimings[state.currentDisplayStage] += Math.max(
+          0,
+          Math.round((Date.now() - state.stageTimingStartedAt) / 1000)
+        );
+        state.stageTimingStartedAt = null;
+      }
+
+      function getStageTimingSummary() {
+        const summary = {};
+        Object.keys(STAGE_DETAILS).forEach((key) => {
+          summary[key] = state.stageTimings[key] || 0;
+        });
+        summary.total = Object.values(summary).reduce((sum, value) => sum + value, 0);
+        return summary;
+      }
+
       function getEmptyFileMessage(label) {
         return `아직 선택한 ${label}가 없습니다.`;
       }
@@ -1477,6 +1701,15 @@
       function syncExtraSelection() {
         const files = Array.from(elements.extraFiles.files || []);
         if (!files.length) {
+          return;
+        }
+
+        if (files.length > APP_CONFIG.MAX_EXTRA_FILES) {
+          elements.extraFiles.value = "";
+          state.selectedUploads.extras = [];
+          elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
+          elements.clearExtraButton.classList.add("hidden");
+          showInputError(`추가 자료는 최대 ${APP_CONFIG.MAX_EXTRA_FILES}개까지 선택할 수 있습니다.`);
           return;
         }
 
@@ -1533,6 +1766,13 @@
           return;
         }
 
+        if (files.length > APP_CONFIG.MAX_EXTRA_FILES) {
+          elements.extraFiles.value = "";
+          elements.extraMeta.textContent = "추가 자료를 선택하지 않았습니다.";
+          showInputError(`추가 자료는 최대 ${APP_CONFIG.MAX_EXTRA_FILES}개까지 선택할 수 있습니다.`);
+          return;
+        }
+
         elements.extraMeta.textContent = `${files.length}개 파일 선택됨 | ${files
           .map((file) => file.name)
           .join(", ")}`;
@@ -1569,17 +1809,18 @@
         elements.startButton.disabled = true;
         showScreen("progress");
         resetProgressUi();
-        startFunMessages();
+        syncStageTiming("bgg");
+        updateStageLoop("start");
 
         try {
           showClientPreparationState({
-            title: "업로드 파일을 읽고 있습니다",
-            subtitle: "선택한 PDF와 추가 자료를 브라우저에서 안전하게 읽는 중입니다.",
+            title: "게임 정보 확인을 시작합니다",
+            subtitle: "입력값과 업로드 파일을 점검하고 요청 준비를 진행합니다.",
             message: pdfFile || faqPdfFile || extraFiles.length
-              ? "파일 크기에 따라 10초에서 1분 이상 걸릴 수 있습니다. 지금은 서버로 보내기 전 준비 단계입니다."
+              ? "선택한 파일을 브라우저에서 읽고 요청용 데이터로 바꾸고 있습니다."
               : bggId
-                ? "첨부 파일이 없어 게임 이름과 BGG 정보 중심으로 요청을 준비하고 있습니다."
-                : "첨부 파일이나 입력한 게임 이름을 바탕으로 요청을 준비하고 있습니다.",
+                ? "첨부 파일 없이 게임 이름과 BGG 정보를 기준으로 요청을 준비하고 있습니다."
+                : "입력한 게임 이름과 추가 자료를 기준으로 요청을 준비하고 있습니다.",
             percent: 12
           });
           const payload = await buildRequestPayload({
@@ -1591,8 +1832,8 @@
           });
           showClientPreparationState({
             title: "작업 서버로 요청을 보내고 있습니다",
-            subtitle: "준비한 자료를 서버에 전달하고 첫 진행 상태를 기다리는 중입니다.",
-            message: "잠시 후 BGG, PDF, AI 단계 중 현재 위치가 아래에 표시됩니다.",
+            subtitle: "준비한 자료를 전달하고 첫 실제 작업 단계를 기다리는 중입니다.",
+            message: "잠시 후 현재 단계가 게임 정보 확인, PDF 읽기, 문서 만들기 중 어디인지 표시됩니다.",
             percent: 18
           });
           await streamGeneration(payload);
@@ -1607,7 +1848,7 @@
         const faqPdfBase64 = faqPdfFile ? await readFileAsDataUrl(faqPdfFile) : "";
 
         const additionalMaterials = await Promise.all(
-          extraFiles.slice(0, 5).map(async (file) => ({
+          extraFiles.map(async (file) => ({
             fileName: file.name,
             mimeType: file.type || guessMimeType(file.name),
             textContent: await extractAdditionalMaterialText(file)
@@ -1746,26 +1987,91 @@
           pdf: elements.stepPdf,
           ai: elements.stepAi
         };
+        const statusMap = {
+          bgg: elements.stepStatusBgg,
+          pdf: elements.stepStatusPdf,
+          ai: elements.stepStatusAi
+        };
+        const currentIndex = order.indexOf(stage);
 
         order.forEach((key, index) => {
           const node = stepMap[key];
-          node.classList.remove("is-current", "is-done");
-          const currentIndex =
-            stage === "bgg-skip" ? 0 : stage === "pdf-skip" ? 1 : order.indexOf(stage);
-          if (currentIndex > index) node.classList.add("is-done");
-          if (
-            (stage === "bgg-skip" && key === "bgg") ||
-            (stage === "pdf-skip" && key === "pdf") ||
-            stage === key
-          ) {
-            node.classList.add("is-current");
+          const statusNode = statusMap[key];
+          node.classList.remove("is-current", "is-done", "is-failed");
+
+          if (currentIndex > index) {
+            node.classList.add("is-done");
+            statusNode.textContent = "완료";
+            statusNode.dataset.status = "done";
+            return;
           }
+
+          if (stage === key) {
+            node.classList.add("is-current");
+            statusNode.textContent = "진행 중";
+            statusNode.dataset.status = "active";
+            return;
+          }
+
+          statusNode.textContent = "대기";
+          statusNode.dataset.status = "pending";
         });
 
         if (stage === "ai") {
           elements.stepBgg.classList.add("is-done");
           elements.stepPdf.classList.add("is-done");
         }
+      }
+
+      function markStageFailure(stage) {
+        const order = ["bgg", "pdf", "ai"];
+        const stepMap = {
+          bgg: elements.stepBgg,
+          pdf: elements.stepPdf,
+          ai: elements.stepAi
+        };
+        const statusMap = {
+          bgg: elements.stepStatusBgg,
+          pdf: elements.stepStatusPdf,
+          ai: elements.stepStatusAi
+        };
+        const failedIndex = order.indexOf(stage);
+
+        order.forEach((key, index) => {
+          const node = stepMap[key];
+          const statusNode = statusMap[key];
+          node.classList.remove("is-current", "is-done", "is-failed");
+
+          if (index < failedIndex) {
+            node.classList.add("is-done");
+            statusNode.textContent = "완료";
+            statusNode.dataset.status = "done";
+            return;
+          }
+
+          if (index === failedIndex) {
+            node.classList.add("is-failed");
+            statusNode.textContent = "중단됨";
+            statusNode.dataset.status = "failed";
+            return;
+          }
+
+          statusNode.textContent = "실행 전";
+          statusNode.dataset.status = "blocked";
+        });
+      }
+
+      function markAllStagesDone() {
+        [
+          [elements.stepBgg, elements.stepStatusBgg],
+          [elements.stepPdf, elements.stepStatusPdf],
+          [elements.stepAi, elements.stepStatusAi]
+        ].forEach(([node, statusNode]) => {
+          node.classList.remove("is-current", "is-failed");
+          node.classList.add("is-done");
+          statusNode.textContent = "완료";
+          statusNode.dataset.status = "done";
+        });
       }
 
       function resetEtaForStage(stage) {
@@ -1808,14 +2114,7 @@ function stopTimers() {
       }
 
       function startFunMessages() {
-        elements.funBox.textContent = "업로드한 자료와 입력값을 정리하고 있습니다...";
-        if (state.funTimer) {
-          clearInterval(state.funTimer);
-        }
-        state.funTimer = window.setInterval(() => {
-          state.funIndex = (state.funIndex + 1) % FUN_MESSAGES.length;
-          elements.funBox.textContent = FUN_MESSAGES[state.funIndex];
-        }, 4500);
+        updateStageLoop("start");
       }
 
       function resetProgressUi() {
@@ -1834,10 +2133,18 @@ function stopTimers() {
       function completeWithResult(data) {
         stopTimers();
         state.abortController = null;
+        finalizeStageTiming();
         setProgressVisualState("complete");
         elements.progressFill.style.width = "100%";
-        state.result = data;
-        renderResult(data);
+        markAllStagesDone();
+        state.result = {
+          ...data,
+          meta: {
+            ...(data.meta || {}),
+            stageTimingSummary: getStageTimingSummary()
+          }
+        };
+        renderResult(state.result);
         elements.startButton.disabled = false;
         showScreen("result");
       }
@@ -1931,7 +2238,7 @@ function stopTimers() {
         const titleGame = data.gameName || "보드게임";
         elements.resultTitle.textContent = `${titleGame} 문서 생성 완료`;
         elements.resultSubtitle.textContent =
-          "문서 A와 문서 B를 탭으로 바꿔가며 읽고, HTML 파일로 내려받을 수 있습니다.";
+          "문서 A와 문서 B를 탭으로 바꿔가며 읽고, 각 단계에 걸린 시간도 함께 확인할 수 있습니다.";
         elements.previewA.innerHTML = wrapDocumentHtml(
           data,
           "A",
@@ -2011,6 +2318,28 @@ function stopTimers() {
           sourceList.appendChild(block);
         }
         elements.resultMeta.appendChild(sourceCard);
+
+        const timing = data.meta?.stageTimingSummary || getStageTimingSummary();
+        const timingCard = document.createElement("section");
+        timingCard.className = "result-source-card";
+        timingCard.innerHTML = `
+          <div class="result-meta-label">이번 작업 소요 시간</div>
+          <div class="result-time-list">
+            <div class="result-time-item"><strong>총 소요 시간</strong><span>${escapeHtml(
+              formatDurationLabel(timing.total)
+            )}</span></div>
+            <div class="result-time-item"><strong>게임 정보 확인</strong><span>${escapeHtml(
+              formatDurationLabel(timing.bgg)
+            )}</span></div>
+            <div class="result-time-item"><strong>PDF 읽기</strong><span>${escapeHtml(
+              formatDurationLabel(timing.pdf)
+            )}</span></div>
+            <div class="result-time-item"><strong>문서 만들기</strong><span>${escapeHtml(
+              formatDurationLabel(timing.ai)
+            )}</span></div>
+          </div>
+        `;
+        elements.resultMeta.appendChild(timingCard);
 
         activateTab("A");
       }
@@ -2263,10 +2592,15 @@ ${getDownloadDocumentStyles()}
         stopTimers();
         state.abortController = null;
         resetUploadSelections();
+        finalizeStageTiming();
         setProgressVisualState("failed");
+        const failedStage = normalizeStage(state.currentStage || "bgg");
+        markStageFailure(failedStage);
+        elements.progressTitle.textContent = "작업이 중단되었습니다";
+        elements.progressSubtitle.textContent = `${STAGE_DETAILS[failedStage]?.label || "현재 단계"} 중 문제가 발생했습니다.`;
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
-        elements.progressMessage.textContent = "이번 시도는 완료되지 못했습니다.";
+        elements.progressMessage.textContent = `${STAGE_DETAILS[failedStage]?.label || "현재 단계"}에서 작업이 멈췄습니다. 오류 내용을 확인한 뒤 다시 시도해주세요.`;
         elements.startButton.disabled = false;
       }
 
@@ -2293,8 +2627,8 @@ ${getDownloadDocumentStyles()}
           elements.workingIndicator.classList.add("hidden");
           elements.etaBox.classList.add("hidden");
           elements.heartbeatBox.classList.add("hidden");
-          elements.funBox.classList.add("hidden");
-          elements.progressSubtitle.textContent = "이번 시도는 여기서 멈췄습니다. 아래 안내를 보고 다시 시도해주세요.";
+          elements.funBox.classList.remove("hidden");
+          updateStageLoop("failed");
           return;
         }
 
@@ -2316,16 +2650,18 @@ ${getDownloadDocumentStyles()}
         elements.workingIndicator.innerHTML = `
           <div class="working-spinner" aria-hidden="true"></div>
           <div>
-            <strong>현재 작업이 계속 진행 중입니다</strong>
-            <small>${escapeHtml(message || "오류가 보이지 않는다면 브라우저를 닫지 말고 조금 더 기다려주세요.")}</small>
+            <strong>현재 작업이 진행 중입니다</strong>
+            <small>${escapeHtml(message || "단계가 바뀌지 않아도 내부 작업은 계속 진행될 수 있습니다.")}</small>
           </div>
         `;
       }
 
       function normalizeStage(stage) {
+        if (["start", "bgg", "bgg-skip"].includes(stage)) {
+          return "bgg";
+        }
         if (
           [
-            "bgg-skip",
             "pdf",
             "pdf-upload",
             "pdf-extract",
@@ -2348,72 +2684,74 @@ ${getDownloadDocumentStyles()}
         const stage = payload.stage || state.currentStage;
         const previousStage = state.currentStage;
         state.currentStage = stage;
+        const normalizedStage = normalizeStage(stage);
+        const previousNormalizedStage = normalizeStage(previousStage);
 
         const stageMap = {
           start: {
-            title: "요청을 정리하고 있습니다",
+            title: "게임 정보 확인을 준비하고 있습니다",
             percent: 8,
-            subtitle: "업로드한 정보와 파일을 확인하며 첫 단계를 준비하고 있습니다."
+            subtitle: "입력한 정보와 파일을 점검하며 첫 작업 단계를 준비하고 있습니다."
           },
           bgg: {
-            title: "BGG 데이터를 수집하고 있습니다",
+            title: "게임 정보를 확인하고 있습니다",
             percent: 34,
-            subtitle: "게임 기본 정보와 공개 토론 내용을 모아 참고 자료를 만들고 있습니다."
+            subtitle: "게임 기본 정보와 공개 메타 정보를 정리하고 있습니다."
           },
           "bgg-skip": {
-            title: "BGG 없이 입력값과 PDF 기준으로 진행합니다",
+            title: "입력한 정보 기준으로 진행하고 있습니다",
             percent: 26,
-            subtitle: "BGG ID가 없어 입력한 게임 정보와 PDF, 추가 자료를 중심으로 문서를 준비합니다."
+            subtitle: "BGG ID 없이 게임 이름과 업로드 자료를 중심으로 첫 단계를 진행합니다."
           },
           pdf: {
-            title: "PDF를 분석하고 있습니다",
+            title: "PDF를 읽고 있습니다",
             percent: 64,
-            subtitle: "룰북과 FAQ에서 텍스트와 이미지를 읽어 문서용 자료로 정리하고 있습니다."
+            subtitle: "룰북과 FAQ의 텍스트, 이미지, 표를 문서용 재료로 정리하고 있습니다."
           },
           "pdf-upload": {
-            title: "룰북 PDF를 분석 서버로 보내고 있습니다",
+            title: "룰북 PDF를 전송하고 있습니다",
             percent: 52,
-            subtitle: "룰북 파일을 서버로 안전하게 전송하고 있습니다."
+            subtitle: "룰북 파일을 분석용 서버로 안전하게 보내고 있습니다."
           },
           "pdf-extract": {
-            title: "룰북 PDF에서 텍스트와 이미지를 추출하고 있습니다",
+            title: "룰북 PDF를 읽고 있습니다",
             percent: 60,
-            subtitle: "페이지 텍스트, 이미지, 위치 정보를 읽는 데 시간이 조금 걸릴 수 있습니다."
+            subtitle: "페이지 텍스트와 이미지 위치를 정리하는 데 시간이 조금 걸릴 수 있습니다."
           },
           "pdf-faq-upload": {
-            title: "FAQ/정오표 PDF를 분석 서버로 보내고 있습니다",
+            title: "FAQ / 정오표 PDF를 전송하고 있습니다",
             percent: 66,
-            subtitle: "추가 PDF가 있으면 순서대로 전송하여 함께 분석합니다."
+            subtitle: "추가 PDF가 있으면 순서대로 보내고 함께 읽습니다."
           },
           "pdf-faq-extract": {
-            title: "FAQ/정오표 PDF를 분석하고 있습니다",
+            title: "FAQ / 정오표 PDF를 읽고 있습니다",
             percent: 72,
-            subtitle: "FAQ와 정오표의 텍스트, 이미지, 수정 규칙을 정리하고 있습니다."
+            subtitle: "최신 예외 규칙과 수정 내용을 함께 정리하고 있습니다."
           },
           "pdf-merge": {
-            title: "PDF 분석 결과를 정리하고 있습니다",
+            title: "PDF 읽기 결과를 정리하고 있습니다",
             percent: 78,
-            subtitle: "룰북과 FAQ 분석 결과를 합쳐 문서 생성용 재료로 마무리하고 있습니다."
+            subtitle: "룰북과 FAQ 결과를 합쳐 문서 생성용 재료로 정리하고 있습니다."
           },
           "pdf-warning": {
-            title: "PDF 분석이 지연되어 가능한 자료부터 계속 진행하고 있습니다",
+            title: "PDF 읽기가 지연되어 가능한 자료부터 계속 진행합니다",
             percent: 74,
-            subtitle: "PDF가 오래 걸리면 다른 자료를 먼저 사용해 다음 단계로 넘어갑니다."
+            subtitle: "PDF 읽기가 오래 걸리면 가능한 자료를 먼저 사용해 다음 단계로 넘어갑니다."
           },
           "pdf-skip": {
-            title: "PDF 없이 BGG 중심으로 진행합니다",
+            title: "PDF 없이 다음 단계로 진행합니다",
             percent: 70,
-            subtitle: "룰북 PDF가 없어도 기본 정보와 공개 자료를 바탕으로 계속 진행합니다."
+            subtitle: "룰북 PDF 없이도 입력 정보와 공개 자료를 바탕으로 계속 진행합니다."
           },
           ai: {
-            title: "학습용 문서를 생성하고 있습니다",
+            title: "문서를 만들고 있습니다",
             percent: 90,
-            subtitle: "용어를 통일하고 문장 구조를 다듬어 최종 문서를 만들고 있습니다."
+            subtitle: "문서 A, 문서 B, 턴 흐름 도식을 정리하며 최종 문서를 만들고 있습니다."
           },
           "ai-retry": {
-            title: "AI 서버가 잠시 혼잡하여 다시 시도하고 있습니다",
+            title: "문서 만들기를 다시 시도하고 있습니다",
             percent: 92,
-            subtitle: "더 안정적으로 결과를 받기 위해 잠시 후 다시 시도하고 있습니다."
+            subtitle: "더 안정적으로 결과를 받기 위해 같은 단계를 한 번 더 시도하고 있습니다."
           }
         };
 
@@ -2421,9 +2759,14 @@ ${getDownloadDocumentStyles()}
         elements.progressTitle.textContent = info.title;
         elements.progressSubtitle.textContent = info.subtitle;
         elements.progressFill.style.width = `${info.percent}%`;
-        elements.progressMessage.textContent = payload.message || "현재 상태를 정리하고 있습니다.";
+        elements.progressMessage.textContent = payload.message || `${STAGE_DETAILS[normalizedStage]?.label || "현재 단계"} 작업을 계속 진행하고 있습니다.`;
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다. 잠깐 멈춘 것처럼 보여도 내부 작업은 계속될 수 있습니다.';
+          '<span class="heartbeat-dot" aria-hidden="true"></span>작업 서버와 계속 통신 중입니다. 단계가 잠깐 유지되어도 내부 작업은 계속될 수 있습니다.';
+
+        if (previousNormalizedStage !== normalizedStage) {
+          syncStageTiming(normalizedStage);
+          updateStageLoop(normalizedStage);
+        }
 
         if (previousStage !== stage) {
           resetEtaForStage(stage);
@@ -2431,7 +2774,7 @@ ${getDownloadDocumentStyles()}
           renderEta();
         }
 
-        paintStageChips(normalizeStage(stage));
+        paintStageChips(normalizedStage);
       }
 
       function resetEtaForStage(stage) {
@@ -2489,17 +2832,26 @@ function stopTimers() {
 
       function resetProgressUi() {
         state.currentStage = "start";
+        state.currentDisplayStage = "bgg";
         state.funIndex = 0;
+        state.funStageKey = "start";
         state.elapsedSeconds = 0;
+        state.stageTimings = {
+          bgg: 0,
+          pdf: 0,
+          ai: 0
+        };
+        state.stageTimingStartedAt = Date.now();
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
-        elements.progressTitle.textContent = "입력 정보를 확인하고 있습니다";
-        elements.progressSubtitle.textContent = "파일과 게임 정보를 확인한 뒤 작업 서버로 요청을 보낼 준비를 하고 있습니다.";
-        elements.progressMessage.textContent = "첨부 파일이 있으면 브라우저에서 먼저 읽고 요청용 데이터로 바꾸는 중일 수 있습니다.";
+        elements.progressTitle.textContent = "자료를 만들고 있습니다";
+        elements.progressSubtitle.textContent = "지금 어떤 작업이 진행 중인지 아래에서 확인할 수 있습니다.";
+        elements.progressMessage.textContent = "현재 단계 기준으로 필요한 작업을 순서대로 진행합니다.";
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>아직 세부 단계 이벤트가 오기 전일 수 있습니다. 요청 준비가 끝나면 서버 진행 상태가 이어서 표시됩니다.';
-        paintStageChips("start");
+          '<span class="heartbeat-dot" aria-hidden="true"></span>첫 실제 작업 단계가 시작되면 상태가 자동으로 갱신됩니다.';
+        paintStageChips("bgg");
+        updateStageLoop("start");
         resetEtaForStage("start");
         renderElapsed();
       }
@@ -2510,9 +2862,10 @@ function stopTimers() {
         elements.progressMessage.textContent = message;
         elements.progressFill.style.width = `${percent}%`;
         elements.heartbeatBox.innerHTML =
-          '<span class="heartbeat-dot" aria-hidden="true"></span>브라우저와 작업 서버가 요청을 준비 중입니다. 아직 세부 단계 이벤트가 오기 전일 수 있습니다.';
-        setProgressVisualState("working", "오류가 없다면 요청을 준비하는 중일 가능성이 큽니다. 잠시만 더 기다려주세요.");
-        paintStageChips("start");
+          '<span class="heartbeat-dot" aria-hidden="true"></span>브라우저와 작업 서버가 요청을 준비 중입니다. 첫 실제 단계가 시작되면 바로 상태를 갱신합니다.';
+        updateStageLoop("start");
+        setProgressVisualState("working", "현재는 요청 준비 단계입니다. 잠시만 기다려주세요.");
+        paintStageChips("bgg");
       }
 
       const originalUpdateProgress = updateProgress;
