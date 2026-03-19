@@ -5,24 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>playready | 보드게임 룰북 자료 자동 생성</title>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+KR:wght@400;500;700;800&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;500;700;800&display=swap");
 
       :root {
-        --bg: #f4efe3;
-        --bg-strong: #efe4c9;
-        --panel: rgba(255, 251, 241, 0.92);
-        --panel-strong: #fffaf0;
-        --ink: #2f2418;
-        --ink-soft: #5d4f3f;
-        --line: rgba(85, 66, 36, 0.18);
-        --brand: #9f4f2b;
-        --brand-strong: #7f3614;
-        --brand-soft: #f4d9bf;
-        --accent: #3b6f55;
-        --accent-soft: #dbe9dc;
-        --warn: #b8642f;
+        --bg: #f7f3ef;
+        --bg-strong: #f0e7f5;
+        --panel: rgba(255, 253, 252, 0.94);
+        --panel-strong: #fffdfc;
+        --ink: #1f1722;
+        --ink-soft: #62566b;
+        --line: rgba(95, 0, 128, 0.14);
+        --brand: #5f0080;
+        --brand-strong: #4a0064;
+        --brand-soft: #eadcf1;
+        --accent: #5c8a73;
+        --accent-soft: #deebe4;
+        --warn: #c06a3f;
         --danger: #9c2f2f;
-        --shadow: 0 24px 60px rgba(70, 44, 19, 0.12);
+        --shadow: 0 24px 60px rgba(52, 23, 68, 0.10);
         --radius-xl: 28px;
         --radius-lg: 20px;
         --radius-md: 14px;
@@ -39,9 +39,9 @@
         font-family: "Noto Sans KR", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(255, 240, 205, 0.9), transparent 32%),
-          radial-gradient(circle at top right, rgba(198, 228, 209, 0.7), transparent 28%),
-          linear-gradient(180deg, #f7f1e2 0%, #efe3c8 48%, #f7f0df 100%);
+          radial-gradient(circle at top left, rgba(234, 220, 241, 0.88), transparent 34%),
+          radial-gradient(circle at top right, rgba(222, 235, 228, 0.78), transparent 28%),
+          linear-gradient(180deg, #faf6f2 0%, #f4ede7 48%, #fbf8f5 100%);
       }
 
       body::before {
@@ -50,8 +50,8 @@
         inset: 0;
         pointer-events: none;
         background-image:
-          linear-gradient(rgba(117, 90, 51, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(117, 90, 51, 0.04) 1px, transparent 1px);
+          linear-gradient(rgba(95, 0, 128, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(95, 0, 128, 0.035) 1px, transparent 1px);
         background-size: 22px 22px;
         mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.2));
       }
@@ -66,9 +66,9 @@
         display: grid;
         gap: 16px;
         padding: 28px;
-        border: 1px solid rgba(95, 74, 43, 0.16);
+        border: 1px solid rgba(95, 0, 128, 0.12);
         border-radius: 32px;
-        background: linear-gradient(135deg, rgba(255, 247, 228, 0.92), rgba(244, 231, 203, 0.92));
+        background: linear-gradient(135deg, rgba(255, 251, 247, 0.96), rgba(244, 235, 248, 0.94));
         box-shadow: var(--shadow);
         overflow: hidden;
         position: relative;
@@ -82,7 +82,7 @@
         right: -40px;
         top: -40px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(159, 79, 43, 0.18), transparent 72%);
+        background: radial-gradient(circle, rgba(95, 0, 128, 0.14), transparent 72%);
       }
 
       .eyebrow {
@@ -90,21 +90,33 @@
         width: fit-content;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(59, 111, 85, 0.12);
+        background: rgba(92, 138, 115, 0.12);
         color: var(--accent);
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.04em;
       }
 
-      h1 {
+      .hero-wordmark {
         margin: 0;
-        font-family: "Cinzel", serif;
-        font-size: clamp(2rem, 4.4vw, 3.8rem);
-        line-height: 1.05;
+        font-family: "DotGothic16", monospace;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1;
+        color: var(--brand);
+        letter-spacing: 0.04em;
       }
 
-      .hero p {
+      .hero-tagline {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(1.7rem, 3vw, 2.6rem);
+        line-height: 1.22;
+        font-weight: 800;
+        color: var(--ink);
+        text-wrap: balance;
+      }
+
+      .hero-copy {
         margin: 0;
         font-size: 1rem;
         line-height: 1.8;
@@ -290,14 +302,14 @@
       .btn-primary {
         padding: 16px 22px;
         background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-        color: #fff7ed;
+        color: #fff9ff;
       }
 
       .btn-secondary {
         padding: 14px 20px;
-        background: rgba(255, 245, 230, 0.95);
+        background: rgba(255, 250, 255, 0.96);
         color: var(--brand-strong);
-        border: 1px solid rgba(159, 79, 43, 0.2);
+        border: 1px solid rgba(95, 0, 128, 0.16);
       }
 
       .btn-danger {
@@ -570,9 +582,9 @@
       }
 
       .tab-btn.is-active {
-        background: #fffaf0;
+        background: #fffdfc;
         color: var(--brand-strong);
-        box-shadow: 0 10px 24px rgba(81, 54, 23, 0.08);
+        box-shadow: 0 10px 24px rgba(74, 0, 100, 0.08);
       }
 
       .result-meta {
@@ -594,22 +606,29 @@
         flex: 1 1 auto;
       }
 
+      #resultTitle {
+        font-family: "DotGothic16", monospace;
+        font-size: clamp(1.4rem, 2.3vw, 2rem);
+        color: var(--brand);
+        letter-spacing: 0.04em;
+      }
+
       .result-header-actions {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
       }
 
-      .result-stat-card,
+      .result-summary-card,
       .result-model-card,
-      .result-source-card {
+      .result-time-card {
         display: grid;
         gap: 10px;
         padding: 16px 18px;
         border-radius: 20px;
-        border: 1px solid rgba(117, 90, 51, 0.12);
-        background: linear-gradient(180deg, rgba(255, 252, 245, 0.98), rgba(248, 241, 226, 0.98));
-        box-shadow: 0 10px 24px rgba(81, 54, 23, 0.05);
+        border: 1px solid rgba(95, 0, 128, 0.12);
+        background: linear-gradient(180deg, rgba(255, 253, 252, 0.98), rgba(247, 241, 249, 0.96));
+        box-shadow: 0 10px 24px rgba(74, 0, 100, 0.05);
         min-width: 0;
       }
 
@@ -631,7 +650,7 @@
         gap: 4px;
         padding: 12px;
         border-radius: 16px;
-        background: rgba(59, 111, 85, 0.08);
+        background: rgba(95, 0, 128, 0.06);
       }
 
       .result-stat-value {
@@ -660,7 +679,7 @@
         gap: 8px;
         padding: 9px 14px;
         border-radius: 999px;
-        background: rgba(159, 79, 43, 0.11);
+        background: rgba(95, 0, 128, 0.11);
         color: var(--brand-strong);
         font-size: 0.9rem;
         font-weight: 800;
@@ -691,7 +710,7 @@
         gap: 12px;
         padding: 12px 14px;
         border-radius: 16px;
-        background: rgba(59, 111, 85, 0.08);
+        background: rgba(95, 0, 128, 0.06);
       }
 
       .result-time-item strong {
@@ -710,7 +729,7 @@
         gap: 6px;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(93, 79, 63, 0.08);
+        background: rgba(95, 0, 128, 0.08);
         color: var(--ink);
         font-size: 0.84rem;
         font-weight: 700;
@@ -726,8 +745,8 @@
         min-width: 112px;
         padding: 10px 12px;
         border-radius: 16px;
-        background: rgba(219, 233, 220, 0.45);
-        border: 1px solid rgba(59, 111, 85, 0.12);
+        background: rgba(92, 138, 115, 0.10);
+        border: 1px solid rgba(92, 138, 115, 0.14);
       }
 
       .result-source-item strong {
@@ -738,6 +757,18 @@
       .result-source-item span {
         font-size: 0.82rem;
         color: var(--ink-soft);
+      }
+
+      .result-summary-sources {
+        display: grid;
+        gap: 10px;
+        margin-top: 4px;
+      }
+
+      .result-summary-divider {
+        height: 1px;
+        background: rgba(95, 0, 128, 0.10);
+        margin: 4px 0;
       }
 
       .preview-frame {
@@ -835,6 +866,25 @@
       .preview-frame h3 {
         font-family: "Noto Sans KR", sans-serif;
         line-height: 1.35;
+      }
+
+      .preview-frame h2 {
+        margin-top: 32px;
+        margin-bottom: 14px;
+        padding: 12px 16px;
+        border: 1px solid rgba(95, 0, 128, 0.12);
+        border-left: 5px solid var(--brand);
+        border-radius: 18px;
+        background: rgba(234, 220, 241, 0.26);
+        color: var(--ink);
+      }
+
+      .preview-frame h3 {
+        margin-top: 22px;
+        margin-bottom: 10px;
+        color: var(--brand-strong);
+        font-size: 1rem;
+        font-weight: 800;
       }
 
       .preview-frame img {
@@ -1208,8 +1258,9 @@
     <div class="app-shell">
       <header class="hero">
         <span class="eyebrow">playready | 룰북 학습 보조 도구</span>
-        <h1>playready<br />복잡한 룰북을, 바로 플레이 가능한 한국어 자료로</h1>
-        <p>
+        <div class="hero-wordmark">playready</div>
+        <h1 class="hero-tagline">룰북을 더 빨리 이해하고 바로 플레이하세요!</h1>
+        <p class="hero-copy">
           게임 이름, BGG ID, 룰북 PDF를 바탕으로 문서 A와 문서 B를 자동으로 만듭니다.
           BGG 정보가 없어도 시작할 수 있고, 룰북과 FAQ가 있으면 더 정확하고 풍부하게 정리됩니다.
         </p>
@@ -1401,7 +1452,7 @@
               <div class="result-header-main">
                 <h2 class="section-title" id="resultTitle">문서 생성 완료</h2>
                 <p class="section-desc" id="resultSubtitle">
-                  문서 A와 문서 B를 탭으로 전환하면서 바로 읽을 수 있습니다.
+                  생성된 문서를 미리보고 다운로드할 수 있습니다.
                 </p>
                 <div class="result-header-actions">
                   <button id="restartTopButton" class="btn-secondary" type="button">처음으로 돌아가기</button>
@@ -2235,10 +2286,8 @@ function stopTimers() {
       }
 
       function renderResult(data) {
-        const titleGame = data.gameName || "보드게임";
-        elements.resultTitle.textContent = `${titleGame} 문서 생성 완료`;
-        elements.resultSubtitle.textContent =
-          "문서 A와 문서 B를 탭으로 바꿔가며 읽고, 각 단계에 걸린 시간도 함께 확인할 수 있습니다.";
+        elements.resultTitle.textContent = "playready";
+        elements.resultSubtitle.textContent = "생성된 문서를 미리보고 다운로드할 수 있습니다.";
         elements.previewA.innerHTML = wrapDocumentHtml(
           data,
           "A",
@@ -2251,10 +2300,10 @@ function stopTimers() {
         );
         elements.resultMeta.innerHTML = "";
 
-        const statCard = document.createElement("section");
-        statCard.className = "result-stat-card";
-        statCard.innerHTML = `
-          <div class="result-meta-label">요약 지표</div>
+        const summaryCard = document.createElement("section");
+        summaryCard.className = "result-summary-card";
+        summaryCard.innerHTML = `
+          <div class="result-meta-label">작업 요약</div>
           <div class="result-stat-grid">
             <div class="result-stat-item">
               <div class="result-stat-value">${data.meta?.forumCount || 0}</div>
@@ -2269,8 +2318,30 @@ function stopTimers() {
               <div class="result-stat-copy">용어 정리</div>
             </div>
           </div>
+          <div class="result-summary-divider"></div>
+          <div class="result-summary-sources">
+            <div class="result-meta-label">사용 소스</div>
+            <div class="result-source-list"></div>
+          </div>
         `;
-        elements.resultMeta.appendChild(statCard);
+        const sourceList = summaryCard.querySelector(".result-source-list");
+        const sourceKinds = Array.isArray(data.meta?.sourceKinds) ? data.meta.sourceKinds : [];
+        sourceKinds.forEach((item) => {
+          if (!item?.active) return;
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = `<strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(
+            `${item.value}${item.suffix || ""}`
+          )}</span>`;
+          sourceList.appendChild(block);
+        });
+        if (!sourceList.children.length) {
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = "<strong>입력 자료</strong><span>최소 정보 기반</span>";
+          sourceList.appendChild(block);
+        }
+        elements.resultMeta.appendChild(summaryCard);
 
         const modelSummary = data.meta?.modelUsageSummary || null;
         const modelCard = document.createElement("section");
@@ -2294,34 +2365,9 @@ function stopTimers() {
         });
         elements.resultMeta.appendChild(modelCard);
 
-        const sourceCard = document.createElement("section");
-        sourceCard.className = "result-source-card";
-        sourceCard.innerHTML = `
-          <div class="result-meta-label">사용 소스</div>
-          <div class="result-source-list"></div>
-        `;
-        const sourceList = sourceCard.querySelector(".result-source-list");
-        const sourceKinds = Array.isArray(data.meta?.sourceKinds) ? data.meta.sourceKinds : [];
-        sourceKinds.forEach((item) => {
-          if (!item?.active) return;
-          const block = document.createElement("div");
-          block.className = "result-source-item";
-          block.innerHTML = `<strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(
-            `${item.value}${item.suffix || ""}`
-          )}</span>`;
-          sourceList.appendChild(block);
-        });
-        if (!sourceList.children.length) {
-          const block = document.createElement("div");
-          block.className = "result-source-item";
-          block.innerHTML = "<strong>입력 자료</strong><span>최소 정보 기반</span>";
-          sourceList.appendChild(block);
-        }
-        elements.resultMeta.appendChild(sourceCard);
-
         const timing = data.meta?.stageTimingSummary || getStageTimingSummary();
         const timingCard = document.createElement("section");
-        timingCard.className = "result-source-card";
+        timingCard.className = "result-time-card";
         timingCard.innerHTML = `
           <div class="result-meta-label">이번 작업 소요 시간</div>
           <div class="result-time-list">
@@ -2442,8 +2488,8 @@ function stopTimers() {
     }
     section, article, figure, table, ul, ol, dl, blockquote { break-inside: avoid; page-break-inside: avoid; }
     h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
-    h2 { font-size: 23px; margin-top: 30px; padding-top: 10px; border-top: 1px solid rgba(148, 163, 184, 0.22); color: #0f172a; }
-    h3 { font-size: 18px; margin-top: 22px; color: #172554; }
+    h2 { font-size: 23px; margin-top: 30px; margin-bottom: 14px; padding: 12px 16px; border: 1px solid rgba(95, 0, 128, 0.12); border-left: 5px solid #5f0080; border-radius: 18px; background: rgba(234, 220, 241, 0.26); color: #0f172a; }
+    h3 { font-size: 18px; margin-top: 22px; margin-bottom: 10px; color: #4a0064; font-weight: 800; }
     img { max-width: 100%; height: auto; break-inside: avoid; page-break-inside: avoid; }
     figure { margin: 18px 0; }
     figcaption { margin-top: 8px; font-size: 12px; color: #64748b; }

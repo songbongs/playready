@@ -465,10 +465,51 @@ function summarizeTurnFlowForPromptV2(turnFlowData, documentType) {
   return `Turn flow summary (${documentType === "B" ? "teaching version" : "study version"}): ${summary}`;
 }
 
+function buildDocumentBStructurePromptV3() {
+  return [
+    "Document B is a teaching aid.",
+    "Its job is to help someone explain the game quickly to other players.",
+    "Prefer short lines that are easy to say aloud.",
+    "",
+    "Document B fixed sections:",
+    "1. 30초 소개 멘트",
+    "2. 플레이어가 하는 일 한눈에 보기",
+    "3. 플레이어 턴 흐름 요약",
+    "4. 첫 턴 또는 첫 라운드 설명 스크립트",
+    "5. 자주 나오는 질문",
+    "6. 종료/점수 빠른 체크리스트",
+    "7. 핵심 참고사항",
+    "",
+    "Document B conditional sections:",
+    "- 세팅 체크리스트",
+    "- 핵심 아이콘 설명",
+    "- 보드 위치 안내",
+    "- 모드별 차이 요약",
+    "",
+    "Document B structure rules:",
+    "- Use the exact Korean section headings listed above.",
+    "- Keep only what is needed to teach a first play.",
+    "- The turn-flow section is the most important section. It must be simple enough to read aloud.",
+    "- Make section titles feel clearly separate from their body content.",
+    "- Right under each h2, start with a short paragraph, list, checklist, or script block so the section looks structurally distinct.",
+    "- Rename any section that would have been called '핵심 참고 카드' to '핵심 참고사항'.",
+    "",
+    "Document B length rules:",
+    "- Use bullets, checklist lines, and short script lines.",
+    "- Keep almost every line short.",
+    "- Make Document B clearly shorter and faster to scan than Document A.",
+    "",
+    "HTML rules:",
+    "- Use h2 for top-level sections and h3 only when truly needed.",
+    "- Return HTML body only.",
+    "- Do not output markdown fences."
+  ].join("\n");
+}
+
 export function buildDocumentPayload(input, glossary, documentType, turnFlowData = null) {
   const sources = buildSourceBundle(input);
   const structurePrompt =
-    documentType === "A" ? buildDocumentAStructurePromptV2() : buildDocumentBStructurePromptV2();
+    documentType === "A" ? buildDocumentAStructurePromptV2() : buildDocumentBStructurePromptV3();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
   const turnFlowGuide = summarizeTurnFlowForPromptV2(turnFlowData, documentType);
   const sectionTuning =
