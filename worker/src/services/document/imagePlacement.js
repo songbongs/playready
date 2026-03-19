@@ -1093,10 +1093,147 @@ function convertHtmlToOutline(html) {
   );
 }
 
+function normalizeFlowDataV3(flowData, docType) {
+  const fallback = getFallbackFlowData(docType);
+  const source = flowData && Array.isArray(flowData.steps) && flowData.steps.length ? flowData : fallback;
+  const maxSteps = docType === "B" ? 5 : 7;
+  const steps = source.steps
+    .slice(0, maxSteps)
+    .map((step, index) => normalizeFlowStepV2(step, index, docType))
+    .filter((step) => step.title && step.detail)
+    .map((step) => {
+      if (step.kind !== "branch") {
+        return step;
+      }
+
+      const validOptions = (step.options || []).filter((option) => option.title && option.detail);
+      if (validOptions.length >= 2) {
+        return { ...step, options: validOptions };
+      }
+
+      return { ...step, kind: "decision", options: [] };
+    });
+
+  return {
+    lead: shortenAtBoundary(source.lead || fallback.lead, docType === "B" ? 78 : 96),
+    steps: steps.length ? steps : fallback.steps.map((step, index) => normalizeFlowStepV2(step, index, docType))
+  };
+}
+
+function requirementLabelV3(value) {
+  const normalized = sanitizeText(value).toLowerCase();
+  if (normalized === "required") return "필수";
+  if (normalized === "optional") return "선택";
+  if (normalized === "free") return "자유";
+  if (normalized === "cleanup") return "정리";
+  return "";
+}
+
+function buildFlowMetaBadgesV3(requirement, timing) {
+  const chips = [];
+  const requirementText = requirementLabelV3(requirement);
+  const timingText = sanitizeText(timing);
+
+  if (requirementText) {
+    chips.push(`<span class="action-flow-badge action-flow-badge--requirement">${escapeHtml(requirementText)}</span>`);
+  }
+
+  if (timingText) {
+    chips.push(`<span class="action-flow-badge action-flow-badge--timing">${escapeHtml(timingText)}</span>`);
+  }
+
+  return chips.length ? `<div class="action-flow-step__meta">${chips.join("")}</div>` : "";
+}
+
+function renderFlowStepsV3(flowData) {
+  return flowData.steps
+    .map((item, index) => {
+      const arrow =
+        index === flowData.steps.length - 1
+          ? ""
+          : '<div class="action-flow-arrow action-flow-arrow--vertical" aria-hidden="true">↓</div>';
+
+      if (item.kind === "branch" && Array.isArray(item.options) && item.options.length >= 2) {
+        const options = item.options
+          .map(
+            (option) => `
+              <div class="action-flow-branch-option">
+                ${buildFlowMetaBadgesV3(option.requirement, option.timing)}
+                <strong>${escapeHtml(option.title)}</strong>
+                <p>${escapeHtml(option.detail)}</p>
+              </div>
+            `
+          )
+          .join("");
+
+        return `
+          <div class="action-flow-branch action-flow-branch--${escapeHtml(item.tone || "secondary")}">
+            <div class="action-flow-branch__label">${escapeHtml(item.title)}</div>
+            ${item.detail ? `<p class="action-flow-branch__detail">${escapeHtml(item.detail)}</p>` : ""}
+            <div class="action-flow-branch__options">${options}</div>
+          </div>
+          ${arrow}
+        `;
+      }
+
+      const extraClass =
+        item.kind === "decision"
+          ? "action-flow-node--decision"
+          : item.kind === "merge"
+            ? "action-flow-node--merge"
+            : "";
+
+      return `
+        <div class="action-flow-node action-flow-node--${escapeHtml(item.tone || "neutral")} ${extraClass}">
+          <div class="action-flow-step">
+            ${buildFlowMetaBadgesV3(item.requirement, item.timing)}
+            <strong>${escapeHtml(item.title)}</strong>
+            <p>${escapeHtml(item.detail)}</p>
+          </div>
+        </div>
+        ${arrow}
+      `;
+    })
+    .join("");
+}
+
+function buildActionFlowSectionV3(docType, flowData) {
+  const normalized = normalizeFlowDataV3(flowData, docType);
+  const title = docType === "B" ? "3-1. 플레이어 턴 흐름 요약" : "3-1. 플레이어 턴 흐름";
+
+  return [
+    `<section class="action-flow-section">`,
+    `<h3>${escapeHtml(title)}</h3>`,
+    `<p class="action-flow-section__lead">${escapeHtml(normalized.lead)}</p>`,
+    `<div class="action-flow action-flow--vertical">`,
+    renderFlowStepsV3(normalized),
+    `</div>`,
+    `</section>`
+  ].join("");
+}
+
+function ensureActionFlowSectionV3(html, docType, flowData) {
+  if (/class=["'][^"']*action-flow-section/.test(html)) {
+    return html.replace(
+      /<section class="action-flow-section">[\s\S]*?<\/section>/i,
+      buildActionFlowSectionV3(docType, flowData)
+    );
+  }
+
+  const sectionHtml = buildActionFlowSectionV3(docType, flowData);
+  const headingPatterns =
+    docType === "B"
+      ? ["플레이어 턴 흐름 요약", "플레이어가 하는 일 한눈에 보기", "플레이어 턴 흐름"]
+      : ["플레이어 턴 흐름", "플레이어가 하게 되는 일", "플레이어 턴 흐름 요약"];
+
+  const inserted = insertAfterHeading(html, headingPatterns, sectionHtml);
+  return inserted === html ? `${html}${sectionHtml}` : inserted;
+}
+
 export function injectImagesIntoHtml(html, extraction, docType = "A", flowData = null) {
   const images = extraction?.images || [];
   const withSlots = replaceImageSlots(html, images);
-  const withActionFlow = ensureActionFlowSectionV2(withSlots, docType, flowData);
+  const withActionFlow = ensureActionFlowSectionV3(withSlots, docType, flowData);
   const withNormalizedTitles = normalizeSectionNames(withActionFlow);
   const withOutline = convertHtmlToOutline(withNormalizedTitles);
   const withGalleries = injectAutomaticGalleries(withOutline, extraction, docType);

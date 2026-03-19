@@ -100,6 +100,7 @@ function parseThingInfo(xml) {
     minPlayers: Number(item.minplayers?.value || 0) || null,
     maxPlayers: Number(item.maxplayers?.value || 0) || null,
     playingTime: Number(item.playingtime?.value || 0) || null,
+    weight: Number(item.statistics?.ratings?.averageweight?.value || 0) || null,
     minAge: Number(item.minage?.value || 0) || null,
     description:
       typeof item.description === "string" ? item.description : item.description?.value || "",
@@ -126,6 +127,7 @@ function buildFallbackThingInfo(bggId, gameName, thingInfo) {
     minPlayers: thingInfo?.minPlayers || null,
     maxPlayers: thingInfo?.maxPlayers || null,
     playingTime: thingInfo?.playingTime || null,
+    weight: thingInfo?.weight || null,
     minAge: thingInfo?.minAge || null,
     description: thingInfo?.description || "",
     mechanics: thingInfo?.mechanics || [],

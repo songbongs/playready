@@ -117,25 +117,39 @@ export function buildTurnFlowPayload(input, glossary) {
     `Game name: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
     "",
-    "Analyze the actual player turn flow for this specific board game.",
-    "Do not output a generic board-game flow.",
+    "Analyze the actual turn or round flow for this specific board game.",
+    "Do not output a generic board-game template.",
+    "The flowchart is the most important element in both documents.",
     "Return only JSON for two flowchart data sets:",
-    "- detailed: for Document A",
-    "- simplified: for Document B",
+    "- detailed: for Document A (self-study)",
+    "- simplified: for Document B (teach-at-the-table)",
     "",
-    "Rules:",
-    "- Use the actual turn structure from the supplied sources.",
-    "- Reflect real branch points when the player must choose between major actions.",
-    "- Make the flow specific to this game, not a generic board-game template.",
-    "- Show where free actions or pre-actions can happen if the sources support them.",
-    "- Mark whether each step is required, optional, free, or cleanup.",
-    "- If timing matters, say when the player can do it during the turn.",
-    "- Keep each title short.",
+    "Turn flow priorities:",
+    "- Use only the real flow supported by the supplied rulebook, FAQ, and BGG data.",
+    "- If the game uses rounds instead of turns, reflect the real round structure.",
+    "- If the game has both round flow and player-turn flow, focus on the player-facing decision flow.",
+    "- Show real branch points only when the player must choose between meaningfully different actions.",
+    "- If free actions, pre-actions, upkeep, or cleanup exist, place them at the correct timing.",
+    "- If FAQ or errata changes the flow, follow FAQ or errata.",
+    "",
+    "Document A flow rules:",
+    "- This flow is for learning. It must help a new player understand what happens, why the flow branches, and what follows next.",
+    "- Preserve meaningful choices and follow-up effects.",
+    "- Prefer 5 to 8 total steps.",
+    "- Branches should usually have 2 to 4 options.",
+    "",
+    "Document B flow rules:",
+    "- This flow is for teaching. It must be simple enough for someone to explain aloud at the table.",
+    "- Keep only the explanation-critical path.",
+    "- Prefer 3 to 5 total steps.",
+    "- Avoid extra branches unless the choice is essential for a first explanation.",
+    "",
+    "Output rules:",
+    "- Mark each step as required, optional, free, or cleanup when the sources support that distinction.",
+    "- Keep each title short and concrete.",
     "- Keep each detail to one short sentence.",
-    "- branch options should usually be 2 to 4 items.",
-    "- detailed should preserve meaningful choices and follow-up effects.",
-    "- simplified should keep only the explanation-critical path.",
-    "- If FAQ/errata changes the turn flow, follow FAQ/errata.",
+    "- Do not leave empty branches or placeholder options.",
+    "- Do not invent actions, timings, or choices that are not in the sources.",
     "",
     "Return format:",
     '{"detailed":{"lead":"","steps":[{"kind":"start|decision|branch|merge|end","title":"","detail":"","tone":"neutral|primary|secondary|warning","requirement":"required|optional|free|cleanup","timing":"","options":[{"title":"","detail":"","tone":"secondary","requirement":"required|optional|free","timing":""}]}]},"simplified":{"lead":"","steps":[]}}',
@@ -344,12 +358,119 @@ function buildDocumentBStructurePrompt() {
   ].join("\n");
 }
 
+function buildDocumentAStructurePromptV2() {
+  return [
+    "Document A is a self-study guide.",
+    "Its job is to help a beginner understand the game alone.",
+    "Do not rewrite the rulebook page by page. Extract only what is needed for understanding.",
+    "",
+    "Document A fixed sections:",
+    "1. 게임 개요",
+    "2. 플레이어가 하게 되는 일",
+    "3. 플레이어 턴 흐름",
+    "4. 게임 준비와 시작 상태",
+    "5. 이 게임의 핵심 시스템 이해",
+    "6. 종료 조건과 결과 판단",
+    "7. 자주 헷갈리는 규칙 정리",
+    "",
+    "Document A conditional sections:",
+    "- 구성물 안내",
+    "- 아이콘/기호 사전",
+    "- 카드/타일/주사위 등 핵심 요소 설명",
+    "- 개인판/공용판 구조 설명",
+    "- 특수 모드 또는 확장 규칙",
+    "",
+    "Document A structure rules:",
+    "- Use a game-neutral high-level structure. Do not assume every game has combat, cards, or rounds in the same way.",
+    "- In section 5, explain only the core systems that actually matter for this game.",
+    "- If a system does not exist in this game, omit it.",
+    "- The turn-flow section is the most important section. The prose should support the flowchart, not replace it.",
+    "",
+    "Document A length rules:",
+    "- Use bullet lists or numbered lists for most content.",
+    "- Each section should be concise but complete enough for self-study.",
+    "- Prefer 3 to 6 short bullets or short paragraphs per section.",
+    "- Avoid long wall-of-text paragraphs.",
+    "",
+    "HTML rules:",
+    "- Use h2 for top-level sections and h3 only when truly needed.",
+    "- Return HTML body only.",
+    "- Do not output markdown fences."
+  ].join("\n");
+}
+
+function buildDocumentBStructurePromptV2() {
+  return [
+    "Document B is a teaching aid.",
+    "Its job is to help someone explain the game quickly to other players.",
+    "Prefer short lines that are easy to say aloud.",
+    "",
+    "Document B fixed sections:",
+    "1. 30초 소개 멘트",
+    "2. 플레이어가 하는 일 한눈에 보기",
+    "3. 플레이어 턴 흐름 요약",
+    "4. 첫 턴 또는 첫 라운드 설명 스크립트",
+    "5. 자주 나오는 질문",
+    "6. 종료/점수 빠른 체크리스트",
+    "7. 핵심 참고 카드",
+    "",
+    "Document B conditional sections:",
+    "- 세팅 체크리스트",
+    "- 핵심 아이콘 설명",
+    "- 보드 위치 안내",
+    "- 모드별 차이 요약",
+    "",
+    "Document B structure rules:",
+    "- Use the same game-neutral high-level structure, but compress it for teaching.",
+    "- Keep only what is needed to teach a first play.",
+    "- The turn-flow section is the most important section. It must be simple enough to read aloud.",
+    "- Avoid detailed background systems unless they are essential for first-time explanation.",
+    "",
+    "Document B length rules:",
+    "- Use bullets, checklist lines, and short script lines.",
+    "- Keep almost every line short.",
+    "- Make Document B clearly shorter and faster to scan than Document A.",
+    "",
+    "HTML rules:",
+    "- Use h2 for top-level sections and h3 only when truly needed.",
+    "- Return HTML body only.",
+    "- Do not output markdown fences."
+  ].join("\n");
+}
+
+function summarizeTurnFlowForPromptV2(turnFlowData, documentType) {
+  const flow = documentType === "B" ? turnFlowData?.simplified : turnFlowData?.detailed;
+  const steps = Array.isArray(flow?.steps) ? flow.steps.slice(0, documentType === "B" ? 5 : 7) : [];
+
+  if (!steps.length) {
+    return "";
+  }
+
+  const summary = steps
+    .map((step) => {
+      const base = [step?.title, step?.detail].filter(Boolean).join(": ");
+      if (step?.kind === "branch" && Array.isArray(step?.options) && step.options.length) {
+        const options = step.options
+          .slice(0, 4)
+          .map((item) => item?.title)
+          .filter(Boolean)
+          .join(", ");
+        return `${base} [options: ${options}]`;
+      }
+      return base;
+    })
+    .filter(Boolean)
+    .join(" -> ");
+
+  return `Turn flow summary (${documentType === "B" ? "teaching version" : "study version"}): ${summary}`;
+}
+
 export function buildDocumentPayload(input, glossary, documentType, turnFlowData = null) {
   const sources = buildSourceBundle(input);
   const structurePrompt =
-    documentType === "A" ? buildDocumentAStructurePrompt() : buildDocumentBStructurePrompt();
+    documentType === "A" ? buildDocumentAStructurePromptV2() : buildDocumentBStructurePromptV2();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
-  const turnFlowGuide = summarizeTurnFlowForPrompt(turnFlowData, documentType);
+  const turnFlowGuide = summarizeTurnFlowForPromptV2(turnFlowData, documentType);
   const sectionTuning =
     documentType === "A"
       ? [
