@@ -1,7 +1,8 @@
-import { collectBggForumData } from "../bgg/bggApi.js";
+﻿import { collectBggForumData } from "../bgg/bggApi.js";
 import { createUserError } from "../security/inputValidator.js";
 import {
   buildDocumentPayload,
+  buildGameFactsPayload,
   buildGlossaryPayload,
   buildTurnFlowPayload,
   parseGeminiJsonResponse
@@ -170,10 +171,10 @@ function hasUsableBggData(bggForumData) {
 
 function resolveEffectiveGameName(request, bggForumData, rulebookExtraction, faqExtraction) {
   return (
-    String(request?.gameName || "").trim() ||
+    normalizeDisplayGameTitle(request?.gameName) ||
     String(bggForumData?.thingInfo?.name || "").trim() ||
-    String(rulebookExtraction?.gameName || "").trim() ||
-    String(faqExtraction?.gameName || "").trim() ||
+    normalizeDisplayGameTitle(rulebookExtraction?.gameName) ||
+    normalizeDisplayGameTitle(faqExtraction?.gameName) ||
     "게임명 미확인"
   );
 }
@@ -227,6 +228,123 @@ function buildSourceUsageMeta(state) {
     sourceKinds,
     sourceKindsUsed: sourceKinds.filter((item) => item.active).map((item) => item.label)
   };
+}
+
+function normalizeDisplayGameTitle(value) {
+  const raw = String(value || "").replace(/\.[a-z0-9]+$/i, "").trim();
+  if (!raw) return "";
+
+  return raw
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b(retail|deluxe|edition|english|korean|rules?|rulebook|rule book|solo|1p)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function resolveDisplayGameTitle(state, gameFacts = null) {
+  return (
+    String(gameFacts?.displayTitle || "").trim() ||
+    String(state.bggForumData?.thingInfo?.name || "").trim() ||
+    normalizeDisplayGameTitle(state.rulebookExtraction?.gameName) ||
+    normalizeDisplayGameTitle(state.faqExtraction?.gameName) ||
+    normalizeDisplayGameTitle(state.request?.gameName) ||
+    "보드게임"
+  );
+}
+
+function stripHtmlTags(html) {
+  return String(html || "")
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeComparableText(value) {
+  return stripHtmlTags(value)
+    .toLowerCase()
+    .replace(/[\s"'`~!@#$%^&*()_+=[\]{};:,.<>/?\\|-]+/g, "");
+}
+
+function countAnchorMatches(text, anchors = []) {
+  const haystack = normalizeComparableText(text);
+  return anchors.filter((anchor) => {
+    const needle = normalizeComparableText(anchor);
+    return needle && haystack.includes(needle);
+  }).length;
+}
+
+function collectCountMentions(text) {
+  return [...stripHtmlTags(text).matchAll(/(\d+)\s*(라운드|일|턴|rounds?|days?|turns?)/gi)].map((match) => ({
+    value: Number(match[1]),
+    unit: String(match[2] || "").toLowerCase()
+  }));
+}
+
+function validateTurnFlowData(turnFlowData, gameFacts) {
+  const detailedSteps = Array.isArray(turnFlowData?.detailed?.steps) ? turnFlowData.detailed.steps : [];
+  const simplifiedSteps = Array.isArray(turnFlowData?.simplified?.steps) ? turnFlowData.simplified.steps : [];
+  const issues = [];
+
+  if (detailedSteps.length < 4) {
+    issues.push("학습용 흐름도 단계가 너무 적습니다.");
+  }
+  if (simplifiedSteps.length < 3) {
+    issues.push("설명용 흐름도 단계가 너무 적습니다.");
+  }
+
+  const anchors = Array.isArray(gameFacts?.flowAnchors) ? gameFacts.flowAnchors.filter(Boolean) : [];
+  if (anchors.length) {
+    if (countAnchorMatches(JSON.stringify(turnFlowData?.detailed || {}), anchors) < Math.min(2, anchors.length)) {
+      issues.push("학습용 흐름도에 게임 고유 핵심 단계가 충분히 반영되지 않았습니다.");
+    }
+    if (countAnchorMatches(JSON.stringify(turnFlowData?.simplified || {}), anchors) < Math.min(1, anchors.length)) {
+      issues.push("설명용 흐름도에 게임 고유 핵심 단계가 충분히 반영되지 않았습니다.");
+    }
+  }
+
+  return issues;
+}
+
+function validateDocumentPair(documentAHtml, documentBHtml, gameFacts, thingInfo) {
+  const issues = [];
+  const textA = stripHtmlTags(documentAHtml);
+  const textB = stripHtmlTags(documentBHtml);
+  const mentions = [...collectCountMentions(textA), ...collectCountMentions(textB)];
+
+  if (mentions.length >= 2) {
+    const distinctCounts = [...new Set(mentions.map((item) => item.value))];
+    if (distinctCounts.length > 1) {
+      issues.push(`문서 A/B 사이에 라운드 또는 일수 표현이 서로 다릅니다: ${distinctCounts.join(", ")}`);
+    }
+  }
+
+  if (gameFacts?.roundCount) {
+    const mismatch = mentions.find((item) => item.value && item.value !== Number(gameFacts.roundCount));
+    if (mismatch) {
+      issues.push(`공통 사실값(${gameFacts.roundCount})과 다른 수치(${mismatch.value})가 문서에 들어갔습니다.`);
+    }
+  }
+
+  const soloPattern = /(solo mode|솔로 모드|1인용 보드게임|1인 전용|solo-only)/i;
+  if (Number(thingInfo?.maxPlayers || 0) > 1 && gameFacts?.isSoloOnly !== true) {
+    if (soloPattern.test(textA) || soloPattern.test(textB)) {
+      issues.push("멀티플레이 정보가 있는데 문서가 솔로 전용처럼 설명하고 있습니다.");
+    }
+  }
+
+  const anchors = Array.isArray(gameFacts?.flowAnchors) ? gameFacts.flowAnchors.filter(Boolean) : [];
+  if (anchors.length) {
+    if (countAnchorMatches(textA, anchors) < Math.min(2, anchors.length)) {
+      issues.push("문서 A 본문에 게임 고유 핵심 개념이 충분히 반영되지 않았습니다.");
+    }
+    if (countAnchorMatches(textB, anchors) < Math.min(1, anchors.length)) {
+      issues.push("문서 B 본문에 게임 고유 핵심 개념이 충분히 반영되지 않았습니다.");
+    }
+  }
+
+  return issues;
 }
 
 function cleanupSensitiveData(state) {
@@ -470,6 +588,7 @@ function buildModelUsageDetails(sectionMap) {
 function buildModelUsageDetailsV2(sectionMap) {
   const sectionLabels = {
     glossary: "용어집",
+    gameFacts: "공통 사실값",
     turnFlow: "플레이어 턴 흐름도",
     documentA: "문서 A",
     documentB: "문서 B"
@@ -677,40 +796,130 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       onProgress,
       "AI 서버가 잠시 혼잡하여 용어집을 다시 시도하고 있습니다... (3/3)"
     );
-    const turnFlowResult = await generateJsonSectionWithRetry(
+    const gameFactsResult = await generateJsonSectionWithRetry(
       config,
-      buildTurnFlowPayload(payloadInput, glossaryResult.data.glossary || []),
+      buildGameFactsPayload(payloadInput, glossaryResult.data.glossary || []),
       onProgress,
-      "AI ?쒕쾭媛 ?좎떆 ?쇱옟?섏뿬 ?뚮젅?댁뼱 ???먮쫫?꾨? ?ㅼ떆 ?쒕룄?섍퀬 ?덉뒿?덈떎... (3/3)"
+      "AI 서버가 잠시 혼잡하여 게임 공통 사실값을 다시 시도하고 있습니다... (3/3)"
     );
-    const documentAResult = await generateJsonSectionWithRetry(
+    const gameFacts = gameFactsResult.data || null;
+    const displayTitle = resolveDisplayGameTitle(state, gameFacts);
+    state.request.gameName = displayTitle;
+
+    const generationInput = {
+      ...payloadInput,
+      gameName: displayTitle
+    };
+
+    let turnFlowResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "A", turnFlowResult.data || null),
+      buildTurnFlowPayload(generationInput, glossaryResult.data.glossary || [], gameFacts),
+      onProgress,
+      "AI 서버가 잠시 혼잡하여 턴 흐름도를 다시 시도하고 있습니다... (3/3)"
+    );
+    const turnFlowIssues = validateTurnFlowData(turnFlowResult.data || null, gameFacts);
+    if (turnFlowIssues.length) {
+      turnFlowResult = await generateJsonSectionWithRetry(
+        config,
+        buildTurnFlowPayload(
+          generationInput,
+          glossaryResult.data.glossary || [],
+          gameFacts,
+          `Fix these flowchart issues: ${turnFlowIssues.join(" / ")}`
+        ),
+        onProgress,
+        "AI 서버가 흐름도 핵심 단계를 다시 보정하고 있습니다... (3/3)"
+      );
+    }
+
+    let documentAResult = await generateJsonSectionWithRetry(
+      config,
+      buildDocumentPayload(
+        generationInput,
+        glossaryResult.data.glossary || [],
+        "A",
+        turnFlowResult.data || null,
+        gameFacts
+      ),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 A를 다시 시도하고 있습니다... (3/3)"
     );
-    const documentBResult = await generateJsonSectionWithRetry(
+    let documentBResult = await generateJsonSectionWithRetry(
       config,
-      buildDocumentPayload(payloadInput, glossaryResult.data.glossary || [], "B", turnFlowResult.data || null),
+      buildDocumentPayload(
+        generationInput,
+        glossaryResult.data.glossary || [],
+        "B",
+        turnFlowResult.data || null,
+        gameFacts
+      ),
       onProgress,
       "AI 서버가 잠시 혼잡하여 문서 B를 다시 시도하고 있습니다... (3/3)"
     );
 
     const images = state.pdfExtraction?.images || [];
-    const documentAHtml = injectImagesIntoHtml(
+    let documentAHtml = injectImagesIntoHtml(
       documentAResult.data.documentHtml || "",
       state.pdfExtraction,
       "A",
       turnFlowResult.data?.detailed || null
     );
-    const documentBHtml = injectImagesIntoHtml(
+    let documentBHtml = injectImagesIntoHtml(
       documentBResult.data.documentHtml || "",
       state.pdfExtraction,
       "B",
       turnFlowResult.data?.simplified || null
     );
+    const documentIssues = validateDocumentPair(
+      documentAHtml,
+      documentBHtml,
+      gameFacts,
+      state.bggForumData?.thingInfo || null
+    );
+    if (documentIssues.length) {
+      documentAResult = await generateJsonSectionWithRetry(
+        config,
+        buildDocumentPayload(
+          generationInput,
+          glossaryResult.data.glossary || [],
+          "A",
+          turnFlowResult.data || null,
+          gameFacts,
+          `Fix these consistency issues: ${documentIssues.join(" / ")}`
+        ),
+        onProgress,
+        "AI 서버가 문서 A의 사실값을 다시 맞추고 있습니다... (3/3)"
+      );
+      documentBResult = await generateJsonSectionWithRetry(
+        config,
+        buildDocumentPayload(
+          generationInput,
+          glossaryResult.data.glossary || [],
+          "B",
+          turnFlowResult.data || null,
+          gameFacts,
+          `Fix these consistency issues: ${documentIssues.join(" / ")}`
+        ),
+        onProgress,
+        "AI 서버가 문서 B의 사실값을 다시 맞추고 있습니다... (3/3)"
+      );
+
+      documentAHtml = injectImagesIntoHtml(
+        documentAResult.data.documentHtml || "",
+        state.pdfExtraction,
+        "A",
+        turnFlowResult.data?.detailed || null
+      );
+      documentBHtml = injectImagesIntoHtml(
+        documentBResult.data.documentHtml || "",
+        state.pdfExtraction,
+        "B",
+        turnFlowResult.data?.simplified || null
+      );
+    }
     const modelUsageBySection = {
       glossary: glossaryResult.modelInfo,
+      gameFacts: gameFactsResult.modelInfo,
       turnFlow: turnFlowResult.modelInfo,
       documentA: documentAResult.modelInfo,
       documentB: documentBResult.modelInfo
@@ -722,14 +931,16 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     return {
       ok: true,
       data: {
-        gameName: state.request.gameName,
+        gameName: displayTitle,
         bggId: state.request.bggId,
         glossary: glossaryResult.data.glossary || [],
+        gameFacts,
         turnFlow: turnFlowResult.data || null,
         documentAHtml,
         documentBHtml,
         meta: {
           generatedAt: new Date().toISOString(),
+          displayTitle,
           imageCount: images.length,
           forumCount: state.bggForumData?.forums?.length || 0,
           faqPageCount: state.faqExtraction?.pageCount || 0,
@@ -749,3 +960,4 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     cleanupSensitiveData(state);
   }
 }
+

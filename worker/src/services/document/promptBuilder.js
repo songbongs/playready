@@ -1,4 +1,4 @@
-import { GEMINI_SYSTEM_PROMPT } from "../../config/constants.js";
+﻿import { GEMINI_SYSTEM_PROMPT } from "../../config/constants.js";
 
 function stripImageBase64(images = []) {
   return images.map((image) => ({
@@ -111,7 +111,97 @@ export function buildGlossaryPayload(input) {
   });
 }
 
-export function buildTurnFlowPayload(input, glossary) {
+export function buildGameFactsPayload(input, glossary = []) {
+  const sources = buildSourceBundle(input);
+  const prompt = [
+    `Game name hint: ${sources.gameName}`,
+    `BGG ID: ${sources.bggId}`,
+    "",
+    "Build a shared fact sheet for this specific board game.",
+    "This fact sheet is the single source of truth for every later document.",
+    "Use only facts supported by the supplied rulebook, FAQ, player aid, and BGG data.",
+    "Do not invent solo mode, day counts, round counts, resources, or mechanics.",
+    "Do not output a generic board-game summary.",
+    "",
+    "Design rules:",
+    "- The outer document structure is game-neutral and reusable for all games.",
+    "- The facts inside that structure must be specific to this game only.",
+    "- Prefer system or mechanism language from the supplied sources.",
+    "- If the evidence is unclear, leave the field blank or add a warning instead of guessing.",
+    "- If BGG metadata and the rulebook disagree, prefer rulebook/FAQ for rules and BGG for metadata like year/players/time/weight.",
+    "",
+    "Return JSON only in this shape:",
+    '{"displayTitle":"","playerModeSummary":"","roundCount":0,"roundUnit":"","roundCountLabel":"","coreLoopSummary":"","flowAnchors":[],"keyMechanics":[],"endgameSummary":"","scoringSummary":"","isSoloOnly":null,"warnings":[]}',
+    "",
+    "Field guidance:",
+    "- displayTitle: clean game title for UI and document headers.",
+    "- playerModeSummary: one short sentence about player count or mode only if supported.",
+    "- roundCount / roundUnit / roundCountLabel: only fill when the sources clearly support it.",
+    "- coreLoopSummary: one short sentence describing what players repeatedly do.",
+    "- flowAnchors: 3 to 6 short phrases that absolutely should appear in the flowchart if supported by the game.",
+    "- keyMechanics: 3 to 8 short phrases describing the core mechanisms that matter for learning the game.",
+    "- endgameSummary and scoringSummary: one short sentence each.",
+    "- isSoloOnly: true only if the supplied sources clearly say this generated document is for solo-only rules.",
+    "- warnings: short notes for uncertainty only.",
+    "",
+    `Glossary: ${JSON.stringify(glossary || [])}`,
+    `Sources: ${JSON.stringify(sources)}`
+  ].join("\n");
+
+  return buildPayload(prompt, 8192, {
+    type: "OBJECT",
+    properties: {
+      displayTitle: { type: "STRING" },
+      playerModeSummary: { type: "STRING" },
+      roundCount: { type: "NUMBER" },
+      roundUnit: { type: "STRING" },
+      roundCountLabel: { type: "STRING" },
+      coreLoopSummary: { type: "STRING" },
+      flowAnchors: { type: "ARRAY", items: { type: "STRING" } },
+      keyMechanics: { type: "ARRAY", items: { type: "STRING" } },
+      endgameSummary: { type: "STRING" },
+      scoringSummary: { type: "STRING" },
+      isSoloOnly: { type: "BOOLEAN", nullable: true },
+      warnings: { type: "ARRAY", items: { type: "STRING" } }
+    },
+    required: [
+      "displayTitle",
+      "playerModeSummary",
+      "roundCount",
+      "roundUnit",
+      "roundCountLabel",
+      "coreLoopSummary",
+      "flowAnchors",
+      "keyMechanics",
+      "endgameSummary",
+      "scoringSummary",
+      "isSoloOnly",
+      "warnings"
+    ]
+  });
+}
+
+function summarizeGameFactsForPrompt(gameFacts) {
+  if (!gameFacts) {
+    return "";
+  }
+
+  return [
+    "Shared facts for every generated document:",
+    `- displayTitle: ${gameFacts.displayTitle || ""}`,
+    `- playerModeSummary: ${gameFacts.playerModeSummary || ""}`,
+    `- roundCountLabel: ${gameFacts.roundCountLabel || ""}`,
+    `- coreLoopSummary: ${gameFacts.coreLoopSummary || ""}`,
+    `- flowAnchors: ${(gameFacts.flowAnchors || []).join(", ")}`,
+    `- keyMechanics: ${(gameFacts.keyMechanics || []).join(", ")}`,
+    `- endgameSummary: ${gameFacts.endgameSummary || ""}`,
+    `- scoringSummary: ${gameFacts.scoringSummary || ""}`,
+    `- isSoloOnly: ${String(gameFacts.isSoloOnly)}`,
+    `- warnings: ${(gameFacts.warnings || []).join(" | ")}`
+  ].join("\n");
+}
+
+export function buildTurnFlowPayload(input, glossary, gameFacts = null, correctionNote = "") {
   const sources = buildSourceBundle(input);
   const prompt = [
     `Game name: ${sources.gameName}`,
@@ -120,17 +210,22 @@ export function buildTurnFlowPayload(input, glossary) {
     "Analyze the actual turn or round flow for this specific board game.",
     "Do not output a generic board-game template.",
     "The flowchart is the most important element in both documents.",
+    "The flowchart must follow the shared facts exactly.",
     "Return only JSON for two flowchart data sets:",
     "- detailed: for Document A (self-study)",
     "- simplified: for Document B (teach-at-the-table)",
     "",
     "Turn flow priorities:",
     "- Use only the real flow supported by the supplied rulebook, FAQ, and BGG data.",
+    "- Keep the reusable high-level flow shape game-neutral, but fill it with this game's specific actions and mechanisms.",
     "- If the game uses rounds instead of turns, reflect the real round structure.",
     "- If the game has both round flow and player-turn flow, focus on the player-facing decision flow.",
     "- Show real branch points only when the player must choose between meaningfully different actions.",
     "- If free actions, pre-actions, upkeep, or cleanup exist, place them at the correct timing.",
     "- If FAQ or errata changes the flow, follow FAQ or errata.",
+    "- If shared flow anchors exist, preserve them unless the sources clearly disprove them.",
+    "- Do not replace a specific mechanism with a generic phrase like 'action phase' or 'cleanup' when the sources use a more concrete game-specific term.",
+    "- Do not invent solo-only loops, day counts, or next-day cleanup unless the sources explicitly support them.",
     "",
     "Document A flow rules:",
     "- This flow is for learning. It must help a new player understand what happens, why the flow branches, and what follows next.",
@@ -150,13 +245,17 @@ export function buildTurnFlowPayload(input, glossary) {
     "- Keep each detail to one short sentence.",
     "- Do not leave empty branches or placeholder options.",
     "- Do not invent actions, timings, or choices that are not in the sources.",
+    correctionNote ? `- Correction note: ${correctionNote}` : "",
     "",
     "Return format:",
     '{"detailed":{"lead":"","steps":[{"kind":"start|decision|branch|merge|end","title":"","detail":"","tone":"neutral|primary|secondary|warning","requirement":"required|optional|free|cleanup","timing":"","options":[{"title":"","detail":"","tone":"secondary","requirement":"required|optional|free","timing":""}]}]},"simplified":{"lead":"","steps":[]}}',
     "",
+    summarizeGameFactsForPrompt(gameFacts),
     `Glossary: ${JSON.stringify(glossary || [])}`,
     `Sources: ${JSON.stringify(sources)}`
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return buildPayload(prompt, 8192, {
     type: "OBJECT",
@@ -506,10 +605,103 @@ function buildDocumentBStructurePromptV3() {
   ].join("\n");
 }
 
-export function buildDocumentPayload(input, glossary, documentType, turnFlowData = null) {
+function buildDocumentAStructurePromptV4() {
+  return [
+    "Document A is a self-study guide.",
+    "Its job is to help a beginner understand the game alone.",
+    "Use a reusable game-neutral outer structure, but fill every section with facts and mechanisms that belong to this specific game.",
+    "Do not rewrite the rulebook page by page. Extract only what is needed for understanding.",
+    "",
+    "Document A fixed sections:",
+    "1. 게임 개요",
+    "2. 플레이어가 하게 되는 일",
+    "3. 플레이어 턴 흐름",
+    "4. 게임 준비와 시작 상태",
+    "5. 이 게임의 핵심 시스템 이해",
+    "6. 종료 조건과 결과 판단",
+    "7. 자주 헷갈리는 규칙 정리",
+    "",
+    "Document A conditional sections:",
+    "- 구성물 안내",
+    "- 아이콘/기호 사전",
+    "- 카드/주사위/타일/트랙 등 핵심 요소 설명",
+    "- 개인판/공용판 구조 설명",
+    "- 특수 모드 또는 확장 규칙",
+    "",
+    "Document A structure rules:",
+    "- Use a game-neutral high-level structure. Do not assume every game has combat, cards, rounds, travel days, or solo-only play in the same way.",
+    "- In section 5, explain only the core systems that actually matter for this game.",
+    "- If a system does not exist in this game, omit it.",
+    "- The turn-flow section is the most important section. The prose should support the flowchart, not replace it.",
+    "- Keep the outer structure reusable for any board game, but make the actual content highly specific to this game.",
+    "",
+    "Document A length rules:",
+    "- Use bullet lists or numbered lists for most content.",
+    "- Each section should be concise but complete enough for self-study.",
+    "- Prefer 3 to 6 short bullets or short paragraphs per section.",
+    "- Avoid long wall-of-text paragraphs.",
+    "",
+    "HTML rules:",
+    "- Use h2 for top-level sections and h3 only when truly needed.",
+    "- Return HTML body only.",
+    "- Do not output markdown fences."
+  ].join("\n");
+}
+
+function buildDocumentBStructurePromptV4() {
+  return [
+    "Document B is a teaching aid.",
+    "Its job is to help someone explain the game quickly to other players.",
+    "Prefer short lines that are easy to say aloud.",
+    "",
+    "Document B fixed sections:",
+    "1. 30초 소개 멘트",
+    "2. 플레이어가 하는 일 한눈에 보기",
+    "3. 플레이어 턴 흐름 요약",
+    "4. 첫 턴 또는 첫 라운드 설명 스크립트",
+    "5. 자주 나오는 질문",
+    "6. 종료/점수 빠른 체크리스트",
+    "7. 핵심 참고사항",
+    "",
+    "Document B conditional sections:",
+    "- 세팅 체크리스트",
+    "- 핵심 아이콘 설명",
+    "- 보드 위치 안내",
+    "- 모드별 차이 요약",
+    "",
+    "Document B structure rules:",
+    "- Use the exact Korean section headings listed above.",
+    "- Keep the reusable outer structure, but fill it with this game's real mechanisms and teaching points only.",
+    "- Keep only what is needed to teach a first play.",
+    "- The turn-flow section is the most important section. It must be simple enough to read aloud.",
+    "- Make section titles feel clearly separate from their body content.",
+    "- Right under each h2, start with a short paragraph, list, checklist, or script block so the section looks structurally distinct.",
+    "- Rename any section that would have been called '핵심 참고 카드' to '핵심 참고사항'.",
+    "- Do not flatten this specific game into generic phrases if the sources provide more concrete mechanism names.",
+    "",
+    "Document B length rules:",
+    "- Use bullets, checklist lines, and short script lines.",
+    "- Keep almost every line short.",
+    "- Make Document B clearly shorter and faster to scan than Document A.",
+    "",
+    "HTML rules:",
+    "- Use h2 for top-level sections and h3 only when truly needed.",
+    "- Return HTML body only.",
+    "- Do not output markdown fences."
+  ].join("\n");
+}
+
+export function buildDocumentPayload(
+  input,
+  glossary,
+  documentType,
+  turnFlowData = null,
+  gameFacts = null,
+  correctionNote = ""
+) {
   const sources = buildSourceBundle(input);
   const structurePrompt =
-    documentType === "A" ? buildDocumentAStructurePromptV2() : buildDocumentBStructurePromptV3();
+    documentType === "A" ? buildDocumentAStructurePromptV4() : buildDocumentBStructurePromptV4();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
   const turnFlowGuide = summarizeTurnFlowForPromptV2(turnFlowData, documentType);
   const sectionTuning =
@@ -547,6 +739,7 @@ export function buildDocumentPayload(input, glossary, documentType, turnFlowData
     `BGG ID: ${sources.bggId}`,
     "",
     structurePrompt,
+    summarizeGameFactsForPrompt(gameFacts),
     turnFlowGuide,
     brevityRules,
     sectionTuning,
@@ -565,10 +758,16 @@ export function buildDocumentPayload(input, glossary, documentType, turnFlowData
     "- 플레이어 턴 흐름도 섹션과 핵심 행동 요약 근처에는 이미지 섹션을 넣지 마세요.",
     "- 같은 이미지를 여러 곳에 반복해서 쓰지 않는 방향으로 서술하세요.",
     "- 문장 수를 불필요하게 늘리지 말고, 각 섹션의 목적을 달성할 만큼만 충분히 쓰세요.",
+    "- 문서 A와 문서 B는 공통 사실값을 반드시 공유해야 합니다.",
+    "- 공통 사실값과 다른 라운드 수, 일수, 모드 설명, 종료 구조를 쓰지 마세요.",
+    "- 공통 사실값이 솔로 전용을 증명하지 않으면 솔로 전용처럼 설명하지 마세요.",
+    correctionNote ? `- Correction note: ${correctionNote}` : "",
     "",
     `고정 용어집: ${JSON.stringify(glossary || [])}`,
     `원본 자료: ${JSON.stringify(sources)}`
-  ].join("\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   return buildPayload(prompt, maxOutputTokens, {
     type: "OBJECT",
@@ -618,3 +817,4 @@ export function parseGeminiJsonResponse(result) {
     throw error;
   }
 }
+

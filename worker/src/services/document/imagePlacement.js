@@ -1,4 +1,4 @@
-function escapeHtml(value) {
+﻿function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -1240,3 +1240,4 @@ export function injectImagesIntoHtml(html, extraction, docType = "A", flowData =
   const withoutForbiddenGalleries = removeForbiddenGalleries(withGalleries, docType);
   return removeHelperCopy(withoutForbiddenGalleries);
 }
+

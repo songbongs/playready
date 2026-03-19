@@ -100,25 +100,26 @@
       .hero-wordmark {
         margin: 0;
         font-family: "DotGothic16", monospace;
-        font-size: clamp(2rem, 4vw, 3rem);
-        line-height: 1;
+        font-size: clamp(2.35rem, 4.6vw, 3.5rem);
+        line-height: 0.95;
         color: var(--brand);
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
+        text-shadow: 0 8px 20px rgba(95, 0, 128, 0.14);
       }
 
       .hero-tagline {
         margin: 0;
-        max-width: 760px;
-        font-size: clamp(1.7rem, 3vw, 2.6rem);
-        line-height: 1.22;
-        font-weight: 800;
-        color: var(--ink);
+        max-width: 620px;
+        font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+        line-height: 1.42;
+        font-weight: 700;
+        color: rgba(31, 23, 34, 0.76);
         text-wrap: balance;
       }
 
       .hero-copy {
         margin: 0;
-        font-size: 1rem;
+        font-size: 0.96rem;
         line-height: 1.8;
         max-width: 760px;
         color: var(--ink-soft);
@@ -361,15 +362,16 @@
         width: 100%;
         height: 18px;
         border-radius: 999px;
-        background: rgba(121, 95, 61, 0.14);
+        background: rgba(95, 0, 128, 0.10);
         overflow: hidden;
         margin: 18px 0;
+        border: 1px solid rgba(95, 0, 128, 0.08);
       }
 
       .progress-fill {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #3b6f55, #b66a35);
+        background: linear-gradient(90deg, #5f0080, #8d5ba6 55%, #c49a42);
         border-radius: inherit;
         transition: width 0.35s ease;
       }
@@ -386,18 +388,19 @@
         gap: 6px;
         padding: 16px;
         border-radius: 18px;
-        background: rgba(255, 248, 236, 0.82);
-        border: 1px solid rgba(117, 90, 51, 0.12);
+        background: rgba(255, 253, 252, 0.95);
+        border: 1px solid rgba(95, 0, 128, 0.10);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
       }
 
       .step-chip.is-current {
-        background: rgba(255, 234, 207, 0.95);
-        border-color: rgba(159, 79, 43, 0.3);
+        background: rgba(234, 220, 241, 0.72);
+        border-color: rgba(95, 0, 128, 0.24);
       }
 
       .step-chip.is-done {
-        background: rgba(219, 233, 220, 0.9);
-        border-color: rgba(59, 111, 85, 0.25);
+        background: rgba(222, 235, 228, 0.94);
+        border-color: rgba(92, 138, 115, 0.24);
       }
 
       .step-chip.is-failed {
@@ -425,12 +428,12 @@
         border-radius: 999px;
         font-size: 0.78rem;
         font-weight: 800;
-        background: rgba(93, 79, 63, 0.08);
+        background: rgba(95, 0, 128, 0.08);
         color: var(--ink-soft);
       }
 
       .step-status[data-status="active"] {
-        background: rgba(159, 79, 43, 0.14);
+        background: rgba(95, 0, 128, 0.14);
         color: var(--brand-strong);
       }
 
@@ -445,7 +448,7 @@
       }
 
       .step-status[data-status="blocked"] {
-        background: rgba(117, 90, 51, 0.12);
+        background: rgba(95, 0, 128, 0.08);
         color: var(--ink-soft);
       }
 
@@ -462,20 +465,24 @@
       }
 
       .eta-box {
-        background: rgba(244, 217, 191, 0.6);
+        background: rgba(246, 230, 206, 0.88);
+        border: 1px solid rgba(196, 154, 66, 0.18);
       }
 
       .elapsed-box,
       .heartbeat-box {
-        background: rgba(232, 238, 247, 0.78);
+        background: rgba(238, 232, 244, 0.92);
+        border: 1px solid rgba(95, 0, 128, 0.10);
       }
 
       .fun-box {
-        background: rgba(219, 233, 220, 0.75);
+        background: rgba(222, 235, 228, 0.92);
+        border: 1px solid rgba(92, 138, 115, 0.16);
       }
 
       .message-box {
-        background: rgba(255, 246, 230, 0.92);
+        background: rgba(244, 235, 248, 0.92);
+        border: 1px solid rgba(95, 0, 128, 0.12);
       }
 
       .error-box {
@@ -491,15 +498,15 @@
         margin-top: 14px;
         padding: 14px 18px;
         border-radius: 18px;
-        background: rgba(255, 252, 245, 0.95);
-        border: 1px solid rgba(117, 90, 51, 0.12);
+        background: rgba(255, 253, 252, 0.96);
+        border: 1px solid rgba(95, 0, 128, 0.12);
       }
 
       .working-spinner {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        border: 3px solid rgba(159, 79, 43, 0.18);
+        border: 3px solid rgba(95, 0, 128, 0.14);
         border-top-color: var(--brand);
         animation: spin 0.85s linear infinite;
         flex: 0 0 auto;
@@ -515,8 +522,8 @@
       }
 
       .working-indicator.is-retrying {
-        background: rgba(255, 242, 214, 0.96);
-        border-color: rgba(184, 132, 47, 0.28);
+        background: rgba(246, 230, 206, 0.96);
+        border-color: rgba(196, 154, 66, 0.28);
       }
 
       .working-indicator.is-failed {
@@ -2247,8 +2254,18 @@ function stopTimers() {
         return pieces.length ? pieces.join(" · ") : "입력 자료 기반";
       }
 
+      function getDisplayTitle(result) {
+        return (
+          result?.meta?.displayTitle ||
+          result?.gameFacts?.displayTitle ||
+          result?.meta?.thingInfo?.name ||
+          result?.gameName ||
+          "보드게임"
+        );
+      }
+
       function buildDocumentHeaderHtml(result, which) {
-        const title = escapeHtml(result?.gameName || "보드게임");
+        const title = escapeHtml(getDisplayTitle(result));
         const docLabel = which === "A" ? "문서 A" : "문서 B";
         const docPurpose = which === "A" ? "학습용" : "설명용";
         const metaItems = collectDocumentMetaItems(result);
@@ -2552,7 +2569,8 @@ function stopTimers() {
       function downloadHtml(which) {
         if (!state.result) return;
         const htmlBody = which === "A" ? state.result.documentAHtml : state.result.documentBHtml;
-        const gameName = sanitizeFileName(state.result.gameName || "playready");
+        const displayTitle = getDisplayTitle(state.result);
+        const gameName = sanitizeFileName(displayTitle || "playready");
         const fileName = `${gameName}-${which === "A" ? "study-doc" : "teach-doc"}.html`;
 
         const fullHtml = `<!DOCTYPE html>
@@ -2560,7 +2578,7 @@ function stopTimers() {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(state.result.gameName || "playready")} - 문서 ${which}</title>
+  <title>${escapeHtml(displayTitle || "playready")} - 문서 ${which}</title>
   <style>
 ${getDownloadDocumentStyles()}
   </style>
