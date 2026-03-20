@@ -2358,6 +2358,25 @@ function stopTimers() {
           block.innerHTML = "<strong>입력 자료</strong><span>최소 정보 기반</span>";
           sourceList.appendChild(block);
         }
+        const sourceFiles = data.meta?.sourceFiles || {};
+        [
+          ["룰북 파일", sourceFiles.rulebookFileName || ""],
+          ["FAQ 파일", sourceFiles.faqFileName || ""]
+        ].forEach(([label, value]) => {
+          if (!value) return;
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = `<strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span>`;
+          sourceList.appendChild(block);
+        });
+        if (Array.isArray(sourceFiles.extraFileNames) && sourceFiles.extraFileNames.length) {
+          const block = document.createElement("div");
+          block.className = "result-source-item";
+          block.innerHTML = `<strong>추가 자료 파일</strong><span>${escapeHtml(
+            sourceFiles.extraFileNames.join(", ")
+          )}</span>`;
+          sourceList.appendChild(block);
+        }
         elements.resultMeta.appendChild(summaryCard);
 
         const modelSummary = data.meta?.modelUsageSummary || null;

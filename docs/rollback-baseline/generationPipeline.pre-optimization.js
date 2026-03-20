@@ -8,7 +8,6 @@ import {
   parseGeminiJsonResponse
 } from "./promptBuilder.js";
 import { injectImagesIntoHtml } from "./imagePlacement.js";
-import { buildOptimizationProfile } from "./sourceOptimization.js";
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -228,14 +227,6 @@ function buildSourceUsageMeta(state) {
   return {
     sourceKinds,
     sourceKindsUsed: sourceKinds.filter((item) => item.active).map((item) => item.label)
-  };
-}
-
-function buildSourceFileMeta(request) {
-  return {
-    rulebookFileName: String(request?.pdfFileName || "").trim(),
-    faqFileName: String(request?.faqPdfFileName || "").trim(),
-    extraFileNames: (request?.additionalMaterials || []).map((item) => item.fileName).filter(Boolean)
   };
 }
 
@@ -798,8 +789,6 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       bggForumData: state.bggForumData,
       additionalMaterials: state.request.additionalMaterials
     };
-    const optimizationProfile = buildOptimizationProfile(state, config);
-    payloadInput.optimizationProfile = optimizationProfile;
 
     const glossaryResult = await generateJsonSectionWithRetry(
       config,
@@ -938,7 +927,6 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
     const modelUsageSummary = formatModelUsageSummary(Object.values(modelUsageBySection));
     const modelUsageDetails = buildModelUsageDetailsV2(modelUsageBySection);
     const sourceUsageMeta = buildSourceUsageMeta(state);
-    const sourceFileMeta = buildSourceFileMeta(state.request);
 
     return {
       ok: true,
@@ -964,16 +952,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
           modelUsageDetails,
           modelUsageBySection,
           sourceKinds: sourceUsageMeta.sourceKinds,
-          sourceKindsUsed: sourceUsageMeta.sourceKindsUsed,
-          sourceFiles: sourceFileMeta,
-          optimization: {
-            rolloutMode: optimizationProfile.rolloutMode,
-            safeCase: optimizationProfile.safeCase,
-            reasons: optimizationProfile.reasons,
-            factPreservingSummaryApplied: optimizationProfile.useFactPreservingSummary,
-            stageInputSlicingApplied: optimizationProfile.useStageInputSlicing,
-            sourceStats: optimizationProfile.sourceStats
-          }
+          sourceKindsUsed: sourceUsageMeta.sourceKindsUsed
         }
       }
     };

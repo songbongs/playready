@@ -189,10 +189,7 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
       continue;
     }
 
-    const threads = ensureArray(forumXml?.forum?.threads?.thread || forumXml?.forum?.thread).slice(
-      0,
-      config.bggMaxThreadsPerForum
-    );
+    const threads = ensureArray(forumXml?.forum?.threads?.thread || forumXml?.forum?.thread);
     const threadResults = [];
 
     for (const thread of threads) {
@@ -209,10 +206,7 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
         continue;
       }
 
-      const comments = parseArticles(threadXml?.thread?.articles?.article || threadXml?.thread?.article).slice(
-        0,
-        config.bggMaxCommentsPerThread
-      );
+      const comments = parseArticles(threadXml?.thread?.articles?.article || threadXml?.thread?.article);
       if (!comments.length) {
         continue;
       }

@@ -1,8 +1,41 @@
-import { GEMINI_SYSTEM_PROMPT } from "../../config/constants.js";
-import { buildOptimizedSourceBundle } from "./sourceOptimization.js";
+﻿import { GEMINI_SYSTEM_PROMPT } from "../../config/constants.js";
 
-function buildSourceBundle(input, stage) {
-  return buildOptimizedSourceBundle(input, stage, input.optimizationProfile || null);
+function stripImageBase64(images = []) {
+  return images.map((image) => ({
+    id: image.id,
+    page: image.page,
+    bbox: image.bbox,
+    mimeType: image.mimeType,
+    nearestTextBlockId: image.nearestTextBlockId || null,
+    sourceType: image.sourceType || "rulebook",
+    width: image.width ?? null,
+    height: image.height ?? null,
+    pixelWidth: image.pixelWidth ?? null,
+    pixelHeight: image.pixelHeight ?? null,
+    areaRatio: image.areaRatio ?? null,
+    renderMode: image.renderMode ?? null
+  }));
+}
+
+function buildSourceBundle(input) {
+  return {
+    gameName: input.gameName,
+    bggId: input.bggId,
+    pdfExtraction: {
+      gameName: input.pdfExtraction?.gameName || input.gameName,
+      pageCount: Number(input.pdfExtraction?.pageCount || 0),
+      textBlocks: input.pdfExtraction?.textBlocks || [],
+      images: stripImageBase64(input.pdfExtraction?.images || [])
+    },
+    faqExtraction: {
+      gameName: input.faqExtraction?.gameName || input.gameName,
+      pageCount: Number(input.faqExtraction?.pageCount || 0),
+      textBlocks: input.faqExtraction?.textBlocks || [],
+      images: stripImageBase64(input.faqExtraction?.images || [])
+    },
+    bggForumData: input.bggForumData || { forums: [] },
+    additionalMaterials: input.additionalMaterials || []
+  };
 }
 
 function buildPayload(userPrompt, maxOutputTokens, responseSchema) {
@@ -31,7 +64,7 @@ function buildPayload(userPrompt, maxOutputTokens, responseSchema) {
 }
 
 export function buildGlossaryPayload(input) {
-  const sources = buildSourceBundle(input, "glossary");
+  const sources = buildSourceBundle(input);
   const prompt = [
     `게임 이름: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
@@ -79,7 +112,7 @@ export function buildGlossaryPayload(input) {
 }
 
 export function buildGameFactsPayload(input, glossary = []) {
-  const sources = buildSourceBundle(input, "gameFacts");
+  const sources = buildSourceBundle(input);
   const prompt = [
     `Game name hint: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
@@ -169,7 +202,7 @@ function summarizeGameFactsForPrompt(gameFacts) {
 }
 
 export function buildTurnFlowPayload(input, glossary, gameFacts = null, correctionNote = "") {
-  const sources = buildSourceBundle(input, "turnFlow");
+  const sources = buildSourceBundle(input);
   const prompt = [
     `Game name: ${sources.gameName}`,
     `BGG ID: ${sources.bggId}`,
@@ -666,7 +699,7 @@ export function buildDocumentPayload(
   gameFacts = null,
   correctionNote = ""
 ) {
-  const sources = buildSourceBundle(input, documentType === "A" ? "documentA" : "documentB");
+  const sources = buildSourceBundle(input);
   const structurePrompt =
     documentType === "A" ? buildDocumentAStructurePromptV4() : buildDocumentBStructurePromptV4();
   const maxOutputTokens = documentType === "A" ? 28672 : 20480;
