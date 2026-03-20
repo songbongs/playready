@@ -527,7 +527,8 @@
       .heartbeat-box,
       .fun-box,
       .message-box,
-      .error-box {
+      .error-box,
+      .cause-box {
         margin-top: 14px;
         padding: 16px 18px;
         border-radius: 18px;
@@ -559,6 +560,38 @@
         background: rgba(156, 47, 47, 0.08);
         color: var(--danger);
         border: 1px solid rgba(156, 47, 47, 0.16);
+      }
+
+      .cause-box {
+        background: rgba(255, 253, 252, 0.96);
+        border: 1px solid rgba(95, 0, 128, 0.12);
+        color: var(--ink);
+      }
+
+      .cause-box strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .cause-box .cause-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        background: rgba(95, 0, 128, 0.08);
+        color: var(--brand-strong);
+      }
+
+      .cause-box p {
+        margin: 0;
+      }
+
+      .cause-box p + p {
+        margin-top: 8px;
       }
 
       .working-indicator {
@@ -1525,6 +1558,7 @@
               현재 단계 기준으로 필요한 작업을 순서대로 진행합니다.
             </div>
             <div id="progressError" class="error-box hidden"></div>
+            <div id="progressCause" class="cause-box hidden"></div>
 
             <div class="progress-actions">
               <button id="cancelButton" class="btn-danger" type="button">취소</button>
@@ -1695,6 +1729,7 @@
         heartbeatBox: document.getElementById("heartbeatBox"),
         funBox: document.getElementById("funBox"),
         progressError: document.getElementById("progressError"),
+        progressCause: document.getElementById("progressCause"),
         cancelButton: document.getElementById("cancelButton"),
         resultTitle: document.getElementById("resultTitle"),
         resultSubtitle: document.getElementById("resultSubtitle"),
@@ -1891,7 +1926,10 @@
           setProgressActionMode("retry");
           const logData = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/log`);
           updateProgressFromJob(job);
-          showProgressError(logData.log?.errorMessage || "문서 생성이 중단되었습니다.");
+          showProgressError(
+            logData.log?.errorMessage || "문서 생성이 중단되었습니다.",
+            logData.log?.errorStage || job.currentStage || state.currentStage
+          );
           return;
         }
 
@@ -1948,7 +1986,10 @@
           updateProgressFromJob(job);
           const logData = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/log`);
           setProgressActionMode("retry");
-          showProgressError(logData.log?.errorMessage || "문서 생성이 중단되었습니다.");
+          showProgressError(
+            logData.log?.errorMessage || "문서 생성이 중단되었습니다.",
+            logData.log?.errorStage || job.currentStage || state.currentStage
+          );
           await loadRecentJobs();
           return;
         }
@@ -2556,6 +2597,7 @@ function stopTimers() {
         setProgressActionMode("watch");
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
+        hideProgressCause();
         elements.progressFill.style.width = "8%";
         elements.progressTitle.textContent = "입력 정보를 확인하고 있습니다";
         elements.progressSubtitle.textContent = "파일과 게임 정보를 확인한 뒤 작업 서버로 요청을 보낼 준비를 하고 있습니다.";
@@ -3030,6 +3072,120 @@ ${getDownloadDocumentStyles()}
         elements.startButton.disabled = false;
       }
 
+      function classifyFailureCause(message, failedStage) {
+        const normalized = String(message || "").toLowerCase();
+
+        const networkPatterns = [
+          "연결",
+          "network",
+          "gateway",
+          "timeout",
+          "timed out",
+          "응답",
+          "불러오지 못",
+          "unavailable",
+          "server",
+          "fetch"
+        ];
+        if (
+          networkPatterns.some((pattern) => normalized.includes(pattern)) &&
+          !/ai 서버|gemini|quota|billing|model|문서 a|문서 b|턴 흐름|용어집|json|혼잡/.test(normalized)
+        ) {
+          return {
+            key: "network",
+            label: "실제 실패 원인: 네트워크 또는 서버 연결",
+            summary: "브라우저, Worker, Render 서버 사이 연결이 불안정해서 멈췄습니다.",
+            action:
+              "인터넷 연결이 안정적인지 확인한 뒤 다시 시도해보세요. 같은 문제가 반복되면 서버 배포 상태나 Render/Cloudflare 응답 상태를 함께 확인하는 것이 좋습니다."
+          };
+        }
+
+        const pdfPatterns = [
+          "pdf 파일을 읽을 수 없습니다",
+          "룰북 pdf",
+          "faq/정오표 pdf",
+          "faq pdf",
+          "손상되었거나 암호화",
+          "pdf를 읽지 못"
+        ];
+        if (pdfPatterns.some((pattern) => normalized.includes(pattern)) || failedStage === "pdf") {
+          if (
+            !/ai 서버|gemini|quota|billing|model|문서 a|문서 b|턴 흐름|json|응답 형식/.test(normalized)
+          ) {
+            return {
+              key: "pdf",
+              label: "실제 실패 원인: PDF 읽기",
+              summary: "올린 PDF를 읽거나 정리하는 과정에서 문제가 생겼습니다.",
+              action:
+                "같은 파일을 다시 올려보거나, 다른 PDF 뷰어에서 열리는지 먼저 확인해보세요. 암호가 걸린 PDF나 손상된 PDF면 다시 저장한 파일로 시도하는 것이 좋습니다."
+            };
+          }
+        }
+
+        const aiPatterns = [
+          "ai 서버",
+          "gemini",
+          "quota",
+          "billing",
+          "api key",
+          "model",
+          "문서 생성",
+          "문서 a",
+          "문서 b",
+          "턴 흐름",
+          "용어집",
+          "json",
+          "입력이 너무 많아",
+          "context length",
+          "high demand",
+          "temporarily unavailable",
+          "혼잡"
+        ];
+        if (aiPatterns.some((pattern) => normalized.includes(pattern)) || failedStage === "ai") {
+          return {
+            key: "ai",
+            label: "실제 실패 원인: AI 문서 생성",
+            summary: "PDF를 읽은 뒤 문서를 만드는 AI 단계에서 멈췄습니다.",
+            action:
+              "잠시 기다렸다가 다시 실행해보세요. 특히 '혼잡', 'Gemini', '모델', 'quota' 같은 문구가 보이면 PDF 문제가 아니라 AI 서버 쪽 이슈일 가능성이 큽니다."
+          };
+        }
+
+        if (networkPatterns.some((pattern) => normalized.includes(pattern))) {
+          return {
+            key: "network",
+            label: "실제 실패 원인: 네트워크 또는 서버 연결",
+            summary: "브라우저, Worker, Render 서버 사이 연결이 불안정해서 멈췄습니다.",
+            action:
+              "인터넷 연결이 안정적인지 확인한 뒤 다시 시도해보세요. 같은 문제가 반복되면 서버 배포 상태나 Render/Cloudflare 응답 상태를 함께 확인하는 것이 좋습니다."
+          };
+        }
+
+        return {
+          key: "network",
+          label: "실제 실패 원인: 네트워크 또는 서버 연결",
+          summary: "오류 문구만으로는 PDF/AI 중 어느 쪽인지 확정하기 어려워 연결 문제로 분류했습니다.",
+          action:
+            "같은 입력으로 한 번 더 시도해보고, 다시 실패하면 최근 작업 로그의 오류 문구를 기준으로 원인을 더 좁혀보는 것이 좋습니다."
+        };
+      }
+
+      function showProgressCause(message, failedStage) {
+        const cause = classifyFailureCause(message, failedStage);
+        elements.progressCause.innerHTML = `
+          <strong>무슨 문제인지 한눈에 보기</strong>
+          <div class="cause-chip">${escapeHtml(cause.label)}</div>
+          <p>${escapeHtml(cause.summary)}</p>
+          <p>${escapeHtml(cause.action)}</p>
+        `;
+        elements.progressCause.classList.remove("hidden");
+      }
+
+      function hideProgressCause() {
+        elements.progressCause.innerHTML = "";
+        elements.progressCause.classList.add("hidden");
+      }
+
       function cancelGeneration() {
         if (state.abortController) {
           state.abortController.abort();
@@ -3070,18 +3226,20 @@ ${getDownloadDocumentStyles()}
         loadRecentJobs().catch(() => {});
       }
 
-      function showProgressError(message) {
+      function showProgressError(message, stageOverride = "") {
         stopTimers();
         state.abortController = null;
         stopJobPolling();
         finalizeStageTiming();
         setProgressVisualState("failed");
-        const failedStage = normalizeStage(state.currentStage || "bgg");
+        const failedStage = normalizeStage(stageOverride || state.currentStage || "bgg");
+        state.currentStage = failedStage;
         markStageFailure(failedStage);
         elements.progressTitle.textContent = "작업이 중단되었습니다";
         elements.progressSubtitle.textContent = `${STAGE_DETAILS[failedStage]?.label || "현재 단계"} 중 문제가 발생했습니다.`;
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
+        showProgressCause(message, failedStage);
         elements.progressMessage.textContent = `${STAGE_DETAILS[failedStage]?.label || "현재 단계"}에서 작업이 멈췄습니다. 오류 내용을 확인한 뒤 다시 시도해주세요.`;
         setProgressActionMode("retry");
         elements.startButton.disabled = false;
@@ -3099,8 +3257,8 @@ ${getDownloadDocumentStyles()}
           elements.workingIndicator.innerHTML = `
             <div class="working-spinner" aria-hidden="true"></div>
             <div>
-              <strong>자동 재시도 중입니다</strong>
-              <small>${escapeHtml(message || "첫 시도 응답이 불안정해 같은 단계를 한 번 더 시도하고 있습니다.")}</small>
+              <strong>AI 서버가 잠시 혼잡합니다. 자동으로 다시 시도 중입니다</strong>
+              <small>${escapeHtml(message || "지금은 사용자가 다시 누를 필요가 없습니다. 잠시 기다리면 같은 단계를 자동으로 다시 시도합니다.")}</small>
             </div>
           `;
           return;
@@ -3232,9 +3390,9 @@ ${getDownloadDocumentStyles()}
             subtitle: "문서 A, 문서 B, 턴 흐름 도식을 정리하며 최종 문서를 만들고 있습니다."
           },
           "ai-retry": {
-            title: "문서 만들기를 다시 시도하고 있습니다",
+            title: "AI 문서 만들기를 자동으로 다시 시도하고 있습니다",
             percent: 92,
-            subtitle: "더 안정적으로 결과를 받기 위해 같은 단계를 한 번 더 시도하고 있습니다."
+            subtitle: "AI 서버 응답이 잠시 밀려 같은 단계를 자동으로 다시 요청하고 있습니다. 새로고침하지 말고 잠시만 기다려주세요."
           }
         };
 
@@ -3357,7 +3515,9 @@ function stopTimers() {
         const stage = payload.stage || state.currentStage;
         setProgressVisualState(
           stage === "ai-retry" ? "retrying" : "working",
-          stage === "ai-retry" ? "AI 서버가 잠시 혼잡하여 같은 단계를 자동으로 한 번 더 시도하고 있습니다." : ""
+          stage === "ai-retry"
+            ? "AI 서버가 잠시 바빠 응답이 늦어졌습니다. 지금은 기다리기만 하면 자동으로 같은 단계를 다시 시도합니다."
+            : ""
         );
       };
 
