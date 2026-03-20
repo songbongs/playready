@@ -8,8 +8,8 @@
       @import url("https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;500;700;800&display=swap");
 
       :root {
-        --bg: #f7f3ef;
-        --bg-strong: #f0e7f5;
+        --bg: #0e1118;
+        --bg-strong: #171b26;
         --panel: rgba(255, 253, 252, 0.94);
         --panel-strong: #fffdfc;
         --ink: #1f1722;
@@ -39,9 +39,10 @@
         font-family: "Noto Sans KR", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(234, 220, 241, 0.88), transparent 34%),
-          radial-gradient(circle at top right, rgba(222, 235, 228, 0.78), transparent 28%),
-          linear-gradient(180deg, #faf6f2 0%, #f4ede7 48%, #fbf8f5 100%);
+          radial-gradient(circle at top left, rgba(116, 84, 160, 0.34), transparent 34%),
+          radial-gradient(circle at top right, rgba(63, 112, 94, 0.28), transparent 30%),
+          radial-gradient(circle at bottom center, rgba(192, 106, 63, 0.16), transparent 34%),
+          linear-gradient(180deg, #11151e 0%, #171b27 48%, #0d1017 100%);
       }
 
       body::before {
@@ -50,10 +51,10 @@
         inset: 0;
         pointer-events: none;
         background-image:
-          linear-gradient(rgba(95, 0, 128, 0.035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(95, 0, 128, 0.035) 1px, transparent 1px);
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         background-size: 22px 22px;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.2));
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.18));
       }
 
       .app-shell {
@@ -66,10 +67,12 @@
         display: grid;
         gap: 16px;
         padding: 28px;
-        border: 1px solid rgba(95, 0, 128, 0.12);
+        border: 1px solid rgba(191, 199, 216, 0.10);
         border-radius: 32px;
-        background: linear-gradient(135deg, rgba(255, 251, 247, 0.96), rgba(244, 235, 248, 0.94));
-        box-shadow: var(--shadow);
+        background:
+          linear-gradient(135deg, rgba(22, 28, 40, 0.94), rgba(33, 26, 43, 0.92)),
+          radial-gradient(circle at top right, rgba(116, 84, 160, 0.20), transparent 34%);
+        box-shadow: 0 28px 70px rgba(4, 8, 18, 0.44);
         overflow: hidden;
         position: relative;
       }
@@ -82,7 +85,7 @@
         right: -40px;
         top: -40px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(95, 0, 128, 0.14), transparent 72%);
+        background: radial-gradient(circle, rgba(126, 94, 178, 0.26), transparent 72%);
       }
 
       .eyebrow {
@@ -90,8 +93,8 @@
         width: fit-content;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(92, 138, 115, 0.12);
-        color: var(--accent);
+        background: rgba(92, 138, 115, 0.18);
+        color: #d7eee2;
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.04em;
@@ -102,9 +105,9 @@
         font-family: "DotGothic16", monospace;
         font-size: clamp(2.35rem, 4.6vw, 3.5rem);
         line-height: 0.95;
-        color: var(--brand);
+        color: #d9b7ff;
         letter-spacing: 0.06em;
-        text-shadow: 0 8px 20px rgba(95, 0, 128, 0.14);
+        text-shadow: 0 10px 26px rgba(38, 12, 67, 0.42);
       }
 
       .hero-tagline {
@@ -113,7 +116,7 @@
         font-size: clamp(1.2rem, 2.2vw, 1.7rem);
         line-height: 1.42;
         font-weight: 700;
-        color: rgba(31, 23, 34, 0.76);
+        color: rgba(247, 244, 250, 0.92);
         text-wrap: balance;
       }
 
@@ -122,7 +125,7 @@
         font-size: 0.96rem;
         line-height: 1.8;
         max-width: 760px;
-        color: var(--ink-soft);
+        color: rgba(223, 217, 231, 0.78);
       }
 
       .screen {
