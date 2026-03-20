@@ -4,6 +4,14 @@ import { readAndValidateJsonRequest } from "./services/security/inputValidator.j
 import { enforceRateLimit } from "./services/security/rateLimiter.js";
 import { handleHealth } from "./routes/health.js";
 import { handleGenerateJson, handleGenerateStream } from "./routes/generate.js";
+import {
+  handleCreateJob,
+  handleGetJob,
+  handleGetJobLog,
+  handleGetJobResult,
+  handleListRecentJobs,
+  processQueuedJob
+} from "./routes/jobs.js";
 
 function isOriginAllowed(origin, allowedOrigin) {
   return Boolean(origin) && origin === allowedOrigin;
@@ -31,6 +39,31 @@ export default {
     }
 
     try {
+      if (url.pathname === "/api/jobs" && request.method === "GET") {
+        return withCors(await handleListRecentJobs(request, env), origin, config.allowedOrigin);
+      }
+
+      if (url.pathname === "/api/jobs" && request.method === "POST") {
+        await enforceRateLimit(request, env);
+        const payload = await readAndValidateJsonRequest(request, config);
+        return withCors(await handleCreateJob(request, payload, env, config), origin, config.allowedOrigin);
+      }
+
+      const jobMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)$/);
+      if (jobMatch && request.method === "GET") {
+        return withCors(await handleGetJob(jobMatch[1], env), origin, config.allowedOrigin);
+      }
+
+      const jobResultMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/result$/);
+      if (jobResultMatch && request.method === "GET") {
+        return withCors(await handleGetJobResult(jobResultMatch[1], env), origin, config.allowedOrigin);
+      }
+
+      const jobLogMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/log$/);
+      if (jobLogMatch && request.method === "GET") {
+        return withCors(await handleGetJobLog(jobLogMatch[1], env), origin, config.allowedOrigin);
+      }
+
       if (url.pathname === "/api/generate" && request.method === "POST") {
         await enforceRateLimit(request, env);
         const payload = await readAndValidateJsonRequest(request, config);
@@ -52,6 +85,18 @@ export default {
         origin,
         config.allowedOrigin
       );
+    }
+  },
+
+  async queue(batch, env) {
+    const config = getRuntimeConfig(env);
+    for (const message of batch.messages) {
+      try {
+        await processQueuedJob(message.body?.jobId, env, config);
+        message.ack();
+      } catch {
+        message.retry();
+      }
     }
   }
 };

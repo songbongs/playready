@@ -24,3 +24,21 @@ OPTIMIZATION_SAFE_MAX_PAGES = "80"
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 id = "fae3d0e445504158afd0b0cc7ad45ab5"
+
+[[d1_databases]]
+binding = "JOBS_DB"
+database_name = "playready-jobs"
+database_id = "b4674867-ecdf-49a5-9b4f-1eeb86db4392"
+
+[[r2_buckets]]
+binding = "JOBS_BUCKET"
+bucket_name = "playready-jobs"
+
+[[queues.producers]]
+binding = "PLAYREADY_JOBS"
+queue = "playready-jobs"
+
+[[queues.consumers]]
+queue = "playready-jobs"
+max_batch_size = 1
+max_batch_timeout = 2

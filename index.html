@@ -337,6 +337,76 @@
         margin-bottom: 6px;
       }
 
+      .job-panel {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(117, 90, 51, 0.12);
+      }
+
+      .job-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .job-card {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(95, 0, 128, 0.12);
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .job-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .job-card strong {
+        font-size: 0.95rem;
+      }
+
+      .job-card small,
+      .job-card p {
+        margin: 0;
+        color: var(--ink-soft);
+        line-height: 1.6;
+      }
+
+      .job-status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .job-status-pill[data-status="queued"],
+      .job-status-pill[data-status="processing"] {
+        background: rgba(95, 0, 128, 0.1);
+        color: var(--brand-strong);
+      }
+
+      .job-status-pill[data-status="completed"] {
+        background: rgba(92, 138, 115, 0.14);
+        color: var(--accent);
+      }
+
+      .job-status-pill[data-status="failed"] {
+        background: rgba(156, 47, 47, 0.12);
+        color: var(--danger);
+      }
+
+      .job-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
       .progress-panel,
       .results-panel {
         padding: 24px;
@@ -1397,6 +1467,15 @@
                   필요한 이미지를 문서 안에 함께 배치
                 </article>
               </div>
+
+              <div class="job-panel">
+                <h2 class="section-title">최근 작업</h2>
+                <p class="section-desc">
+                  화면을 닫았다가 다시 와도 여기에서 이어서 확인할 수 있습니다.
+                </p>
+                <div id="recentJobsEmpty" class="hint">아직 저장된 최근 작업이 없습니다.</div>
+                <div id="recentJobsList" class="job-list"></div>
+              </div>
             </aside>
           </div>
         </section>
@@ -1494,6 +1573,7 @@
     <script>
       const APP_CONFIG = {
         WORKER_BASE_URL: "https://playready-worker.iamsangmin.workers.dev",
+        JOB_POLL_MS: 5000,
         MAX_PDF_BYTES: 50 * 1024 * 1024,
         MAX_EXTRA_FILES: 5,
         ETA_SECONDS: {
@@ -1512,6 +1592,11 @@
           "ai-retry": 35,
           done: 0
         }
+      };
+
+      const STORAGE_KEYS = {
+        sessionId: "playready-session-id",
+        activeJobId: "playready-active-job-id"
       };
 
       const STAGE_LOOP_MESSAGES = {
@@ -1552,6 +1637,12 @@
         currentStage: "start",
         currentDisplayStage: "bgg",
         abortController: null,
+        jobPollTimer: null,
+        activeJobId: "",
+        recentJobs: [],
+        sessionId: "",
+        progressActionMode: "watch",
+        selectedJobSummary: null,
         etaSeconds: APP_CONFIG.ETA_SECONDS.start,
         etaTimer: null,
         elapsedSeconds: 0,
@@ -1590,6 +1681,8 @@
         clearPdfButton: document.getElementById("clearPdfButton"),
         clearFaqPdfButton: document.getElementById("clearFaqPdfButton"),
         clearExtraButton: document.getElementById("clearExtraButton"),
+        recentJobsList: document.getElementById("recentJobsList"),
+        recentJobsEmpty: document.getElementById("recentJobsEmpty"),
         inputError: document.getElementById("inputError"),
         startButton: document.getElementById("startButton"),
         progressTitle: document.getElementById("progressTitle"),
@@ -1655,6 +1748,279 @@
       elements.downloadB.addEventListener("click", () => downloadHtml("B"));
       elements.restartTopButton.addEventListener("click", resetToStart);
       elements.restartButton.addEventListener("click", resetToStart);
+
+      initializeJobSession();
+
+      function initializeJobSession() {
+        state.sessionId = getOrCreateSessionId();
+        loadRecentJobs().catch(() => {
+          elements.recentJobsEmpty.textContent = "최근 작업을 불러오지 못했습니다. 새 작업은 계속 시작할 수 있습니다.";
+          elements.recentJobsEmpty.classList.remove("hidden");
+        });
+
+        const storedActiveJobId = window.localStorage.getItem(STORAGE_KEYS.activeJobId) || "";
+        if (storedActiveJobId) {
+          openJobById(storedActiveJobId).catch(() => {
+            window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          });
+        }
+      }
+
+      function getOrCreateSessionId() {
+        const existing = window.localStorage.getItem(STORAGE_KEYS.sessionId);
+        if (existing) {
+          return existing;
+        }
+
+        const generated = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        window.localStorage.setItem(STORAGE_KEYS.sessionId, generated);
+        return generated;
+      }
+
+      async function fetchJson(url, init = {}) {
+        const response = await fetch(url, {
+          ...init,
+          headers: {
+            ...(init.headers || {}),
+            "X-Playready-Session-Id": state.sessionId
+          }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data?.error?.message || data?.message || "요청 처리 중 오류가 발생했습니다.");
+        }
+        return data;
+      }
+
+      async function loadRecentJobs() {
+        const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs`);
+        state.recentJobs = Array.isArray(data.jobs) ? data.jobs : [];
+        renderRecentJobs();
+      }
+
+      function renderRecentJobs() {
+        elements.recentJobsList.innerHTML = "";
+        if (!state.recentJobs.length) {
+          elements.recentJobsEmpty.classList.remove("hidden");
+          return;
+        }
+
+        elements.recentJobsEmpty.classList.add("hidden");
+        state.recentJobs.forEach((job) => {
+          const card = document.createElement("article");
+          card.className = "job-card";
+          card.innerHTML = `
+            <div class="job-card-head">
+              <div>
+                <strong>${escapeHtml(job.gameName || "보드게임")}</strong>
+                <small>${escapeHtml(formatJobTimestamp(job.createdAt))}</small>
+              </div>
+              <span class="job-status-pill" data-status="${escapeHtml(job.status || "queued")}">${escapeHtml(
+                getJobStatusLabel(job.status)
+              )}</span>
+            </div>
+            <p>${escapeHtml(job.progressMessage || "작업 상태를 불러오는 중입니다.")}</p>
+            <small>${escapeHtml(buildRecentJobFileSummary(job.sourceFiles || {}))}</small>
+            <div class="job-card-actions">
+              <button class="btn-inline" type="button" data-job-open="${escapeHtml(job.jobId)}">이 작업 열기</button>
+            </div>
+          `;
+          card.querySelector("[data-job-open]")?.addEventListener("click", () => openJob(job));
+          elements.recentJobsList.appendChild(card);
+        });
+      }
+
+      function formatJobTimestamp(value) {
+        if (!value) return "시간 정보 없음";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toLocaleString("ko-KR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function getJobStatusLabel(status) {
+        if (status === "processing") return "진행 중";
+        if (status === "completed") return "완료";
+        if (status === "failed") return "실패";
+        return "접수됨";
+      }
+
+      function buildRecentJobFileSummary(sourceFiles) {
+        const parts = [];
+        if (sourceFiles.rulebookFileName) parts.push(`룰북: ${sourceFiles.rulebookFileName}`);
+        if (sourceFiles.faqFileName) parts.push(`FAQ: ${sourceFiles.faqFileName}`);
+        if (Array.isArray(sourceFiles.extraFileNames) && sourceFiles.extraFileNames.length) {
+          parts.push(`추가자료 ${sourceFiles.extraFileNames.length}개`);
+        }
+        return parts.join(" | ") || "파일명 정보 없음";
+      }
+
+      function prefillFormFromJob(job) {
+        elements.gameName.value = job.gameName || "";
+        elements.bggId.value = job.bggId || "";
+      }
+
+      async function openJobById(jobId) {
+        const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(jobId)}`);
+        await openJob(data.job);
+      }
+
+      async function openJob(job) {
+        if (!job?.jobId) return;
+        state.selectedJobSummary = job;
+        state.activeJobId = job.jobId;
+        if (job.status === "completed") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/result`);
+          state.selectedJobSummary = data.job || job;
+          completeWithResult(data.result?.data || data.result);
+          return;
+        }
+
+        if (job.status === "failed") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          showScreen("progress");
+          resetProgressUi();
+          setProgressActionMode("retry");
+          const logData = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/log`);
+          updateProgressFromJob(job);
+          showProgressError(logData.log?.errorMessage || "문서 생성이 중단되었습니다.");
+          return;
+        }
+
+        showScreen("progress");
+        resetProgressUi();
+        setProgressActionMode("watch");
+        updateProgressFromJob(job);
+        startJobPolling(job.jobId);
+      }
+
+      function startJobPolling(jobId) {
+        stopJobPolling();
+        state.activeJobId = jobId;
+        window.localStorage.setItem(STORAGE_KEYS.activeJobId, jobId);
+        refreshActiveJob().catch((error) => {
+          showProgressError(error.message || "작업 상태를 불러오지 못했습니다.");
+        });
+        state.jobPollTimer = window.setInterval(() => {
+          refreshActiveJob().catch((error) => {
+            stopJobPolling();
+            showProgressError(error.message || "작업 상태를 불러오지 못했습니다.");
+          });
+        }, APP_CONFIG.JOB_POLL_MS);
+      }
+
+      function stopJobPolling() {
+        if (state.jobPollTimer) {
+          clearInterval(state.jobPollTimer);
+          state.jobPollTimer = null;
+        }
+      }
+
+      async function refreshActiveJob() {
+        if (!state.activeJobId) return;
+        const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(state.activeJobId)}`);
+        const job = data.job;
+        state.selectedJobSummary = job;
+        updateRecentJobCache(job);
+
+        if (job.status === "completed") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          const resultData = await fetchJson(
+            `${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/result`
+          );
+          completeWithResult(resultData.result?.data || resultData.result);
+          await loadRecentJobs();
+          return;
+        }
+
+        if (job.status === "failed") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          updateProgressFromJob(job);
+          const logData = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/log`);
+          setProgressActionMode("retry");
+          showProgressError(logData.log?.errorMessage || "문서 생성이 중단되었습니다.");
+          await loadRecentJobs();
+          return;
+        }
+
+        setProgressActionMode("watch");
+        updateProgressFromJob(job);
+      }
+
+      function updateRecentJobCache(job) {
+        const index = state.recentJobs.findIndex((item) => item.jobId === job.jobId);
+        if (index === -1) {
+          state.recentJobs.unshift(job);
+        } else {
+          state.recentJobs.splice(index, 1, job);
+        }
+        state.recentJobs = state.recentJobs.slice(0, 12);
+        renderRecentJobs();
+      }
+
+      function updateProgressFromJob(job) {
+        const stage = normalizeJobStageForUi(job.currentStage || "queued");
+        state.currentStage = stage;
+        syncStageTiming(stage);
+        updateStageLoop(stage === "queued" ? "start" : stage);
+        paintStageChips(stage === "queued" ? "bgg" : stage);
+
+        const stageUi = {
+          queued: {
+            title: "작업을 접수했습니다",
+            subtitle: "브라우저를 닫거나 화면이 꺼져도 서버에서 계속 작업합니다.",
+            percent: 10
+          },
+          bgg: {
+            title: "게임 정보를 확인하고 있습니다",
+            subtitle: "BGG 정보와 입력한 게임 정보를 정리하고 있습니다.",
+            percent: 28
+          },
+          pdf: {
+            title: "PDF를 읽고 있습니다",
+            subtitle: "룰북과 FAQ의 텍스트, 이미지, 표를 정리하고 있습니다.",
+            percent: 58
+          },
+          ai: {
+            title: "문서를 만들고 있습니다",
+            subtitle: "문서 A, 문서 B, 턴 흐름도를 생성하고 있습니다.",
+            percent: 86
+          }
+        }[stage] || {
+          title: "작업 상태를 불러오고 있습니다",
+          subtitle: "서버에 저장된 최근 상태를 확인하고 있습니다.",
+          percent: 14
+        };
+
+        elements.progressTitle.textContent = stageUi.title;
+        elements.progressSubtitle.textContent = stageUi.subtitle;
+        elements.progressFill.style.width = `${stageUi.percent}%`;
+        elements.progressMessage.textContent =
+          job.progressMessage || "서버에서 작업을 계속 진행하고 있습니다. 나중에 다시 돌아와도 됩니다.";
+        setProgressVisualState("working", "이 화면을 닫아도 작업은 서버에서 계속 진행됩니다.");
+      }
+
+      function normalizeJobStageForUi(stage) {
+        if (["queued", "start"].includes(stage)) return "queued";
+        if (stage === "completed") return "ai";
+        if (stage === "failed") return state.currentStage || "bgg";
+        return stage;
+      }
+
+      function setProgressActionMode(mode) {
+        state.progressActionMode = mode;
+        elements.cancelButton.textContent = mode === "retry" ? "다시 작업 준비" : "나중에 확인하기";
+      }
 
       function showScreen(name) {
         Object.entries(elements.screens).forEach(([key, node]) => {
@@ -1867,18 +2233,19 @@
         elements.startButton.disabled = true;
         showScreen("progress");
         resetProgressUi();
+        setProgressActionMode("watch");
         syncStageTiming("bgg");
         updateStageLoop("start");
 
         try {
           showClientPreparationState({
-            title: "게임 정보 확인을 시작합니다",
-            subtitle: "입력값과 업로드 파일을 점검하고 요청 준비를 진행합니다.",
+            title: "작업 접수를 준비합니다",
+            subtitle: "입력값과 업로드 파일을 점검하고 서버에 작업을 등록할 준비를 합니다.",
             message: pdfFile || faqPdfFile || extraFiles.length
-              ? "선택한 파일을 브라우저에서 읽고 요청용 데이터로 바꾸고 있습니다."
+              ? "선택한 파일을 브라우저에서 읽고 서버 접수용 데이터로 바꾸고 있습니다."
               : bggId
-                ? "첨부 파일 없이 게임 이름과 BGG 정보를 기준으로 요청을 준비하고 있습니다."
-                : "입력한 게임 이름과 추가 자료를 기준으로 요청을 준비하고 있습니다.",
+                ? "첨부 파일 없이 게임 이름과 BGG 정보를 기준으로 서버에 작업을 접수합니다."
+                : "입력한 게임 이름과 추가 자료를 기준으로 서버에 작업을 접수합니다.",
             percent: 12
           });
           const payload = await buildRequestPayload({
@@ -1889,12 +2256,20 @@
             extraFiles
           });
           showClientPreparationState({
-            title: "작업 서버로 요청을 보내고 있습니다",
-            subtitle: "준비한 자료를 전달하고 첫 실제 작업 단계를 기다리는 중입니다.",
-            message: "잠시 후 현재 단계가 게임 정보 확인, PDF 읽기, 문서 만들기 중 어디인지 표시됩니다.",
+            title: "작업을 서버에 접수하고 있습니다",
+            subtitle: "접수만 끝나면 브라우저를 닫아도 서버에서 계속 작업합니다.",
+            message: "잠시 후 접수번호와 현재 상태를 불러옵니다.",
             percent: 18
           });
-          await streamGeneration(payload);
+          const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+          await loadRecentJobs();
+          await openJob(data.job);
         } catch (error) {
           showProgressError(error.message || "요청을 준비하는 중 오류가 발생했습니다.");
           elements.startButton.disabled = false;
@@ -2178,6 +2553,7 @@ function stopTimers() {
       function resetProgressUi() {
         state.currentStage = "start";
         state.funIndex = 0;
+        setProgressActionMode("watch");
         elements.progressError.classList.add("hidden");
         elements.progressError.textContent = "";
         elements.progressFill.style.width = "8%";
@@ -2190,7 +2566,10 @@ function stopTimers() {
       }
       function completeWithResult(data) {
         stopTimers();
+        stopJobPolling();
         state.abortController = null;
+        state.activeJobId = "";
+        window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
         finalizeStageTiming();
         setProgressVisualState("complete");
         elements.progressFill.style.width = "100%";
@@ -2205,6 +2584,7 @@ function stopTimers() {
         renderResult(state.result);
         elements.startButton.disabled = false;
         showScreen("result");
+        loadRecentJobs().catch(() => {});
       }
 
       function formatPlayerRange(info) {
@@ -2654,27 +3034,46 @@ ${getDownloadDocumentStyles()}
         if (state.abortController) {
           state.abortController.abort();
         }
+        if (state.progressActionMode === "retry" && state.selectedJobSummary) {
+          prefillFormFromJob(state.selectedJobSummary);
+          stopJobPolling();
+          state.activeJobId = "";
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          stopTimers();
+          resetUploadSelections();
+          elements.startButton.disabled = false;
+          showScreen("input");
+          showInputError("이전 작업의 게임 이름과 BGG 정보만 다시 채웠습니다. PDF와 추가 자료는 다시 첨부한 뒤 재시작해주세요.");
+          loadRecentJobs().catch(() => {});
+          return;
+        }
+
         state.abortController = null;
+        stopJobPolling();
         stopTimers();
-        resetUploadSelections();
         elements.startButton.disabled = false;
         showScreen("input");
-        showInputError("문서 생성이 취소되었습니다. 파일은 다시 첨부하도록 초기화했습니다.");
+        showInputError("작업은 서버에서 계속 진행 중입니다. 최근 작업 목록에서 언제든 다시 확인할 수 있습니다.");
+        loadRecentJobs().catch(() => {});
       }
 
       function resetToStart() {
         stopTimers();
+        stopJobPolling();
         state.abortController = null;
         state.result = null;
+        state.activeJobId = "";
+        window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
         resetUploadSelections();
         showScreen("input");
         clearInputError();
+        loadRecentJobs().catch(() => {});
       }
 
       function showProgressError(message) {
         stopTimers();
         state.abortController = null;
-        resetUploadSelections();
+        stopJobPolling();
         finalizeStageTiming();
         setProgressVisualState("failed");
         const failedStage = normalizeStage(state.currentStage || "bgg");
@@ -2684,6 +3083,7 @@ ${getDownloadDocumentStyles()}
         elements.progressError.textContent = message;
         elements.progressError.classList.remove("hidden");
         elements.progressMessage.textContent = `${STAGE_DETAILS[failedStage]?.label || "현재 단계"}에서 작업이 멈췄습니다. 오류 내용을 확인한 뒤 다시 시도해주세요.`;
+        setProgressActionMode("retry");
         elements.startButton.disabled = false;
       }
 

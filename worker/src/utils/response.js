@@ -26,7 +26,7 @@ export function withCors(response, origin, allowedOrigin) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Vary", "Origin");
   }
-  headers.set("Access-Control-Allow-Headers", "Content-Type");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, X-Playready-Session-Id");
   headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   return new Response(response.body, {
     status: response.status,
@@ -45,7 +45,7 @@ export function sseHeaders(origin, allowedOrigin) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Vary", "Origin");
   }
-  headers.set("Access-Control-Allow-Headers", "Content-Type");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, X-Playready-Session-Id");
   headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   return headers;
 }
