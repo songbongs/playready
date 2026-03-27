@@ -101,6 +101,92 @@ npx wrangler secret put GEMINI_API_KEY
 - 붙여넣어도 화면에 글자가 보이지 않을 수 있습니다.
 - 정상 동작이니 그대로 Enter를 누르면 됩니다.
 
+## 7-2. BGG API 키 secret 등록
+
+BGG(BoardGameGeek) 사이트에서 게임 정보와 포럼 글을 가져오려면 BGG API 키가 필요합니다.
+이 키가 없으면 BGG 데이터(게임 기본 정보, 포럼 Q&A, 디자이너 코멘트 등)를 가져올 수 없습니다.
+
+### BGG API 키란?
+
+BGG 사이트가 "이 사람은 허가된 사용자입니다"라고 확인하기 위해 발급하는 고유 코드입니다.
+Gemini API 키와 같은 개념이지만, BGG용이라는 점만 다릅니다.
+
+### BGG API 키 발급받는 방법
+
+1. BGG 사이트에 로그인합니다.
+2. 브라우저에서 [https://boardgamegeek.com/applications](https://boardgamegeek.com/applications) 에 접속합니다.
+3. 애플리케이션을 등록하고 승인을 받으면 API 키(토큰)를 받을 수 있습니다.
+4. 발급받은 키를 메모장 등에 복사해둡니다.
+
+### BGG API 키 등록 절차
+
+발급받은 키를 Cloudflare Worker에 등록하는 과정입니다.
+
+1. PowerShell을 엽니다.
+
+2. Worker 폴더로 이동합니다.
+
+```powershell
+cd "C:\Users\kblife\Desktop\AI 실습\playready\worker"
+```
+
+3. 아래 명령을 그대로 복사해서 붙여넣고 Enter를 누릅니다.
+
+```powershell
+npx wrangler secret put BGG_API_KEY
+```
+
+4. 아래처럼 입력을 기다리는 메시지가 나타납니다.
+
+```text
+🌀 Creating the secret for the Worker "playready-worker"
+? Enter a secret value: ›
+```
+
+5. 이 상태에서, BGG에서 발급받은 API 키를 붙여넣습니다.
+
+예를 들어 BGG에서 받은 키가 `bgg_xK9mP2vLqR7nT4wJ8sF1dG5hY3cB6aE0` 라면,
+그대로 복사해서 PowerShell 창에 붙여넣습니다.
+
+```text
+? Enter a secret value: ›
+```
+
+중요:
+- 붙여넣어도 **화면에 아무 글자도 보이지 않습니다.** 이것은 보안을 위한 정상 동작입니다.
+- 비밀번호 입력할 때 `****`조차 안 보이는 것과 같습니다.
+- 당황하지 말고 그대로 Enter를 누르면 됩니다.
+
+6. Enter를 누르면 아래와 같은 성공 메시지가 나옵니다.
+
+```text
+✨ Success! Uploaded secret BGG_API_KEY
+```
+
+이 메시지가 보이면 등록이 완료된 것입니다.
+
+### 등록이 잘 됐는지 확인하는 방법
+
+1. [Cloudflare 대시보드](https://dash.cloudflare.com)에 로그인합니다.
+2. `Workers & Pages` 클릭
+3. `playready-worker` 클릭
+4. `Settings` → `Variables and Secrets` 열기
+5. 아래쪽 Secrets 목록에 `BGG_API_KEY`가 보이면 정상입니다.
+
+주의:
+- Cloudflare 대시보드에서는 키 값 자체는 볼 수 없습니다. 이름만 확인 가능합니다.
+- 키를 잘못 넣었다면, 같은 명령(`npx wrangler secret put BGG_API_KEY`)을 다시 실행해서 새 값으로 덮어쓰면 됩니다.
+
+### 등록 후 반드시 Worker 재배포
+
+키를 등록한 뒤에는 Worker를 다시 배포해야 적용됩니다.
+
+```powershell
+npx wrangler deploy
+```
+
+배포가 끝나면 이제 BGG ID가 있는 게임으로 문서를 생성할 때 포럼 데이터와 디자이너 코멘트가 결과에 반영됩니다.
+
 ## 8. 허용 도메인 설정
 
 GitHub Pages 주소가 예를 들어 아래와 같다고 가정하겠습니다.

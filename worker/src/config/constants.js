@@ -33,6 +33,7 @@ export function getRuntimeConfig(env) {
   return {
     allowedOrigin: env.ALLOWED_ORIGIN,
     bggApiBase: env.BGG_API_BASE || "https://boardgamegeek.com/xmlapi2",
+    bggApiKey: env.BGG_API_KEY || "",
     geminiModel: env.GEMINI_MODEL || "gemini-2.5-pro",
     pdfExtractorUrl: env.PDF_EXTRACTOR_URL,
     requestMaxBytes: Number(env.REQUEST_MAX_BYTES || 50 * 1024 * 1024),

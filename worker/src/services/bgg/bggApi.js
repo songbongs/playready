@@ -6,7 +6,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchXml(url, init, errorMessage) {
+async function fetchXml(url, init, errorMessage, bggApiKey) {
   const retryableStatuses = new Set([202, 408, 425, 429, 500, 502, 503, 504]);
   const maxAttempts = 5;
   let lastStatus = 0;
@@ -19,6 +19,7 @@ async function fetchXml(url, init, errorMessage) {
         headers: {
           accept: "application/xml",
           "user-agent": "playready-worker/1.0 (+https://songbongs.github.io/playready)",
+          ...(bggApiKey ? { authorization: `Bearer ${bggApiKey}` } : {}),
           ...(init?.headers || {})
         }
       });
@@ -45,9 +46,9 @@ async function fetchXml(url, init, errorMessage) {
   throw createUserError(`${errorMessage} (status: ${lastStatus})`, 502, "BGG_UNAVAILABLE");
 }
 
-async function fetchXmlOrNull(url, init, errorMessage, onProgress) {
+async function fetchXmlOrNull(url, init, errorMessage, onProgress, bggApiKey) {
   try {
-    return await fetchXml(url, init, errorMessage);
+    return await fetchXml(url, init, errorMessage, bggApiKey);
   } catch {
     await onProgress?.("BGG 응답이 지연되어 일부 자료를 건너뛰고 있습니다... (1/3)", {
       stage: "bgg-warning",
@@ -142,7 +143,8 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
     thingUrl,
     {},
     "BGG 서버에서 게임 기본 정보를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.",
-    onProgress
+    onProgress,
+    config.bggApiKey
   );
   const thingInfo = buildFallbackThingInfo(bggId, gameName, thingXml ? parseThingInfo(thingXml) : null);
 
@@ -151,7 +153,8 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
     forumListUrl,
     {},
     "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
-    onProgress
+    onProgress,
+    config.bggApiKey
   );
 
   if (!forumListXml) {
@@ -182,7 +185,8 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
       forumUrl,
       {},
       "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
-      onProgress
+      onProgress,
+      config.bggApiKey
     );
 
     if (!forumXml) {
@@ -202,7 +206,8 @@ export async function collectBggForumData(bggId, gameName, config, onProgress) {
         threadUrl,
         {},
         "BGG 서버에서 응답이 없습니다. 잠시 후 다시 시도해주세요.",
-        onProgress
+        onProgress,
+        config.bggApiKey
       );
 
       if (!threadXml) {
