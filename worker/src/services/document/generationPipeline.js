@@ -636,7 +636,7 @@ async function generateJsonSectionWithRetry(config, payload, onProgress, retryMe
   throw lastError;
 }
 
-export async function runGenerationPipeline(state, env, config, onProgress = async () => {}) {
+export async function runGenerationPipeline(state, env, config, onProgress = async () => {}, jobControl = null) {
   const startedAt = Date.now();
   const assertTime = () => {
     if (Date.now() - startedAt > config.processingTimeoutMs) {
@@ -655,7 +655,8 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
         state.request.bggId,
         state.request.gameName,
         config,
-        onProgress
+        onProgress,
+        jobControl
       );
       state.request.gameName = resolveEffectiveGameName(state.request, state.bggForumData, null, null);
     } else {
@@ -683,6 +684,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
         stage: "bgg-skip"
       });
     }
+    await jobControl?.assertActive("bgg", "BGG 단계 결과를 정리하고 있습니다.");
     assertTime();
 
     await onProgress("PDF를 분석하고 있습니다... (2/3)", { stage: "pdf" });
@@ -786,6 +788,7 @@ export async function runGenerationPipeline(state, env, config, onProgress = asy
       state.rulebookExtraction,
       state.faqExtraction
     );
+    await jobControl?.assertActive("pdf", "PDF 단계 결과를 정리하고 있습니다.");
     assertTime();
 
     await onProgress("한국어 문서를 생성하고 있습니다... (3/3)", { stage: "ai" });

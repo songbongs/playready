@@ -8,21 +8,21 @@
       @import url("https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;500;700;800&display=swap");
 
       :root {
-        --bg: #0e1118;
-        --bg-strong: #171b26;
-        --panel: rgba(255, 253, 252, 0.94);
-        --panel-strong: #fffdfc;
-        --ink: #1f1722;
-        --ink-soft: #62566b;
-        --line: rgba(95, 0, 128, 0.14);
-        --brand: #5f0080;
-        --brand-strong: #4a0064;
-        --brand-soft: #eadcf1;
-        --accent: #5c8a73;
-        --accent-soft: #deebe4;
-        --warn: #c06a3f;
-        --danger: #9c2f2f;
-        --shadow: 0 24px 60px rgba(52, 23, 68, 0.10);
+        --bg: oklch(97.02% 0.009 185.41);
+        --bg-strong: oklch(93.73% 0.0072 185.41);
+        --panel: oklch(100% 0.0045 185.41 / 0.94);
+        --panel-strong: oklch(100% 0.0045 185.41);
+        --ink: oklch(21.03% 0.009 185.41);
+        --ink-soft: oklch(45% 0.02 185.41);
+        --line: oklch(90% 0.009 185.41 / 0.82);
+        --brand: oklch(53% 0.11 185.41);
+        --brand-strong: oklch(37% 0.07 185.41);
+        --brand-soft: oklch(92% 0.035 185.41);
+        --accent: oklch(73.29% 0.197 142.6);
+        --accent-soft: oklch(96% 0.04 142.6);
+        --warn: oklch(78.19% 0.1614 64.12);
+        --danger: oklch(65.32% 0.237 17.53);
+        --shadow: 0 24px 60px rgba(18, 52, 58, 0.12);
         --radius-xl: 28px;
         --radius-lg: 20px;
         --radius-md: 14px;
@@ -39,10 +39,10 @@
         font-family: "Noto Sans KR", sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(116, 84, 160, 0.34), transparent 34%),
-          radial-gradient(circle at top right, rgba(63, 112, 94, 0.28), transparent 30%),
-          radial-gradient(circle at bottom center, rgba(192, 106, 63, 0.16), transparent 34%),
-          linear-gradient(180deg, #11151e 0%, #171b27 48%, #0d1017 100%);
+          radial-gradient(circle at top left, rgba(101, 196, 189, 0.22), transparent 32%),
+          radial-gradient(circle at top right, rgba(124, 193, 150, 0.18), transparent 28%),
+          radial-gradient(circle at bottom center, rgba(242, 191, 112, 0.12), transparent 34%),
+          linear-gradient(180deg, #f8fbfb 0%, #eef5f4 46%, #e8f1ef 100%);
       }
 
       body::before {
@@ -51,10 +51,10 @@
         inset: 0;
         pointer-events: none;
         background-image:
-          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+          linear-gradient(rgba(30, 76, 81, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(30, 76, 81, 0.035) 1px, transparent 1px);
         background-size: 22px 22px;
-        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.18));
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.1));
       }
 
       .app-shell {
@@ -67,12 +67,12 @@
         display: grid;
         gap: 16px;
         padding: 28px;
-        border: 1px solid rgba(191, 199, 216, 0.10);
+        border: 1px solid rgba(173, 211, 208, 0.44);
         border-radius: 32px;
         background:
-          linear-gradient(135deg, rgba(22, 28, 40, 0.94), rgba(33, 26, 43, 0.92)),
-          radial-gradient(circle at top right, rgba(116, 84, 160, 0.20), transparent 34%);
-        box-shadow: 0 28px 70px rgba(4, 8, 18, 0.44);
+          linear-gradient(135deg, rgba(18, 53, 58, 0.96), rgba(28, 67, 69, 0.93)),
+          radial-gradient(circle at top right, rgba(134, 221, 212, 0.18), transparent 34%);
+        box-shadow: 0 28px 70px rgba(26, 55, 61, 0.22);
         overflow: hidden;
         position: relative;
       }
@@ -85,7 +85,7 @@
         right: -40px;
         top: -40px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(126, 94, 178, 0.26), transparent 72%);
+        background: radial-gradient(circle, rgba(126, 223, 214, 0.32), transparent 72%);
       }
 
       .eyebrow {
@@ -93,8 +93,8 @@
         width: fit-content;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(92, 138, 115, 0.18);
-        color: #d7eee2;
+        background: rgba(134, 221, 212, 0.16);
+        color: #eafffb;
         font-size: 13px;
         font-weight: 700;
         letter-spacing: 0.04em;
@@ -105,9 +105,9 @@
         font-family: "DotGothic16", monospace;
         font-size: clamp(2.35rem, 4.6vw, 3.5rem);
         line-height: 0.95;
-        color: #d9b7ff;
+        color: #d6fffa;
         letter-spacing: 0.06em;
-        text-shadow: 0 10px 26px rgba(38, 12, 67, 0.42);
+        text-shadow: 0 10px 26px rgba(8, 40, 44, 0.28);
       }
 
       .hero-tagline {
@@ -116,7 +116,7 @@
         font-size: clamp(1.2rem, 2.2vw, 1.7rem);
         line-height: 1.42;
         font-weight: 700;
-        color: rgba(247, 244, 250, 0.92);
+        color: rgba(246, 255, 254, 0.94);
         text-wrap: balance;
       }
 
@@ -125,7 +125,7 @@
         font-size: 0.96rem;
         line-height: 1.8;
         max-width: 760px;
-        color: rgba(223, 217, 231, 0.78);
+        color: rgba(214, 234, 232, 0.82);
       }
 
       .screen {
@@ -155,8 +155,8 @@
       .panel-section {
         padding: 24px;
         border-radius: 24px;
-        background: rgba(255, 252, 245, 0.82);
-        border: 1px solid rgba(117, 90, 51, 0.1);
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(173, 211, 208, 0.42);
       }
 
       .section-title {
@@ -202,8 +202,8 @@
         align-items: center;
         padding: 6px 10px;
         border-radius: 999px;
-        background: rgba(59, 111, 85, 0.1);
-        color: var(--accent);
+        background: rgba(101, 196, 189, 0.12);
+        color: var(--brand-strong);
         font-size: 0.8rem;
         font-weight: 800;
         letter-spacing: 0.01em;
@@ -214,8 +214,8 @@
         width: 100%;
         padding: 16px 18px;
         border-radius: 16px;
-        border: 1px solid rgba(100, 77, 43, 0.18);
-        background: #fffdfa;
+        border: 1px solid rgba(173, 211, 208, 0.5);
+        background: rgba(255, 255, 255, 0.98);
         font-size: 1rem;
         color: var(--ink);
         outline: none;
@@ -223,16 +223,16 @@
       }
 
       .field input:focus {
-        border-color: rgba(159, 79, 43, 0.55);
-        box-shadow: 0 0 0 4px rgba(159, 79, 43, 0.12);
+        border-color: rgba(63, 154, 148, 0.72);
+        box-shadow: 0 0 0 4px rgba(101, 196, 189, 0.18);
       }
 
       .hint {
         margin: 0;
         padding: 12px 14px;
         border-radius: 14px;
-        background: rgba(219, 233, 220, 0.7);
-        color: #335746;
+        background: rgba(223, 248, 243, 0.82);
+        color: #245a56;
         font-size: 0.88rem;
         line-height: 1.65;
       }
@@ -245,9 +245,9 @@
         display: grid;
         gap: 10px;
         padding: 16px;
-        border: 1px dashed rgba(117, 90, 51, 0.3);
+        border: 1px dashed rgba(101, 196, 189, 0.52);
         border-radius: 18px;
-        background: rgba(255, 251, 243, 0.9);
+        background: rgba(248, 255, 254, 0.9);
       }
 
       .upload-box input[type="file"] {
@@ -263,9 +263,9 @@
       .btn-inline {
         padding: 10px 14px;
         font-size: 0.85rem;
-        background: rgba(255, 245, 230, 0.95);
+        background: rgba(244, 251, 250, 0.95);
         color: var(--brand-strong);
-        border: 1px solid rgba(159, 79, 43, 0.2);
+        border: 1px solid rgba(101, 196, 189, 0.22);
       }
 
       .file-meta {
@@ -306,21 +306,22 @@
       .btn-primary {
         padding: 16px 22px;
         background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-        color: #fff9ff;
+        color: #f6fffe;
+        box-shadow: 0 16px 34px rgba(46, 114, 116, 0.22);
       }
 
       .btn-secondary {
         padding: 14px 20px;
-        background: rgba(255, 250, 255, 0.96);
+        background: rgba(255, 255, 255, 0.94);
         color: var(--brand-strong);
-        border: 1px solid rgba(95, 0, 128, 0.16);
+        border: 1px solid rgba(101, 196, 189, 0.2);
       }
 
       .btn-danger {
         padding: 14px 20px;
-        background: rgba(156, 47, 47, 0.1);
+        background: rgba(234, 82, 82, 0.08);
         color: var(--danger);
-        border: 1px solid rgba(156, 47, 47, 0.14);
+        border: 1px solid rgba(234, 82, 82, 0.16);
       }
 
       .tips-list {
@@ -331,8 +332,8 @@
       .tip-card {
         padding: 16px;
         border-radius: 18px;
-        background: linear-gradient(180deg, rgba(255, 250, 239, 0.98), rgba(248, 240, 222, 0.98));
-        border: 1px solid rgba(117, 90, 51, 0.12);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 248, 0.98));
+        border: 1px solid rgba(173, 211, 208, 0.38);
       }
 
       .tip-card strong {
@@ -343,7 +344,7 @@
       .job-panel {
         margin-top: 18px;
         padding-top: 18px;
-        border-top: 1px solid rgba(117, 90, 51, 0.12);
+        border-top: 1px solid rgba(173, 211, 208, 0.34);
       }
 
       .job-list {
@@ -356,8 +357,8 @@
         gap: 8px;
         padding: 14px;
         border-radius: 18px;
-        border: 1px solid rgba(95, 0, 128, 0.12);
-        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(173, 211, 208, 0.46);
+        background: rgba(255, 255, 255, 0.94);
       }
 
       .job-card-head {
@@ -390,13 +391,23 @@
 
       .job-status-pill[data-status="queued"],
       .job-status-pill[data-status="processing"] {
-        background: rgba(95, 0, 128, 0.1);
+        background: rgba(101, 196, 189, 0.12);
         color: var(--brand-strong);
       }
 
       .job-status-pill[data-status="completed"] {
         background: rgba(92, 138, 115, 0.14);
         color: var(--accent);
+      }
+
+      .job-status-pill[data-status="cancelling"] {
+        background: rgba(196, 154, 66, 0.16);
+        color: var(--warn);
+      }
+
+      .job-status-pill[data-status="cancelled"] {
+        background: rgba(156, 47, 47, 0.08);
+        color: var(--danger);
       }
 
       .job-status-pill[data-status="failed"] {
@@ -435,16 +446,16 @@
         width: 100%;
         height: 18px;
         border-radius: 999px;
-        background: rgba(95, 0, 128, 0.10);
+        background: rgba(101, 196, 189, 0.12);
         overflow: hidden;
         margin: 18px 0;
-        border: 1px solid rgba(95, 0, 128, 0.08);
+        border: 1px solid rgba(101, 196, 189, 0.12);
       }
 
       .progress-fill {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #5f0080, #8d5ba6 55%, #c49a42);
+        background: linear-gradient(90deg, #4fbdb4, #2f8f8b 55%, #85c763);
         border-radius: inherit;
         transition: width 0.35s ease;
       }
@@ -462,18 +473,18 @@
         padding: 16px;
         border-radius: 18px;
         background: rgba(255, 253, 252, 0.95);
-        border: 1px solid rgba(95, 0, 128, 0.10);
+        border: 1px solid rgba(173, 211, 208, 0.42);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
       }
 
       .step-chip.is-current {
-        background: rgba(234, 220, 241, 0.72);
-        border-color: rgba(95, 0, 128, 0.24);
+        background: rgba(220, 247, 244, 0.88);
+        border-color: rgba(79, 189, 180, 0.34);
       }
 
       .step-chip.is-done {
-        background: rgba(222, 235, 228, 0.94);
-        border-color: rgba(92, 138, 115, 0.24);
+        background: rgba(230, 248, 236, 0.96);
+        border-color: rgba(103, 191, 138, 0.3);
       }
 
       .step-chip.is-failed {
@@ -501,12 +512,12 @@
         border-radius: 999px;
         font-size: 0.78rem;
         font-weight: 800;
-        background: rgba(95, 0, 128, 0.08);
+        background: rgba(101, 196, 189, 0.08);
         color: var(--ink-soft);
       }
 
       .step-status[data-status="active"] {
-        background: rgba(95, 0, 128, 0.14);
+        background: rgba(101, 196, 189, 0.16);
         color: var(--brand-strong);
       }
 
@@ -539,24 +550,24 @@
       }
 
       .eta-box {
-        background: rgba(246, 230, 206, 0.88);
-        border: 1px solid rgba(196, 154, 66, 0.18);
+        background: rgba(255, 245, 223, 0.92);
+        border: 1px solid rgba(230, 186, 98, 0.24);
       }
 
       .elapsed-box,
       .heartbeat-box {
-        background: rgba(238, 232, 244, 0.92);
-        border: 1px solid rgba(95, 0, 128, 0.10);
+        background: rgba(239, 250, 249, 0.94);
+        border: 1px solid rgba(101, 196, 189, 0.16);
       }
 
       .fun-box {
-        background: rgba(222, 235, 228, 0.92);
-        border: 1px solid rgba(92, 138, 115, 0.16);
+        background: rgba(235, 248, 239, 0.94);
+        border: 1px solid rgba(103, 191, 138, 0.18);
       }
 
       .message-box {
-        background: rgba(244, 235, 248, 0.92);
-        border: 1px solid rgba(95, 0, 128, 0.12);
+        background: rgba(243, 252, 251, 0.94);
+        border: 1px solid rgba(101, 196, 189, 0.18);
       }
 
       .error-box {
@@ -567,7 +578,7 @@
 
       .cause-box {
         background: rgba(255, 253, 252, 0.96);
-        border: 1px solid rgba(95, 0, 128, 0.12);
+        border: 1px solid rgba(173, 211, 208, 0.42);
         color: var(--ink);
       }
 
@@ -585,7 +596,7 @@
         font-size: 0.85rem;
         font-weight: 700;
         margin-bottom: 10px;
-        background: rgba(95, 0, 128, 0.08);
+        background: rgba(101, 196, 189, 0.12);
         color: var(--brand-strong);
       }
 
@@ -604,15 +615,15 @@
         margin-top: 14px;
         padding: 14px 18px;
         border-radius: 18px;
-        background: rgba(255, 253, 252, 0.96);
-        border: 1px solid rgba(95, 0, 128, 0.12);
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(173, 211, 208, 0.42);
       }
 
       .working-spinner {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        border: 3px solid rgba(95, 0, 128, 0.14);
+        border: 3px solid rgba(101, 196, 189, 0.2);
         border-top-color: var(--brand);
         animation: spin 0.85s linear infinite;
         flex: 0 0 auto;
@@ -628,8 +639,8 @@
       }
 
       .working-indicator.is-retrying {
-        background: rgba(246, 230, 206, 0.96);
-        border-color: rgba(196, 154, 66, 0.28);
+        background: rgba(255, 245, 223, 0.96);
+        border-color: rgba(230, 186, 98, 0.3);
       }
 
       .working-indicator.is-failed {
@@ -638,8 +649,8 @@
       }
 
       .working-indicator.is-complete {
-        background: rgba(219, 233, 220, 0.92);
-        border-color: rgba(59, 111, 85, 0.24);
+        background: rgba(232, 249, 238, 0.94);
+        border-color: rgba(103, 191, 138, 0.24);
       }
 
       .heartbeat-dot {
@@ -685,7 +696,7 @@
         padding: 8px;
         width: fit-content;
         border-radius: 999px;
-        background: rgba(117, 90, 51, 0.09);
+        background: rgba(226, 241, 240, 0.92);
       }
 
       .tab-btn {
@@ -695,9 +706,9 @@
       }
 
       .tab-btn.is-active {
-        background: #fffdfc;
+        background: #ffffff;
         color: var(--brand-strong);
-        box-shadow: 0 10px 24px rgba(74, 0, 100, 0.08);
+        box-shadow: 0 10px 24px rgba(46, 114, 116, 0.12);
       }
 
       .result-meta {
@@ -739,9 +750,9 @@
         gap: 10px;
         padding: 16px 18px;
         border-radius: 20px;
-        border: 1px solid rgba(95, 0, 128, 0.12);
-        background: linear-gradient(180deg, rgba(255, 253, 252, 0.98), rgba(247, 241, 249, 0.96));
-        box-shadow: 0 10px 24px rgba(74, 0, 100, 0.05);
+        border: 1px solid rgba(173, 211, 208, 0.42);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 250, 249, 0.96));
+        box-shadow: 0 10px 24px rgba(46, 114, 116, 0.08);
         min-width: 0;
       }
 
@@ -763,7 +774,7 @@
         gap: 4px;
         padding: 12px;
         border-radius: 16px;
-        background: rgba(95, 0, 128, 0.06);
+        background: rgba(101, 196, 189, 0.08);
       }
 
       .result-stat-value {
@@ -792,7 +803,7 @@
         gap: 8px;
         padding: 9px 14px;
         border-radius: 999px;
-        background: rgba(95, 0, 128, 0.11);
+        background: rgba(101, 196, 189, 0.12);
         color: var(--brand-strong);
         font-size: 0.9rem;
         font-weight: 800;
@@ -823,7 +834,7 @@
         gap: 12px;
         padding: 12px 14px;
         border-radius: 16px;
-        background: rgba(95, 0, 128, 0.06);
+        background: rgba(101, 196, 189, 0.08);
       }
 
       .result-time-item strong {
@@ -842,7 +853,7 @@
         gap: 6px;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(95, 0, 128, 0.08);
+        background: rgba(101, 196, 189, 0.1);
         color: var(--ink);
         font-size: 0.84rem;
         font-weight: 700;
@@ -858,8 +869,8 @@
         min-width: 112px;
         padding: 10px 12px;
         border-radius: 16px;
-        background: rgba(92, 138, 115, 0.10);
-        border: 1px solid rgba(92, 138, 115, 0.14);
+        background: rgba(235, 248, 239, 0.92);
+        border: 1px solid rgba(103, 191, 138, 0.2);
       }
 
       .result-source-item strong {
@@ -880,15 +891,15 @@
 
       .result-summary-divider {
         height: 1px;
-        background: rgba(95, 0, 128, 0.10);
+        background: rgba(173, 211, 208, 0.42);
         margin: 4px 0;
       }
 
       .preview-frame {
         padding: 22px;
         border-radius: 24px;
-        background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.98));
-        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: linear-gradient(180deg, rgba(249, 252, 252, 0.98), rgba(238, 246, 245, 0.98));
+        border: 1px solid rgba(173, 211, 208, 0.3);
         min-height: 420px;
       }
 
@@ -900,9 +911,9 @@
       .preview-frame .doc-header-card {
         padding: 22px 24px;
         border-radius: 24px;
-        border: 1px solid rgba(148, 163, 184, 0.22);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(173, 211, 208, 0.28);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 250, 0.98));
+        box-shadow: 0 20px 40px rgba(46, 114, 116, 0.08);
       }
 
       .preview-frame .doc-header-top {
@@ -951,9 +962,9 @@
       }
 
       .preview-frame .doc-badge--primary {
-        background: rgba(15, 23, 42, 0.95);
-        border-color: rgba(15, 23, 42, 0.95);
-        color: #f8fafc;
+        background: rgba(31, 92, 95, 0.96);
+        border-color: rgba(31, 92, 95, 0.96);
+        color: #f7fffe;
       }
 
       .preview-frame .doc-meta-row {
@@ -1883,6 +1894,8 @@
 
       function getJobStatusLabel(status) {
         if (status === "processing") return "진행 중";
+        if (status === "cancelling") return "중단 요청";
+        if (status === "cancelled") return "중단됨";
         if (status === "completed") return "완료";
         if (status === "failed") return "실패";
         return "접수됨";
@@ -1918,6 +1931,16 @@
           const data = await fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(job.jobId)}/result`);
           state.selectedJobSummary = data.job || job;
           completeWithResult(data.result?.data || data.result);
+          return;
+        }
+
+        if (job.status === "cancelled") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          showScreen("progress");
+          resetProgressUi();
+          updateProgressFromJob(job);
+          showProgressCancelled(job.progressMessage || "사용자가 작업 중단을 요청해 작업을 멈췄습니다.");
           return;
         }
 
@@ -1983,6 +2006,15 @@
           return;
         }
 
+        if (job.status === "cancelled") {
+          stopJobPolling();
+          window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
+          updateProgressFromJob(job);
+          showProgressCancelled(job.progressMessage || "사용자가 작업 중단을 요청해 작업을 멈췄습니다.");
+          await loadRecentJobs();
+          return;
+        }
+
         if (job.status === "failed") {
           stopJobPolling();
           window.localStorage.removeItem(STORAGE_KEYS.activeJobId);
@@ -1997,7 +2029,7 @@
           return;
         }
 
-        setProgressActionMode("watch");
+        setProgressActionMode(job.status === "cancelling" ? "cancelling" : "watch");
         updateProgressFromJob(job);
       }
 
@@ -2018,6 +2050,26 @@
         syncStageTiming(stage);
         updateStageLoop(stage === "queued" ? "start" : stage);
         paintStageChips(stage === "queued" ? "bgg" : stage);
+
+        if (job.status === "cancelling") {
+          elements.progressTitle.textContent = "작업 중단을 요청했습니다";
+          elements.progressSubtitle.textContent = "이미 시작된 요청을 안전하게 마무리한 뒤 가능한 가장 빠른 지점에서 작업을 멈춥니다.";
+          elements.progressFill.style.width = "94%";
+          elements.progressMessage.textContent =
+            job.progressMessage || "서버가 중단 요청을 확인하고 있습니다. 잠시만 기다려주세요.";
+          setProgressVisualState("cancelling");
+          return;
+        }
+
+        if (job.status === "cancelled") {
+          elements.progressTitle.textContent = "작업을 중단했습니다";
+          elements.progressSubtitle.textContent = "현재 job은 더 이상 진행되지 않습니다. 같은 정보로 다시 시작할 수 있습니다.";
+          elements.progressFill.style.width = "100%";
+          elements.progressMessage.textContent =
+            job.progressMessage || "사용자 요청에 따라 작업을 중단했습니다.";
+          setProgressVisualState("cancelled");
+          return;
+        }
 
         const stageUi = {
           queued: {
@@ -2056,6 +2108,13 @@
 
       function normalizeJobStageForUi(stage) {
         if (["queued", "start"].includes(stage)) return "queued";
+        if (["bgg", "bgg-skip", "bgg-thing", "bgg-forumlist", "bgg-forum", "bgg-thread", "bgg-warning"].includes(stage)) {
+          return "bgg";
+        }
+        if (["pdf", "pdf-upload", "pdf-extract", "pdf-faq-upload", "pdf-faq-extract", "pdf-merge", "pdf-warning", "pdf-skip"].includes(stage)) {
+          return "pdf";
+        }
+        if (["ai", "ai-retry"].includes(stage)) return "ai";
         if (stage === "completed") return "ai";
         if (stage === "failed") return state.currentStage || "bgg";
         return stage;
@@ -2063,7 +2122,19 @@
 
       function setProgressActionMode(mode) {
         state.progressActionMode = mode;
-        elements.cancelButton.textContent = mode === "retry" ? "다시 작업 준비" : "나중에 확인하기";
+        elements.cancelButton.disabled = mode === "cancelling";
+        elements.cancelButton.textContent =
+          mode === "retry"
+            ? "다시 작업 준비"
+            : mode === "cancelling"
+              ? "중단 요청 중..."
+              : "작업 중단 요청";
+      }
+
+      async function requestJobCancellation(jobId) {
+        return fetchJson(`${APP_CONFIG.WORKER_BASE_URL}/api/jobs/${encodeURIComponent(jobId)}/cancel`, {
+          method: "POST"
+        });
       }
 
       function showScreen(name) {
@@ -3189,7 +3260,7 @@ ${getDownloadDocumentStyles()}
         elements.progressCause.classList.add("hidden");
       }
 
-      function cancelGeneration() {
+      async function cancelGeneration() {
         if (state.abortController) {
           state.abortController.abort();
         }
@@ -3205,6 +3276,22 @@ ${getDownloadDocumentStyles()}
           showInputError("이전 작업의 게임 이름과 BGG 정보만 다시 채웠습니다. PDF와 추가 자료는 다시 첨부한 뒤 재시작해주세요.");
           loadRecentJobs().catch(() => {});
           return;
+        }
+
+        if (state.progressActionMode === "watch" && state.activeJobId) {
+          try {
+            setProgressActionMode("cancelling");
+            elements.progressMessage.textContent =
+              "서버에 작업 중단을 요청했습니다. 현재 처리 중인 묶음을 안전하게 마치면 자동으로 멈춥니다.";
+            setProgressVisualState("cancelling");
+            await requestJobCancellation(state.activeJobId);
+            loadRecentJobs().catch(() => {});
+            return;
+          } catch (error) {
+            setProgressActionMode("watch");
+            showInputError(error.message || "작업 중단 요청을 보내지 못했습니다. 잠시 후 다시 시도해주세요.");
+            return;
+          }
         }
 
         state.abortController = null;
@@ -3248,6 +3335,22 @@ ${getDownloadDocumentStyles()}
         elements.startButton.disabled = false;
       }
 
+      function showProgressCancelled(message) {
+        stopTimers();
+        state.abortController = null;
+        stopJobPolling();
+        finalizeStageTiming();
+        setProgressVisualState("cancelled");
+        elements.progressTitle.textContent = "작업을 중단했습니다";
+        elements.progressSubtitle.textContent = "같은 설정으로 다시 시작하려면 아래 버튼을 눌러 입력 화면으로 돌아가세요.";
+        elements.progressError.classList.add("hidden");
+        hideProgressCause();
+        elements.progressMessage.textContent =
+          message || "사용자 요청에 따라 작업을 중단했습니다. 파일은 다시 첨부한 뒤 새 작업으로 시작할 수 있습니다.";
+        setProgressActionMode("retry");
+        elements.startButton.disabled = false;
+      }
+
       function setProgressVisualState(mode, message = "") {
         elements.workingIndicator.classList.remove("hidden", "is-retrying", "is-failed", "is-complete");
         elements.etaBox.classList.remove("hidden");
@@ -3267,8 +3370,38 @@ ${getDownloadDocumentStyles()}
           return;
         }
 
+        if (mode === "cancelling") {
+          elements.workingIndicator.classList.add("is-retrying");
+          elements.workingIndicator.innerHTML = `
+            <div class="working-spinner" aria-hidden="true"></div>
+            <div>
+              <strong>작업 중단을 요청했습니다</strong>
+              <small>${escapeHtml(message || "이미 시작한 요청을 안전하게 마무리한 뒤 멈춥니다. 보통은 잠시 후 상태가 바뀝니다.")}</small>
+            </div>
+          `;
+          elements.heartbeatBox.innerHTML =
+            '<span class="heartbeat-dot" aria-hidden="true"></span>중단 요청을 서버가 확인하고 있습니다. 현재 외부 요청 하나가 끝나면 바로 멈출 수 있습니다.';
+          return;
+        }
+
         if (mode === "failed") {
           elements.workingIndicator.classList.add("hidden");
+          elements.etaBox.classList.add("hidden");
+          elements.heartbeatBox.classList.add("hidden");
+          elements.funBox.classList.remove("hidden");
+          updateStageLoop("failed");
+          return;
+        }
+
+        if (mode === "cancelled") {
+          elements.workingIndicator.classList.add("is-complete");
+          elements.workingIndicator.innerHTML = `
+            <div class="working-spinner" aria-hidden="true"></div>
+            <div>
+              <strong>작업이 중단되었습니다</strong>
+              <small>${escapeHtml(message || "이 job은 더 이상 진행되지 않습니다. 필요하면 같은 정보로 다시 시작할 수 있습니다.")}</small>
+            </div>
+          `;
           elements.etaBox.classList.add("hidden");
           elements.heartbeatBox.classList.add("hidden");
           elements.funBox.classList.remove("hidden");
@@ -3341,6 +3474,31 @@ ${getDownloadDocumentStyles()}
             title: "게임 정보를 확인하고 있습니다",
             percent: 34,
             subtitle: "게임 기본 정보와 공개 메타 정보를 정리하고 있습니다."
+          },
+          "bgg-thing": {
+            title: "BGG 기본 정보를 읽고 있습니다",
+            percent: 24,
+            subtitle: "게임 제목, 인원, 시간, 난이도 같은 기본 정보를 먼저 가져오고 있습니다."
+          },
+          "bgg-forumlist": {
+            title: "BGG 포럼 목록을 고르고 있습니다",
+            percent: 28,
+            subtitle: "전체 포럼 중에서 최근성과 반응을 함께 고려해 대표 포럼만 추립니다."
+          },
+          "bgg-forum": {
+            title: "대표 BGG 포럼을 읽고 있습니다",
+            percent: 34,
+            subtitle: "규칙과 FAQ 성격이 강한 포럼부터 우선해서 읽고 있습니다."
+          },
+          "bgg-thread": {
+            title: "대표 스레드와 댓글을 정리하고 있습니다",
+            percent: 40,
+            subtitle: "포럼 안에서도 최근성과 반응이 있는 글 위주로 핵심 내용만 추려 읽고 있습니다."
+          },
+          "bgg-warning": {
+            title: "BGG 정보를 일부만 사용하고 다음 단계로 넘어갑니다",
+            percent: 42,
+            subtitle: "시간을 너무 오래 쓰지 않도록 대표 정보만 모은 뒤 다음 단계로 진행합니다."
           },
           "bgg-skip": {
             title: "입력한 정보 기준으로 진행하고 있습니다",
@@ -3496,6 +3654,7 @@ function stopTimers() {
           '<span class="heartbeat-dot" aria-hidden="true"></span>첫 실제 작업 단계가 시작되면 상태가 자동으로 갱신됩니다.';
         paintStageChips("bgg");
         updateStageLoop("start");
+        setProgressActionMode("watch");
         resetEtaForStage("start");
         renderElapsed();
       }

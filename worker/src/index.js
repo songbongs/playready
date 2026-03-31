@@ -5,6 +5,7 @@ import { enforceRateLimit } from "./services/security/rateLimiter.js";
 import { handleHealth } from "./routes/health.js";
 import { handleGenerateJson, handleGenerateStream } from "./routes/generate.js";
 import {
+  handleCancelJob,
   handleCreateJob,
   handleGetJob,
   handleGetJobLog,
@@ -40,7 +41,7 @@ export default {
 
     try {
       if (url.pathname === "/api/jobs" && request.method === "GET") {
-        return withCors(await handleListRecentJobs(request, env), origin, config.allowedOrigin);
+        return withCors(await handleListRecentJobs(request, env, config), origin, config.allowedOrigin);
       }
 
       if (url.pathname === "/api/jobs" && request.method === "POST") {
@@ -51,17 +52,22 @@ export default {
 
       const jobMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)$/);
       if (jobMatch && request.method === "GET") {
-        return withCors(await handleGetJob(jobMatch[1], env), origin, config.allowedOrigin);
+        return withCors(await handleGetJob(request, jobMatch[1], env, config), origin, config.allowedOrigin);
+      }
+
+      const jobCancelMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/cancel$/);
+      if (jobCancelMatch && request.method === "POST") {
+        return withCors(await handleCancelJob(request, jobCancelMatch[1], env, config), origin, config.allowedOrigin);
       }
 
       const jobResultMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/result$/);
       if (jobResultMatch && request.method === "GET") {
-        return withCors(await handleGetJobResult(jobResultMatch[1], env), origin, config.allowedOrigin);
+        return withCors(await handleGetJobResult(request, jobResultMatch[1], env, config), origin, config.allowedOrigin);
       }
 
       const jobLogMatch = url.pathname.match(/^\/api\/jobs\/([^/]+)\/log$/);
       if (jobLogMatch && request.method === "GET") {
-        return withCors(await handleGetJobLog(jobLogMatch[1], env), origin, config.allowedOrigin);
+        return withCors(await handleGetJobLog(request, jobLogMatch[1], env, config), origin, config.allowedOrigin);
       }
 
       if (url.pathname === "/api/generate" && request.method === "POST") {

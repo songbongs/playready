@@ -18,22 +18,36 @@ export function createJobId() {
 }
 
 export function normalizeJobStage(stage) {
-  if (["pdf", "pdf-upload", "pdf-extract", "pdf-faq-upload", "pdf-faq-extract", "pdf-merge", "pdf-warning"].includes(stage)) {
+  if (
+    [
+      "pdf",
+      "pdf-upload",
+      "pdf-extract",
+      "pdf-faq-upload",
+      "pdf-faq-extract",
+      "pdf-merge",
+      "pdf-warning"
+    ].includes(stage)
+  ) {
     return "pdf";
   }
   if (["ai", "ai-retry"].includes(stage)) {
     return "ai";
   }
-  if (["start", "bgg", "bgg-skip", "bgg-warning"].includes(stage)) {
+  if (String(stage || "").startsWith("bgg") || stage === "start") {
     return "bgg";
   }
   if (stage === "completed") {
     return "completed";
   }
-  if (stage === "failed") {
+  if (["failed", "cancelled"].includes(stage)) {
     return "failed";
   }
   return "queued";
+}
+
+export function isTerminalJobStatus(status) {
+  return ["completed", "failed", "cancelled"].includes(String(status || ""));
 }
 
 function mapRow(row) {
@@ -177,6 +191,47 @@ export async function markJobFailed(env, jobId, error, extra = {}) {
       error?.message || "처리 중 오류가 발생했습니다.",
       extra.errorStage || "",
       nowIso(),
+      extra.sourceMode || "legacy",
+      JSON.stringify(extra.sourceOptimization || {}),
+      jobId
+    )
+    .run();
+}
+
+export async function markJobCancelling(env, jobId, extra = {}) {
+  await env.JOBS_DB.prepare(
+    `UPDATE jobs
+     SET status = 'cancelling',
+         progress_message = ?,
+         updated_at = ?
+     WHERE job_id = ? AND status IN ('queued', 'processing', 'cancelling')`
+  )
+    .bind(extra.progressMessage || "작업 중단 요청을 받았습니다. 가능한 가장 빠른 지점에서 멈춥니다.", nowIso(), jobId)
+    .run();
+}
+
+export async function markJobCancelled(env, jobId, extra = {}) {
+  const timestamp = nowIso();
+  await env.JOBS_DB.prepare(
+    `UPDATE jobs
+     SET status = 'cancelled',
+         current_stage = 'cancelled',
+         progress_message = ?,
+         error_message = '',
+         error_stage = ?,
+         updated_at = ?,
+         completed_at = ?,
+         expires_at = ?,
+         source_mode = ?,
+         source_optimization = ?
+     WHERE job_id = ?`
+  )
+    .bind(
+      extra.progressMessage || "사용자 요청으로 작업을 중단했습니다.",
+      extra.errorStage || "",
+      timestamp,
+      timestamp,
+      extra.expiresAt || null,
       extra.sourceMode || "legacy",
       JSON.stringify(extra.sourceOptimization || {}),
       jobId
